@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675">
+  <defs>
+    <linearGradient id="bgGrad8" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="50%" stop-color="#334155" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+    <radialGradient id="glow8" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+    <pattern id="grid8" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ffffff" stroke-width="0.5" stroke-opacity="0.08" />
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="675" fill="url(#bgGrad8)" />
+  <rect width="1200" height="675" fill="url(#grid8)" />
+  <circle cx="900" cy="300" r="400" fill="url(#glow8)" />
+
+  <!-- Tactical Pitch Graphic -->
+  <g transform="translate(100, 100)" stroke="#ffffff" stroke-width="2" stroke-opacity="0.25" fill="none">
+    <rect width="400" height="260" rx="8" />
+    <line x1="200" y1="0" x2="200" y2="260" />
+    <circle cx="200" cy="130" r="45" />
+    <rect x="0" y="55" width="60" height="150" />
+    <rect x="340" y="55" width="60" height="150" />
+  </g>
+
+  <!-- Chart Nodes / Analytics Visual -->
+  <g transform="translate(600, 140)">
+    <rect width="480" height="280" rx="16" fill="#0f172a" fill-opacity="0.7" stroke="#ffffff" stroke-width="1" stroke-opacity="0.2" />
+    <text x="30" y="45" font-family="system-ui, sans-serif" font-size="18" font-weight="bold" fill="#38bdf8">PANTOMIME FOOTBALL QUANT LAB 2026</text>
+    <text x="30" y="80" font-family="system-ui, sans-serif" font-size="28" font-weight="900" fill="#ffffff">Guide & Méthodologie</text>
+
+    <!-- Data Bars -->
+    <rect x="30" y="120" width="80" height="110" rx="6" fill="#10b981" fill-opacity="0.8" />
+    <rect x="130" y="160" width="80" height="70" rx="6" fill="#38bdf8" fill-opacity="0.8" />
+    <rect x="230" y="100" width="80" height="130" rx="6" fill="#6366f1" fill-opacity="0.8" />
+    <rect x="330" y="140" width="80" height="90" rx="6" fill="#f59e0b" fill-opacity="0.8" />
+
+    <text x="45" y="255" font-family="monospace" font-size="14" fill="#94a3b8">xG PRO</text>
+    <text x="145" y="255" font-family="monospace" font-size="14" fill="#94a3b8">POISSON</text>
+    <text x="245" y="255" font-family="monospace" font-size="14" fill="#94a3b8">KELLY</text>
+    <text x="345" y="255" font-family="monospace" font-size="14" fill="#94a3b8">VALUE</text>
+  </g>
+
+  <!-- Main Headline Box -->
+  <g transform="translate(100, 480)">
+    <rect width="1000" height="130" rx="16" fill="#090d16" fill-opacity="0.85" stroke="#10b981" stroke-width="1.5" />
+    <text x="40" y="45" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#10b981" letter-spacing="2">DOSSIER EXPERT ANNUEL #09</text>
+    <text x="40" y="85" font-family="system-ui, sans-serif" font-size="22" font-weight="bold" fill="#ffffff">Comment Choisir un Site de Pronostics Foot : Le Guide d'Évaluation en 7 Cri...</text>
+  </g>
+</svg>
