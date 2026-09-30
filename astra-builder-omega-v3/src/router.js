@@ -4,6 +4,7 @@ export function costStatus(cfg,kind="text"){
   const base=normalizeBase(kind==="image"?cfg.imageBaseUrl:cfg.baseUrl);
   if(!cfg.zeroCost)return"UNVERIFIED";
   if(kind==="text"&&base.includes("openrouter.ai"))return"PASS";
+  if(kind==="image"&&base.startsWith("astra://zerogpu/"))return"PASS";
   if(cfg.attestedFree&&base)return"PARTIAL";
   return"FAIL";
 }
@@ -17,6 +18,12 @@ export async function chat(cfg,model,system,user){
 }
 export async function generateImage(cfg,prompt){
   const base=normalizeBase(cfg.imageBaseUrl);if(!base)throw new Error("Endpoint image gratuit non configuré");
+  if(base.startsWith("astra://zerogpu/")){
+    const res=await fetch("/api/free_image",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt,model:cfg.imageModel})});
+    const raw=await res.text();if(!res.ok)throw new Error("ZeroGPU image "+res.status+": "+raw.slice(0,240));
+    const data=JSON.parse(raw);if(!data?.b64)throw new Error("ZeroGPU image response invalid");
+    return{bytes:Uint8Array.from(atob(data.b64),x=>x.charCodeAt(0)),mime:data.mime||"image/png"};
+  }
   if(cfg.zeroCost&&!cfg.attestedFree)throw new Error("ZERO-COST GATE: coût de l'endpoint image non attesté gratuit");
   const headers={"Content-Type":"application/json"};if(cfg.imageKey)headers.Authorization="Bearer "+cfg.imageKey;
   const res=await fetch(base+"/images/generations",{method:"POST",headers,body:JSON.stringify({model:cfg.imageModel,prompt,size:"1024x1024",response_format:"b64_json"})});
