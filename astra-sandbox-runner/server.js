@@ -41,7 +41,7 @@ async function runSandbox(project={}){
    runs.push(install);evidence.push(evidenceFromRun("Dependencies "+(rel||"."),install,true));if(install.status!=="PASS")continue;
    if(scripts.build){const b=await run("npm",["run","build"],{cwd,timeout:90000,label:"build "+(rel||".")});runs.push(b);evidence.push(evidenceFromRun("Build "+(rel||"."),b,true))}
    else evidence.push({name:"Build "+(rel||"."),status:"PARTIAL",detail:"no build script"});
-   if(scripts.test&&!/no test specified/i.test(String(scripts.test))){const t=await run("npm",["test","--","--runInBand"],{cwd,timeout:90000,label:"test "+(rel||".")});runs.push(t);evidence.push(evidenceFromRun("Tests "+(rel||"."),t,true))}
+   if(scripts.test&&!/no test specified/i.test(String(scripts.test))){const t=await run("npm",["test"],{cwd,timeout:90000,label:"test "+(rel||".")});runs.push(t);evidence.push(evidenceFromRun("Tests "+(rel||"."),t,true))}
    else evidence.push({name:"Tests "+(rel||"."),status:"PARTIAL",detail:"no executable test script"});
   }
   const js=files.filter(f=>/\.(?:js|mjs|cjs)$/.test(f.path)).slice(0,50);for(const f of js){const r=await run("node",["--check",join(root,f.path)],{cwd:root,timeout:8000,label:"syntax "+f.path});runs.push(r);if(r.status!=="PASS"){evidence.push(evidenceFromRun("JS syntax "+f.path,r,true));break}}if(js.length&&!evidence.some(e=>e.name.startsWith("JS syntax")&&e.status==="FAIL"))evidence.push({name:"JS syntax",status:"PASS",detail:js.length+" file(s) checked"});
