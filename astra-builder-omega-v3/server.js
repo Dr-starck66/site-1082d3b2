@@ -18,10 +18,10 @@ const timeoutFetch=(url,opts={},ms=15000)=>fetch(url,{...opts,signal:AbortSignal
 function canonical(v){if(Array.isArray(v))return v.map(canonical);if(v&&typeof v==="object"){const o={};for(const k of Object.keys(v).sort())o[k]=canonical(v[k]);return o}return v}
 function serverSeal(payload,previousHash="GENESIS"){const at=new Date().toISOString(),body={at,previousHash,payload:canonical(payload)},hash=createHash("sha256").update(JSON.stringify(body)).digest("hex");return{at,previousHash,hash,algorithm:"SHA-256",issuer:"ASTRA_CONTROL_PLANE"}}
 const ZERO_GPU_TEXT_HOST="https://steliotel-qwen3-8-27b-chat.hf.space";
-async function zeroGpuText(system,user){
+async function zeroGpuText(system,user,maxTokens=1536){
  const headers={"content-type":"application/json"};if(process.env.HF_TOKEN)headers.authorization="Bearer "+process.env.HF_TOKEN;
  const message=("SYSTEM:\n"+String(system||"")+"\n\nUSER:\n"+String(user||"")).slice(0,120000);
- const submit=await timeoutFetch(ZERO_GPU_TEXT_HOST+"/gradio_api/call/chat",{method:"POST",headers,body:JSON.stringify({data:[message,[],1536,0.2,false]})},30000);
+ const submit=await timeoutFetch(ZERO_GPU_TEXT_HOST+"/gradio_api/call/chat",{method:"POST",headers,body:JSON.stringify({data:[message,[],Math.max(32,Math.min(1536,Number(maxTokens)||1536)),0.2,false]})},30000);
  const raw=await submit.text();if(!submit.ok)throw new Error("ZeroGPU text submit "+submit.status+": "+raw.slice(0,220));
  let job;try{job=JSON.parse(raw)}catch{throw new Error("ZeroGPU text submit non-JSON")};if(!job?.event_id)throw new Error("ZeroGPU text event id missing");
  const events=await timeoutFetch(ZERO_GPU_TEXT_HOST+"/gradio_api/call/chat/"+encodeURIComponent(job.event_id),{headers:process.env.HF_TOKEN?{authorization:"Bearer "+process.env.HF_TOKEN}:{}},150000);
@@ -177,4 +177,16 @@ const srv=http.createServer(async(req,res)=>{try{
  const url=new URL(req.url||"/","http://localhost");if(url.pathname.startsWith("/api/")||url.pathname==="/health"){const done=await api(req,res,url);if(done!==false)return}
  let p=decodeURIComponent(url.pathname);if(p==="/")p="/index.html";const rel=normalize(p).replace(/^[/\\]+/,"");if(!safePath(rel)){res.writeHead(403);return res.end("Forbidden")}const f=join(root,rel);if(!f.startsWith(root)){res.writeHead(403);return res.end("Forbidden")}const st=await stat(f);if(!st.isFile())throw new Error("not file");const data=await readFile(f);res.writeHead(200,{"content-type":mime[extname(f)]||"application/octet-stream","cache-control":"public,max-age=300"});res.end(data)
 }catch(e){if(e?.status)return send(res,e.status,{error:e.message});res.writeHead(404,{"content-type":"text/plain; charset=utf-8"});res.end("Not found")}});
-srv.listen(port,"0.0.0.0",()=>console.log("ASTRA BUILDER Ω V6 META-EVOLUTION ENGINE listening",port));
+srv.listen(port,"0.0.0.0",()=>{
+ console.log("ASTRA BUILDER Ω V6 META-EVOLUTION ENGINE listening",port);
+ if(process.env.ASTRA_MODEL_PROBE_ON_BOOT==="1")setTimeout(async()=>{
+  try{
+   const t=await zeroGpuText("You are an inference connectivity probe.","Return exactly ASTRA_MODEL_OK and nothing else.",64);
+   console.log("[ASTRA MODEL PROBE] TEXT PASS",t.model,String(t.text).slice(0,120));
+  }catch(e){console.error("[ASTRA MODEL PROBE] TEXT FAIL",String(e?.message||e).slice(0,300))}
+  try{
+   const r=await timeoutFetch(ZERO_GPU_IMAGE_HOST+"/config",{},20000);
+   console.log("[ASTRA MODEL PROBE] IMAGE ROUTE",r.ok?"PASS":"FAIL",r.status,"Qwen/Qwen-Image-2.1");
+  }catch(e){console.error("[ASTRA MODEL PROBE] IMAGE ROUTE FAIL",String(e?.message||e).slice(0,300))}
+ },750);
+});
