@@ -7,6 +7,7 @@ import{saveWorkspace,getWorkspace,listWorkspaces,deleteWorkspace,snapshotOf}from
 import{compileMission,missionProgress,updateMission,guardFiles,NegativeKnowledge,createGenome,scoreVariant,dualityVerdict,sha256}from"./sovereign.js";
 import{metricSnapshot,compare as compareBench,matrix as benchmarkMatrix}from"./benchmark-x10.js";
 import{seal,verifyChain,proofPack}from"./evidenlock.js";
+import{routeAttempt}from"./jev-router.js";
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const phases=["SPEC","IMPORT","IMPROVE","FRONTEND","BACKEND","DATABASE","AUTH","OPS","IMAGES","STATIC TEST","SERVER VALIDATE","ADVERSARY","REPAIR","VERIFY²","DEPLOY PLAN"];
 const defaults={baseUrl:"https://openrouter.ai/api/v1",apiKey:"",architect:"deepseek/deepseek-v3.2",frontend:"qwen/qwen3-coder-next",backend:"qwen/qwen3-coder-next",ops:"qwen/qwen3-coder-next",adversary:"deepseek/deepseek-v3.2",verifier:"qwen/qwen3.6-plus",imageBaseUrl:"",imageKey:"",imageModel:"black-forest-labs/FLUX.2-klein-4B",zeroCost:true,attestedFree:false,githubToken:"",railwayToken:"",railwayWorkspaceId:"",repoName:"",privateRepo:true};
@@ -28,7 +29,7 @@ function rescueEvent(e){
  addEv("ASTRA RESCUE Ω",e.status,e.type+" · "+e.detail);
 }
 const rescue=new RescueSupervisor({onEvent:rescueEvent,checkpoint:saveCheckpoint,restore:restoreCheckpoint,maxAttempts:3,maxRestarts:2});
-async function rescueChat(cfg,model,system,user){return rescue.run("AI "+model,()=>chat(cfg,model,system,user),{attempts:3})}
+async function rescueChat(cfg,model,system,user){return rescue.run("AI "+model,async attempt=>{const route=routeAttempt(cfg,model,system,attempt);if(route.fallback)addEv("JEV-X Router","PARTIAL",route.role+" fallback → "+route.model+" (attempt "+attempt+")");const out=await chat(cfg,route.model,system,user);if(route.fallback)addEv("JEV-X Router","PASS",route.role+" recovered via "+route.model);return out},{attempts:3})}
 async function rescueImage(cfg,prompt){return rescue.run("IMAGE",()=>generateImage(cfg,prompt),{attempts:3})}
 function parse(t){const c=(t||"").trim().replace(/^\`\`\`(?:json)?/i,"").replace(/\`\`\`$/i,"").trim();try{return JSON.parse(c)}catch{}const a=c.indexOf("{"),b=c.lastIndexOf("}");if(a>=0&&b>a)return JSON.parse(c.slice(a,b+1));throw new Error("Réponse IA non JSON")}
 function safeFiles(v){return(v?.files||[]).filter(x=>x&&typeof x.path==="string"&&typeof x.content==="string"&&x.path&&!x.path.includes("..")&&!x.path.startsWith("/"))}
