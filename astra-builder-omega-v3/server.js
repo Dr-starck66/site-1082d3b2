@@ -1,28 +1,122 @@
-import http from"node:http";import{readFile,stat}from"node:fs/promises";import{extname,join,normalize}from"node:path";
+import http from "node:http";
+import { readFile, stat } from "node:fs/promises";
+import { extname, join, normalize } from "node:path";
+
 const root=process.cwd(),port=Number(process.env.PORT||3000),MAX=4*1024*1024;
 const mime={".html":"text/html; charset=utf-8",".css":"text/css; charset=utf-8",".js":"text/javascript; charset=utf-8",".json":"application/json; charset=utf-8",".png":"image/png",".jpg":"image/jpeg",".jpeg":"image/jpeg",".webp":"image/webp",".svg":"image/svg+xml"};
-const send=(res,code,obj)=>{res.writeHead(code,{"content-type":"application/json; charset=utf-8"});res.end(JSON.stringify(obj))};
+const send=(res,code,obj)=>{res.writeHead(code,{"content-type":"application/json; charset=utf-8","cache-control":"no-store"});res.end(JSON.stringify(obj))};
 async function body(req){let n=0,ch=[];for await(const c of req){n+=c.length;if(n>MAX)throw Object.assign(new Error("payload too large"),{status:413});ch.push(c)}return ch.length?JSON.parse(Buffer.concat(ch).toString("utf8")):{}}
 const safePath=p=>typeof p==="string"&&p.length>0&&!p.startsWith("/")&&!p.includes("..")&&!p.includes("\\");
-function validate(project={}){const files=Array.isArray(project.files)?project.files:[],spec=project.spec||{},e=[];const add=(name,status,detail)=>e.push({name,status,detail});
+const slug=s=>String(s||"astra-app").toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,54)||"astra-app";
+const timeoutFetch=(url,opts={},ms=15000)=>fetch(url,{...opts,signal:AbortSignal.timeout(ms)});
+
+function validate(project={}){
+ const files=Array.isArray(project.files)?project.files:[],spec=project.spec||{},e=[];const add=(name,status,detail)=>e.push({name,status,detail});
  add("File count",files.length>=8&&files.length<=200?"PASS":"FAIL",files.length+" files");
- const paths=files.map(f=>f?.path).filter(Boolean);add("Safe paths",paths.every(safePath)?"PASS":"FAIL","relative paths only");add("Unique paths",new Set(paths).size===paths.length?"PASS":"FAIL","no path collisions");
+ const paths=files.map(f=>f?.path).filter(Boolean);add("Safe paths",paths.length===files.length&&paths.every(safePath)?"PASS":"FAIL","relative paths only");add("Unique paths",new Set(paths).size===paths.length?"PASS":"FAIL","no path collisions");
  const all=files.map(f=>String(f?.content||"")).join("\n");add("Credential scan",/(?:api[_-]?key|token|secret)\s*[:=]\s*["'][A-Za-z0-9_\-]{20,}/i.test(all)?"FAIL":"PASS","generic credential-pattern scan");
  const pkgs=files.filter(f=>/package\.json$/.test(f.path||""));let pkgOk=true;for(const f of pkgs)try{JSON.parse(f.content)}catch{pkgOk=false}add("package.json parse",pkgOk?"PASS":"FAIL",pkgs.length+" manifest(s)");
+ add("Root Dockerfile",files.some(f=>f.path==="Dockerfile")?"PASS":"PARTIAL","single-service container contract");
  add("Backend health",files.some(f=>/health/i.test((f.path||"")+" "+(f.content||"")))?"PASS":"FAIL","health endpoint/check");
  add("Tests",files.some(f=>/(test|spec)\.(js|ts|tsx|jsx)$|\/tests?\//i.test(f.path||""))?"PASS":"PARTIAL","automated test files");
  add("Database",files.some(f=>/(schema|migration|database|prisma|sql)/i.test(f.path||""))?"PASS":"PARTIAL","database artifact");
  add("Auth",files.some(f=>/(auth|session|login|security)/i.test((f.path||"")+" "+(f.content||"")))?"PASS":"PARTIAL","auth/security artifact");
  add("Deploy manifest",files.some(f=>f.path==="deploy.json")?"PASS":"PARTIAL","deploy.json");
  add("Acceptance",Array.isArray(spec.acceptance)&&spec.acceptance.length>=3?"PASS":"PARTIAL",(spec.acceptance?.length||0)+" criteria");
- const verdict=e.some(x=>x.status==="FAIL")?"FAIL":e.some(x=>x.status==="PARTIAL"||x.status==="UNVERIFIED")?"PARTIAL":"PASS";return{verdict,evidence:e,summary:verdict==="PASS"?"Server validation passed":"Server validation requires attention"}}
-function deployPlan(project){const v=validate(project),files=project.files||[];const dynamic=files.some(f=>/^backend\//.test(f.path||""));return{status:v.verdict==="FAIL"?"FAIL":"PARTIAL",validation:v,target:dynamic?"container":"static-or-container",healthPath:dynamic?"/health":"/",requirements:{gitWrite:true,deployBroker:true,secretsBroker:true,databaseBroker:files.some(f=>/(schema|migration|database|sql)/i.test(f.path||""))},providers:[{id:"railway",status:"UNVERIFIED"},{id:"vercel",status:"UNVERIFIED"},{id:"netlify",status:"UNVERIFIED"}],note:"No provider is PASS until a real deployment broker returns public runtime evidence."}}
-async function api(req,res,url){if(req.method==="GET"&&url.pathname==="/health")return send(res,200,{ok:true,service:"astra-builder-omega-v3",version:"3.0.0",broker:!!process.env.ASTRA_DEPLOY_BROKER_URL});
- if(req.method==="GET"&&url.pathname==="/api/self_test"){const sample={spec:{acceptance:["UI renders","API health works","Auth and data contracts exist"]},files:[{path:"frontend/index.html",content:"<main>ASTRA test</main>"},{path:"backend/package.json",content:'{"name":"demo","version":"1.0.0"}'},{path:"backend/src/server.js",content:"app.get('/health',handler)"},{path:"backend/tests/server.test.js",content:"test health endpoint"},{path:"database/schema.sql",content:"create table users(id text primary key);"},{path:"auth/session.js",content:"export function sessionGuard(){}"},{path:"deploy.json",content:'{"healthPath":"/health"}'},{path:"README.md",content:"demo"}]};const v=validate(sample);return send(res,v.verdict==="PASS"?200:500,{ok:v.verdict==="PASS",verdict:v.verdict,evidence:v.evidence})}
- if(req.method==="GET"&&url.pathname==="/api/capabilities")return send(res,200,{version:"3.0.0",serverValidation:true,deployBroker:!!process.env.ASTRA_DEPLOY_BROKER_URL,zeroCostGate:true,maxPayloadBytes:MAX});
+ const verdict=e.some(x=>x.status==="FAIL")?"FAIL":e.some(x=>x.status==="PARTIAL"||x.status==="UNVERIFIED")?"PARTIAL":"PASS";
+ return{verdict,evidence:e,summary:verdict==="PASS"?"Server validation passed":"Server validation requires attention"};
+}
+function getDeployConfig(project){
+ const f=(project.files||[]).find(x=>x.path==="deploy.json");let d={};
+ if(f){try{d=JSON.parse(f.content)}catch{}}
+ return{provider:"railway",rootDirectory:typeof d.rootDirectory==="string"?d.rootDirectory:".",dockerfilePath:typeof d.dockerfilePath==="string"?d.dockerfilePath:"Dockerfile",healthPath:typeof d.healthPath==="string"&&d.healthPath.startsWith("/")?d.healthPath:"/health",startCommand:typeof d.startCommand==="string"?d.startCommand:null};
+}
+function deployPlan(project){
+ const v=validate(project),cfg=getDeployConfig(project);
+ return{status:v.verdict==="FAIL"?"FAIL":"PARTIAL",validation:v,target:"container",healthPath:cfg.healthPath,config:cfg,requirements:{gitWrite:true,railwayToken:true,secretsTransient:true,databaseBroker:(project.files||[]).some(f=>/(schema|migration|database|sql)/i.test(f.path||""))},providers:[{id:"railway",status:"READY"}],note:"PASS is withheld until the exact Git commit deploys and the public health endpoint returns 2xx."};
+}
+
+async function gh(token,path,opts={}){
+ const r=await timeoutFetch("https://api.github.com"+path,{...opts,headers:{"accept":"application/vnd.github+json","authorization":"Bearer "+token,"x-github-api-version":"2022-11-28","content-type":"application/json",...(opts.headers||{})}},20000);
+ const raw=await r.text();let data;try{data=JSON.parse(raw)}catch{data={raw}};
+ if(!r.ok)throw new Error("GitHub "+r.status+": "+(data?.message||raw.slice(0,180)));
+ return data;
+}
+async function createGithubProject(project,deploy){
+ if(!deploy.githubToken)throw new Error("GitHub token missing");
+ const me=await gh(deploy.githubToken,"/user");
+ const base=slug(deploy.repoName||project.spec?.appName||"astra-app");
+ let name=base;
+ let repo;
+ try{repo=await gh(deploy.githubToken,"/user/repos",{method:"POST",body:JSON.stringify({name,private:deploy.privateRepo!==false,auto_init:true,description:"Generated by ASTRA BUILDER Ω"})})}
+ catch(e){if(!String(e).includes("422"))throw e;name=(base+"-"+Date.now().toString(36)).slice(0,70);repo=await gh(deploy.githubToken,"/user/repos",{method:"POST",body:JSON.stringify({name,private:deploy.privateRepo!==false,auto_init:true,description:"Generated by ASTRA BUILDER Ω"})})}
+ const full=me.login+"/"+name;
+ const ref=await gh(deploy.githubToken,"/repos/"+full+"/git/ref/heads/main");
+ const commit=await gh(deploy.githubToken,"/repos/"+full+"/git/commits/"+ref.object.sha);
+ const treeItems=(project.files||[]).map(f=>({path:f.path,mode:"100644",type:"blob",content:String(f.content||"")}));
+ const tree=await gh(deploy.githubToken,"/repos/"+full+"/git/trees",{method:"POST",body:JSON.stringify({base_tree:commit.tree.sha,tree:treeItems})});
+ const next=await gh(deploy.githubToken,"/repos/"+full+"/git/commits",{method:"POST",body:JSON.stringify({message:"feat: generated by ASTRA BUILDER Ω",tree:tree.sha,parents:[ref.object.sha]})});
+ await gh(deploy.githubToken,"/repos/"+full+"/git/refs/heads/main",{method:"PATCH",body:JSON.stringify({sha:next.sha,force:false})});
+ return{owner:me.login,name,fullName:full,commitSha:next.sha,url:repo.html_url,private:repo.private};
+}
+
+async function rail(token,query,variables={}){
+ const r=await timeoutFetch("https://backboard.railway.com/graphql/v2",{method:"POST",headers:{"authorization":"Bearer "+token,"content-type":"application/json"},body:JSON.stringify({query,variables})},20000);
+ const raw=await r.text();let data;try{data=JSON.parse(raw)}catch{throw new Error("Railway non-JSON response")};
+ if(!r.ok||data.errors?.length)throw new Error("Railway: "+(data.errors?.map(x=>x.message).join("; ")||r.status));
+ return data.data;
+}
+async function createRailwayDeployment(project,deploy,git){
+ if(!deploy.railwayToken)throw new Error("Railway token missing");
+ const projectInput={name:(project.spec?.appName||git.name).slice(0,80),description:"Generated by ASTRA BUILDER Ω",defaultEnvironmentName:"production"};
+ if(deploy.railwayWorkspaceId)projectInput.workspaceId=deploy.railwayWorkspaceId;
+ const p=await rail(deploy.railwayToken,"mutation($input:ProjectCreateInput!){projectCreate(input:$input){id name}}",{input:projectInput});
+ const projectId=p.projectCreate.id;
+ const pq=await rail(deploy.railwayToken,"query($id:String!){project(id:$id){environments{edges{node{id name}}}}}",{id:projectId});
+ const envs=pq.project.environments.edges.map(x=>x.node);const env=envs.find(x=>x.name==="production")||envs[0];if(!env)throw new Error("Railway environment missing");
+ const service=await rail(deploy.railwayToken,"mutation($input:ServiceCreateInput!){serviceCreate(input:$input){id name}}",{input:{projectId,name:git.name,source:{repo:git.fullName},branch:"main"}});
+ const serviceId=service.serviceCreate.id,cfg=getDeployConfig(project);
+ const instanceInput={rootDirectory:cfg.rootDirectory,healthcheckPath:cfg.healthPath,healthcheckTimeout:180,sleepApplication:true,restartPolicyType:"ON_FAILURE",restartPolicyMaxRetries:3};
+ if(cfg.dockerfilePath)instanceInput.dockerfilePath=cfg.dockerfilePath;if(cfg.startCommand)instanceInput.startCommand=cfg.startCommand;
+ await rail(deploy.railwayToken,"mutation($serviceId:String!,$environmentId:String!,$input:ServiceInstanceUpdateInput!){serviceInstanceUpdate(serviceId:$serviceId,environmentId:$environmentId,input:$input)}",{serviceId,environmentId:env.id,input:instanceInput});
+ const domainData=await rail(deploy.railwayToken,"mutation($input:ServiceDomainCreateInput!){serviceDomainCreate(input:$input){id domain}}",{input:{serviceId,environmentId:env.id}});
+ const deployment=await rail(deploy.railwayToken,"mutation($serviceId:String!,$environmentId:String!,$commitSha:String!){serviceInstanceDeployV2(serviceId:$serviceId,environmentId:$environmentId,commitSha:$commitSha)}",{serviceId,environmentId:env.id,commitSha:git.commitSha});
+ return{projectId,environmentId:env.id,serviceId,deploymentId:deployment.serviceInstanceDeployV2,domain:domainData.serviceDomainCreate.domain,healthPath:cfg.healthPath};
+}
+async function deploymentStatus(deploy){
+ if(!deploy.railwayToken||!deploy.deploymentId)throw new Error("Deployment credentials missing");
+ const d=await rail(deploy.railwayToken,"query($id:String!){deployment(id:$id){id status url staticUrl meta}}",{id:deploy.deploymentId});
+ const x=d.deployment;let health={status:"UNVERIFIED"};
+ if(["SUCCESS","SLEEPING"].includes(x.status)&&deploy.domain){
+  try{const r=await timeoutFetch("https://"+deploy.domain+(deploy.healthPath||"/health"),{redirect:"follow"},15000);health={status:r.ok?"PASS":"FAIL",httpStatus:r.status,url:r.url}}catch(e){health={status:"FAIL",error:String(e).slice(0,180)}}
+ }
+ const verdict=["FAILED","CRASHED","REMOVED"].includes(x.status)?"FAIL":health.status==="PASS"?"PASS":["SUCCESS","SLEEPING"].includes(x.status)?"PARTIAL":"PARTIAL";
+ return{status:verdict,deploymentStatus:x.status,health,deployment:x};
+}
+
+async function api(req,res,url){
+ if(req.method==="GET"&&url.pathname==="/health")return send(res,200,{ok:true,service:"astra-builder-omega-v3",version:"3.1.0",nativeDeployBroker:true});
+ if(req.method==="GET"&&url.pathname==="/api/self_test"){
+  const sample={spec:{acceptance:["UI renders","API health works","Auth and data contracts exist"]},files:[{path:"frontend/index.html",content:"<main>ASTRA test</main>"},{path:"backend/package.json",content:'{"name":"demo","version":"1.0.0"}'},{path:"backend/src/server.js",content:"app.get('/health',handler)"},{path:"backend/tests/server.test.js",content:"test health endpoint"},{path:"database/schema.sql",content:"create table users(id text primary key);"},{path:"auth/session.js",content:"export function sessionGuard(){}"},{path:"Dockerfile",content:"FROM node:22-alpine"},{path:"deploy.json",content:'{"provider":"railway","dockerfilePath":"Dockerfile","healthPath":"/health"}'},{path:"README.md",content:"demo"}]};
+  const v=validate(sample);return send(res,v.verdict==="PASS"?200:500,{ok:v.verdict==="PASS",verdict:v.verdict,evidence:v.evidence});
+ }
+ if(req.method==="GET"&&url.pathname==="/api/capabilities")return send(res,200,{version:"3.1.0",serverValidation:true,deployBroker:true,nativeDeployBroker:true,providers:["github","railway"],zeroCostGate:true,maxPayloadBytes:MAX});
  if(req.method==="POST"&&url.pathname==="/api/validate")return send(res,200,validate(await body(req)));
  if(req.method==="POST"&&url.pathname==="/api/deploy-plan")return send(res,200,deployPlan(await body(req)));
- if(req.method==="POST"&&url.pathname==="/api/deploy"){const project=await body(req),plan=deployPlan(project);if(plan.validation.verdict==="FAIL")return send(res,422,{status:"FAIL",plan});const broker=process.env.ASTRA_DEPLOY_BROKER_URL;if(!broker)return send(res,501,{status:"UNVERIFIED",reason:"No authorized deploy broker configured",plan});const headers={"content-type":"application/json"};if(process.env.ASTRA_BROKER_SECRET)headers.authorization="Bearer "+process.env.ASTRA_BROKER_SECRET;const r=await fetch(broker,{method:"POST",headers,body:JSON.stringify({project,plan})}),raw=await r.text();let data;try{data=JSON.parse(raw)}catch{data={raw}}return send(res,r.ok?200:502,{status:r.ok?"PARTIAL":"FAIL",brokerStatus:r.status,data,plan})}
- return false}
-const srv=http.createServer(async(req,res)=>{try{const url=new URL(req.url||"/","http://localhost");if(url.pathname.startsWith("/api/")||url.pathname==="/health"){const done=await api(req,res,url);if(done!==false)return}let p=decodeURIComponent(url.pathname);if(p==="/")p="/index.html";const rel=normalize(p).replace(/^[/\\]+/,"");if(!safePath(rel)){res.writeHead(403);return res.end("Forbidden")}const f=join(root,rel);if(!f.startsWith(root)){res.writeHead(403);return res.end("Forbidden")}const st=await stat(f);if(!st.isFile())throw new Error("not file");const data=await readFile(f);res.writeHead(200,{"content-type":mime[extname(f)]||"application/octet-stream","cache-control":"public,max-age=300"});res.end(data)}catch(e){if(e?.status)return send(res,e.status,{error:e.message});res.writeHead(404,{"content-type":"text/plain; charset=utf-8"});res.end("Not found")}});
-srv.listen(port,"0.0.0.0",()=>console.log("ASTRA BUILDER Ω V3 listening",port));
+ if(req.method==="POST"&&url.pathname==="/api/deploy"){
+  const project=await body(req),plan=deployPlan(project);if(plan.validation.verdict==="FAIL")return send(res,422,{status:"FAIL",plan});
+  const deploy=project.deploy||{};
+  try{const git=await createGithubProject(project,deploy);const rw=await createRailwayDeployment(project,deploy,git);return send(res,202,{status:"PARTIAL",reason:"Deployment started; public health not verified yet",git,railway:rw,plan})}
+  catch(e){return send(res,502,{status:"FAIL",reason:String(e.message||e),plan})}
+ }
+ if(req.method==="POST"&&url.pathname==="/api/deploy_status"){
+  const x=await body(req);try{return send(res,200,await deploymentStatus(x))}catch(e){return send(res,502,{status:"FAIL",reason:String(e.message||e)})}
+ }
+ return false;
+}
+
+const srv=http.createServer(async(req,res)=>{try{
+ const url=new URL(req.url||"/","http://localhost");if(url.pathname.startsWith("/api/")||url.pathname==="/health"){const done=await api(req,res,url);if(done!==false)return}
+ let p=decodeURIComponent(url.pathname);if(p==="/")p="/index.html";const rel=normalize(p).replace(/^[/\\]+/,"");if(!safePath(rel)){res.writeHead(403);return res.end("Forbidden")}const f=join(root,rel);if(!f.startsWith(root)){res.writeHead(403);return res.end("Forbidden")}const st=await stat(f);if(!st.isFile())throw new Error("not file");const data=await readFile(f);res.writeHead(200,{"content-type":mime[extname(f)]||"application/octet-stream","cache-control":"public,max-age=300"});res.end(data)
+}catch(e){if(e?.status)return send(res,e.status,{error:e.message});res.writeHead(404,{"content-type":"text/plain; charset=utf-8"});res.end("Not found")}});
+srv.listen(port,"0.0.0.0",()=>console.log("ASTRA BUILDER Ω V3.1 listening",port));
