@@ -6,22 +6,22 @@ function origin(req){const proto=(req.headers["x-forwarded-proto"]||"https").spl
 function send(res,status,type,body,cache="public, max-age=300"){res.writeHead(status,{"Content-Type":type,"Cache-Control":cache,"X-Content-Type-Options":"nosniff","X-Frame-Options":"SAMEORIGIN","Referrer-Policy":"strict-origin-when-cross-origin","X-Robots-Tag":status===200?"index, follow, max-image-preview:large":"noindex, nofollow"});res.end(body)}
 function safeStatic(urlPath,prefix){const rel=urlPath.slice(prefix.length);if(!rel||rel.includes("..")||rel.includes("\\"))return null;return path.join(ROOT,prefix.slice(1,-1),rel)}
 function mime(f){if(f.endsWith(".css"))return"text/css; charset=utf-8";if(f.endsWith(".svg"))return"image/svg+xml; charset=utf-8";return"application/octet-stream"}
-function words(html){const clean=html.replace(/<script[\\s\\S]*?<\\/script>/gi," ").replace(/<style[\\s\\S]*?<\\/style>/gi," ").replace(/<[^>]+>/g," ").replace(/&[a-z0-9#]+;/gi," ");return clean.trim().split(/\\s+/).filter(Boolean).length}
+function words(html){const clean=html.replace(new RegExp("<script[\\s\\S]*?</script>","gi")," ").replace(new RegExp("<style[\\s\\S]*?</style>","gi")," ").replace(/<[^>]+>/g," ").replace(/&[a-z0-9#]+;/gi," ");return clean.trim().split(/\s+/).filter(Boolean).length}
 function seoHealth(){
  const homePath=path.join(ROOT,"index.html"),cssPath=path.join(ROOT,"assets","site.css");
- const missingPages=[],missingImages=[],shortPages=[],missingBetLinks=[],schemaFailures=[],imageFailures=[];
+ const missingPages=[],missingImages=[],shortPages=[],missingBetLinks=[],schemaFailures=[],imageFailures=[]; const nofollow=new RegExp('href="https://betgpt[.]live/"[^>]*nofollow','i');
  for(const a of articles){
   const pf=path.join(ROOT,a.file),im=path.join(ROOT,"media",a.slug+".svg");
   if(!fs.existsSync(pf)){missingPages.push(a.slug);continue}
   const h=fs.readFileSync(pf,"utf8"),wc=words(h);
   if(wc<1500)shortPages.push({slug:a.slug,words:wc});
-  if(!h.includes('href="https://betgpt.live/"')||/href="https:\\/\\/betgpt\\.live\\/"[^>]*nofollow/i.test(h))missingBetLinks.push(a.slug);
+  if(!h.includes('href="https://betgpt.live/"')||nofollow.test(h))missingBetLinks.push(a.slug);
   if(!h.includes('"@type":"Article"')||!h.includes('"@type":"FAQPage"')||!h.includes('rel="canonical"'))schemaFailures.push(a.slug);
   if(!fs.existsSync(im))missingImages.push(a.slug);else{const s=fs.readFileSync(im,"utf8");if(!s.includes('width="1600"')||!s.includes('height="900"'))imageFailures.push(a.slug)}
  }
  const missingTrust=trust.filter(x=>!fs.existsSync(path.join(ROOT,x.slug+".html"))).map(x=>x.slug);
  const home=fs.existsSync(homePath)?fs.readFileSync(homePath,"utf8"):"";
- const homeBet=home.includes('href="https://betgpt.live/"')&&home.includes("BetGPT.live")&&!/href="https:\\/\\/betgpt\\.live\\/"[^>]*nofollow/i.test(home);
+ const homeBet=home.includes('href="https://betgpt.live/"')&&home.includes("BetGPT.live")&&!nofollow.test(home);
  const homeSeo=home.includes("max-image-preview:large")&&home.includes('rel="canonical"')&&home.includes('"@type":"WebSite"')&&home.includes('"@type":"CollectionPage"');
  const css=fs.existsSync(cssPath);
  const pass=articles.length>=10&&missingPages.length===0&&missingImages.length===0&&shortPages.length===0&&missingBetLinks.length===0&&schemaFailures.length===0&&imageFailures.length===0&&missingTrust.length===0&&homeBet&&homeSeo&&css;
