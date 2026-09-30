@@ -255,8 +255,8 @@ async function deployGenerated(){
 async function loadCapabilities(){try{const r=await fetch("/api/capabilities");state.capabilities=await r.json();addEv("Control plane","PASS","server v"+state.capabilities.version+", validation active");addEv("Deploy broker",state.capabilities.deployBroker?"PASS":"UNVERIFIED",state.capabilities.nativeDeployBroker?"GitHub + Railway native broker ready":"broker unavailable");renderFiles()}catch{addEv("Control plane","FAIL","/api/capabilities inaccessible")}}
 async function run(rescueCycle=0){
  const idea=$("#idea").value.trim();if(!idea)return;
- if(rescueCycle===0){state.workspaceId=null;state.history=[];state.conversation=[{at:new Date().toISOString(),role:"user",content:idea}];state.evidenceChain=[];state.genomes=[];state.benchmarkRuns=[];state.mission=null;beginMetaOperation("Initial generation")}
- state.runStartedAt=Date.now();setStatus("RUNNING");$("#runBtn").disabled=true;$("#errorBox").classList.add("hidden");state.files=[];state.assets=[];state.evidence=[];state.spec=null;state.bench=null;seedAgents();renderFiles();renderSovereign();
+ if(rescueCycle===0){state.workspaceId=null;state.history=[];state.conversation=[{at:new Date().toISOString(),role:"user",content:idea}];state.evidenceChain=[];state.genomes=[];state.benchmarkRuns=[];state.mission=null}
+ state.runStartedAt=Date.now();setStatus("RUNNING");$("#runBtn").disabled=true;$("#errorBox").classList.add("hidden");state.files=[];state.assets=[];state.evidence=[];state.spec=null;state.bench=null;if(rescueCycle===0)beginMetaOperation("Initial generation");seedAgents();renderFiles();renderSovereign();
  try{
   addEv("Zero-cost text gate",costStatus(state.cfg,"text"),costStatus(state.cfg,"text")==="PASS"?"OpenRouter free router forcé":"endpoint personnalisé: coût non prouvé par ASTRA");
   setPhase("SPEC");agent("Architect",effectiveModel(state.cfg,state.cfg.architect),"RUNNING");state.spec=parse(await rescueChat(state.cfg,state.cfg.architect,prompts.architect,idea+"\nKNOWN FAILURES TO AVOID:\n"+JSON.stringify(state.negativeKnowledge.hints(8))));agent("Architect",effectiveModel(state.cfg,state.cfg.architect),"PASS");
