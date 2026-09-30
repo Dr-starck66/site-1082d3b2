@@ -1,6 +1,7 @@
 import http from "node:http";
 import { readFile, stat } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
+import { createHash } from "node:crypto";
 
 const root=process.cwd(),port=Number(process.env.PORT||3000),MAX=4*1024*1024;
 const rescueEvents=[];const rescueLog=(type,detail)=>{rescueEvents.push({at:new Date().toISOString(),type,detail:String(detail).slice(0,500)});if(rescueEvents.length>50)rescueEvents.shift();console.error("[ASTRA RESCUE Ω]",type,detail)};
@@ -12,6 +13,8 @@ async function body(req){let n=0,ch=[];for await(const c of req){n+=c.length;if(
 const safePath=p=>typeof p==="string"&&p.length>0&&!p.startsWith("/")&&!p.includes("..")&&!p.includes("\\");
 const slug=s=>String(s||"astra-app").toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,54)||"astra-app";
 const timeoutFetch=(url,opts={},ms=15000)=>fetch(url,{...opts,signal:AbortSignal.timeout(ms)});
+function canonical(v){if(Array.isArray(v))return v.map(canonical);if(v&&typeof v==="object"){const o={};for(const k of Object.keys(v).sort())o[k]=canonical(v[k]);return o}return v}
+function serverSeal(payload,previousHash="GENESIS"){const at=new Date().toISOString(),body={at,previousHash,payload:canonical(payload)},hash=createHash("sha256").update(JSON.stringify(body)).digest("hex");return{at,previousHash,hash,algorithm:"SHA-256",issuer:"ASTRA_CONTROL_PLANE"}}
 
 function validate(project={}){
  const files=Array.isArray(project.files)?project.files:[],spec=project.spec||{},e=[];const add=(name,status,detail)=>e.push({name,status,detail});
@@ -104,7 +107,7 @@ async function importGithubProject(input){
  const tree=await gh(token,"/repos/"+full+"/git/trees/"+encodeURIComponent(ref)+"?recursive=1");
  const allowed=/\.(?:js|jsx|ts|tsx|mjs|cjs|json|html|css|scss|md|txt|yml|yaml|toml|sql|prisma|graphql|gql|env|example|sh|ps1|dockerfile)$/i;
  const names=new Set(["Dockerfile","Makefile",".gitignore",".dockerignore","Procfile"]);
- const blobs=(tree.tree||[]).filter(x=>x.type==="blob"&&safePath(x.path)&&(allowed.test(x.path)||names.has(x.path.split("/").pop()))&&(x.size||0)<=300000).slice(0,140);
+ const blobs=(tree.tree||[]).filter(x=>x.type==="blob"&&safePath(x.path)&&!/(^|\/)\.env$/i.test(x.path)&&(allowed.test(x.path)||names.has(x.path.split("/").pop()))&&(x.size||0)<=300000).slice(0,140);
  let total=0,files=[];
  for(const item of blobs){if(total>3000000)break;const b=await gh(token,"/repos/"+full+"/git/blobs/"+item.sha);if(b.encoding!=="base64")continue;const content=Buffer.from(String(b.content||"").replace(/\n/g,""),"base64").toString("utf8");total+=Buffer.byteLength(content);if(total>3000000)break;files.push({path:item.path,content})}
  if(!files.length)throw new Error("No supported text files found");
@@ -112,14 +115,14 @@ async function importGithubProject(input){
 }
 
 async function api(req,res,url){
- if(req.method==="GET"&&url.pathname==="/health")return send(res,200,{ok:true,service:"astra-builder-omega-v3",version:"3.3.0",nativeDeployBroker:true,rescue:"ARMED"});
+ if(req.method==="GET"&&url.pathname==="/health")return send(res,200,{ok:true,service:"astra-builder-omega-v3",version:"4.0.0",nativeDeployBroker:true,rescue:"ARMED"});
  if(req.method==="GET"&&url.pathname==="/api/self_test"){
   const sample={spec:{acceptance:["UI renders","API health works","Auth and data contracts exist"]},files:[{path:"frontend/index.html",content:"<main>ASTRA test</main>"},{path:"backend/package.json",content:'{"name":"demo","version":"1.0.0"}'},{path:"backend/src/server.js",content:"app.get('/health',handler)"},{path:"backend/tests/server.test.js",content:"test health endpoint"},{path:"database/schema.sql",content:"create table users(id text primary key);"},{path:"auth/session.js",content:"export function sessionGuard(){}"},{path:"Dockerfile",content:"FROM node:22-alpine"},{path:"deploy.json",content:'{"provider":"railway","dockerfilePath":"Dockerfile","healthPath":"/health"}'},{path:"README.md",content:"demo"}]};
   const v=validate(sample);const rescueOk=typeof fatal==="function"&&Array.isArray(rescueEvents);return send(res,v.verdict==="PASS"&&rescueOk?200:500,{ok:v.verdict==="PASS"&&rescueOk,verdict:v.verdict,rescue:rescueOk?"ARMED":"FAIL",evidence:v.evidence});
  }
  if(req.method==="GET"&&url.pathname==="/api/capabilities")return send(res,200,{version:"3.2.0",serverValidation:true,deployBroker:true,nativeDeployBroker:true,rescue:true,rescuePolicy:{operationAttempts:3,pipelineRestarts:2,serverRestart:"ON_FAILURE"},providers:["github","railway"],zeroCostGate:true,maxPayloadBytes:MAX});
  if(req.method==="GET"&&url.pathname==="/api/rescue_status")return send(res,200,{status:"ARMED",events:rescueEvents.slice(-20),restartPolicy:"Railway ON_FAILURE",circuitBreaker:true});
- if(req.method==="POST"&&url.pathname==="/api/import_github"){const x=await body(req);try{return send(res,200,await importGithubProject(x))}catch(e){return send(res,502,{status:"FAIL",reason:String(e.message||e)})}}
+ if(req.method==="POST"&&url.pathname==="/api/import_github"){const x=await body(req);try{return send(res,200,await importGithubProject(x))}catch(e){return send(res,502,{status:"FAIL",reason:String(e.message||e)})}}\n if(req.method==="POST"&&url.pathname==="/api/seal"){const x=await body(req);return send(res,200,{status:"PASS",seal:serverSeal(x.payload,x.previousHash||"GENESIS")})}
  if(req.method==="POST"&&url.pathname==="/api/validate")return send(res,200,validate(await body(req)));
  if(req.method==="POST"&&url.pathname==="/api/deploy-plan")return send(res,200,deployPlan(await body(req)));
  if(req.method==="POST"&&url.pathname==="/api/deploy"){
@@ -138,4 +141,4 @@ const srv=http.createServer(async(req,res)=>{try{
  const url=new URL(req.url||"/","http://localhost");if(url.pathname.startsWith("/api/")||url.pathname==="/health"){const done=await api(req,res,url);if(done!==false)return}
  let p=decodeURIComponent(url.pathname);if(p==="/")p="/index.html";const rel=normalize(p).replace(/^[/\\]+/,"");if(!safePath(rel)){res.writeHead(403);return res.end("Forbidden")}const f=join(root,rel);if(!f.startsWith(root)){res.writeHead(403);return res.end("Forbidden")}const st=await stat(f);if(!st.isFile())throw new Error("not file");const data=await readFile(f);res.writeHead(200,{"content-type":mime[extname(f)]||"application/octet-stream","cache-control":"public,max-age=300"});res.end(data)
 }catch(e){if(e?.status)return send(res,e.status,{error:e.message});res.writeHead(404,{"content-type":"text/plain; charset=utf-8"});res.end("Not found")}});
-srv.listen(port,"0.0.0.0",()=>console.log("ASTRA BUILDER Ω V3.3 + RESCUE + WORKSPACE listening",port));
+srv.listen(port,"0.0.0.0",()=>console.log("ASTRA BUILDER Ω V4 SOVEREIGN FABRIC listening",port));
