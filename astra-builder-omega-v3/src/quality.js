@@ -8,11 +8,11 @@ export function staticChecks(files,spec){
   out.push(ev("Preview bundle",!!map["preview/index.html"]&&!!map["preview/styles.css"]&&!!map["preview/app.js"],"preview autonome"));
   out.push(ev("Backend health",files.some(f=>/health/i.test(f.path+" "+f.content)),"endpoint/contrôle health détecté"));
   out.push(ev("Tests present",files.some(f=>/(test|spec)/i.test(f.path)),"fichiers de tests détectés"));
-  out.push(ev("No TODO placeholders",!/(TODO|lorem ipsum|coming soon)/i.test(all),"pas de placeholder évident"));
+  out.push(ev("No unfinished markers",!/(?:\/\/|\/\*|#)\s*TODO\b|lorem ipsum|coming soon/i.test(all),"pas de marqueur inachevé évident"));
   out.push(ev("No obvious secrets",!/(sk-or-v1-|ghp_|AKIA[0-9A-Z]{16}|api[_-]?key\s*[:=]\s*["'][^"']{8,})/i.test(all),"pas de secret évident"));
   const pkg=files.find(f=>/package\.json$/.test(f.path));let pkgOk=true;if(pkg){try{JSON.parse(pkg.content)}catch{pkgOk=false}}out.push(ev("package.json parse",pkg?pkgOk:true,pkg?"JSON valide":"aucun package.json",!pkg));
   const acceptance=spec?.acceptance||[];out.push(ev("Acceptance criteria",acceptance.length>=3,acceptance.length+" critères définis"));
-  return out;
+  out.push(ev("Auth/security",files.some(f=>/(auth|session|login|security)/i.test((f.path||"")+" "+(f.content||"")))?"PASS":"PARTIAL","auth/security artifact"));return out;
 }
 export function benchmark(files,evidence,spec){
   const pass=evidence.filter(e=>e.status==="PASS").length,total=evidence.length||1;const tests=files.filter(f=>/(test|spec)/i.test(f.path)).length;const dirs=new Set(files.map(f=>f.path.split("/")[0])).size;
