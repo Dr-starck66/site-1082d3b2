@@ -10,6 +10,11 @@ export function costStatus(cfg,kind="text"){
 }
 export async function chat(cfg,model,system,user){
   const base=normalizeBase(cfg.baseUrl);if(!base)throw new Error("Endpoint texte manquant");
+  if(cfg.zeroCost&&base.includes("openrouter.ai")&&!cfg.apiKey){
+    const res=await fetch("/api/free_text",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system,user,requestedModel:model})});
+    const raw=await res.text();if(!res.ok)throw new Error("ZeroGPU text "+res.status+": "+raw.slice(0,240));
+    const data=JSON.parse(raw);if(!data?.text)throw new Error("ZeroGPU text response invalid");return String(data.text);
+  }
   if(cfg.zeroCost&&!base.includes("openrouter.ai")&&!cfg.attestedFree)throw new Error("ZERO-COST GATE: endpoint cloud personnalisé non attesté gratuit");
   const headers={"Content-Type":"application/json"};if(cfg.apiKey)headers.Authorization="Bearer "+cfg.apiKey;
   const res=await fetch(base+"/chat/completions",{method:"POST",headers,body:JSON.stringify({model:effectiveModel(cfg,model),temperature:.15,messages:[{role:"system",content:system},{role:"user",content:user}]})});
