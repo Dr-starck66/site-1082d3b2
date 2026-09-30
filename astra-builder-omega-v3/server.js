@@ -15,6 +15,34 @@ async function body(req){let n=0,ch=[];for await(const c of req){n+=c.length;if(
 const safePath=p=>typeof p==="string"&&p.length>0&&!p.startsWith("/")&&!p.includes("..")&&!p.includes("\\");
 const slug=s=>String(s||"astra-app").toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,54)||"astra-app";
 const timeoutFetch=(url,opts={},ms=15000)=>fetch(url,{...opts,signal:AbortSignal.timeout(ms)});
+const localModelBase=kind=>String(kind==="critic"?process.env.ASTRA_LOCAL_DEEPSEEK_BASE:process.env.ASTRA_LOCAL_QWEN_BASE||"").replace(/\/+$/,"");
+async function localModelHealth(kind){
+ const base=localModelBase(kind);if(!base)return{status:"UNVERIFIED",kind,reason:"private model base not configured"};
+ const root=base.replace(/\/v1$/,"");
+ try{const r=await timeoutFetch(root+"/health",{},30000),raw=await r.text();return{status:r.ok?"PASS":"PARTIAL",kind,httpStatus:r.status,body:raw.slice(0,180),baseConfigured:true}}catch(e){return{status:"PARTIAL",kind,reason:String(e?.message||e),baseConfigured:true}}
+}
+function localKind(requestedModel="",system=""){
+ const s=(String(requestedModel)+" "+String(system)).toLowerCase();
+ return/(deepseek|adversary|critic|verify|skeptic)/.test(s)?"critic":"builder";
+}
+async function localText(system,user,requestedModel,maxTokens=1536){
+ const kind=localKind(requestedModel,system),base=localModelBase(kind);if(!base)throw new Error("local "+kind+" model endpoint not configured");
+ const model=kind==="critic"?"deepseek-critic-local":"qwen-coder-local";
+ const r=await timeoutFetch(base+"/chat/completions",{method:"POST",headers:{"content-type":"application/json","authorization":"Bearer astra-private"},body:JSON.stringify({model,temperature:kind==="critic"?.2:.12,max_tokens:Math.max(32,Math.min(1536,Number(maxTokens)||1536)),messages:[{role:"system",content:String(system||"")},{role:"user",content:String(user||"")} ]})},180000);
+ const raw=await r.text();if(!r.ok)throw new Error("local "+kind+" inference "+r.status+": "+raw.slice(0,280));
+ let data;try{data=JSON.parse(raw)}catch{throw new Error("local "+kind+" inference non-JSON")}
+ let text=String(data?.choices?.[0]?.message?.content||"");
+ if(kind==="critic")text=text.replace(/<think>[\s\S]*?<\/think>/gi,"").trim();
+ if(!text)throw new Error("local "+kind+" inference empty");
+ return{text,provider:"ASTRA private llama.cpp",model,kind,route:"railway-private"};
+}
+async function routedLocalText(system,user,requestedModel,maxTokens=1536){
+ try{return{status:"PASS",...(await localText(system,user,requestedModel,maxTokens)),fallback:false}}
+ catch(localError){
+  const fb=await zeroGpuText(system,user,maxTokens);
+  return{status:"PARTIAL",...fb,fallback:true,localError:String(localError?.message||localError).slice(0,260)};
+ }
+}
 function canonical(v){if(Array.isArray(v))return v.map(canonical);if(v&&typeof v==="object"){const o={};for(const k of Object.keys(v).sort())o[k]=canonical(v[k]);return o}return v}
 function serverSeal(payload,previousHash="GENESIS"){const at=new Date().toISOString(),body={at,previousHash,payload:canonical(payload)},hash=createHash("sha256").update(JSON.stringify(body)).digest("hex");return{at,previousHash,hash,algorithm:"SHA-256",issuer:"ASTRA_CONTROL_PLANE"}}
 const ZERO_GPU_TEXT_HOST="https://steliotel-qwen3-8-27b-chat.hf.space";
@@ -153,10 +181,13 @@ async function api(req,res,url){
   const sample={spec:{acceptance:["UI renders","API health works","Auth and data contracts exist"]},files:[{path:"frontend/index.html",content:"<main>ASTRA test</main>"},{path:"backend/package.json",content:'{"name":"demo","version":"1.0.0"}'},{path:"backend/src/server.js",content:"app.get('/health',handler)"},{path:"backend/tests/server.test.js",content:"test health endpoint"},{path:"database/schema.sql",content:"create table users(id text primary key);"},{path:"auth/session.js",content:"export function sessionGuard(){}"},{path:"Dockerfile",content:"FROM node:22-alpine"},{path:"deploy.json",content:'{"provider":"railway","dockerfilePath":"Dockerfile","healthPath":"/health"}'},{path:"README.md",content:"demo"}]};
   const v=validate(sample),rescueOk=typeof fatal==="function"&&Array.isArray(rescueEvents),sealTest=serverSeal({selfTest:true},"GENESIS"),sealOk=/^[a-f0-9]{64}$/.test(sealTest.hash),pop=seedPopulation(4,1).map((x,i)=>({...x,fitness:10-i})),ranked=rankPopulation(pop),evoDecision=evolutionDecision(null,ranked[0]),evolutionOk=pop.length===4&&ranked[0]?.fitness===10&&evoDecision.action==="CONTINUE",metaPolicy=normalizePolicy({...defaultMetaPolicy(),trustThreshold:1,population:99,rescueAttempts:99,adversaryPasses:99}),mutants=mutatePolicies(defaultMetaPolicy(),4),metaRewardPass=rewardOutcome({quality:95,trustScore:90,tests:5,status:"PASS",fail:0,partial:0,latencyMs:1000,deployPass:true}),metaRewardFail=rewardOutcome({quality:30,trustScore:20,tests:0,status:"FAIL",fail:2,partial:3,latencyMs:20000,deployPass:false}),metaOk=metaPolicy.trustThreshold>=76&&metaPolicy.population<=5&&metaPolicy.rescueAttempts<=4&&metaPolicy.adversaryPasses<=2&&mutants.length===4&&metaRewardPass>metaRewardFail;return send(res,v.verdict==="PASS"&&rescueOk&&sealOk&&evolutionOk&&metaOk?200:500,{ok:v.verdict==="PASS"&&rescueOk&&sealOk&&evolutionOk&&metaOk,verdict:v.verdict,rescue:rescueOk?"ARMED":"FAIL",sovereignSeal:sealOk?"PASS":"FAIL",evolutionEngine:evolutionOk?"PASS":"FAIL",metaEvolution:metaOk?"PASS":"FAIL",metaSafetyRails:{trustThreshold:metaPolicy.trustThreshold,population:metaPolicy.population,rescueAttempts:metaPolicy.rescueAttempts,adversaryPasses:metaPolicy.adversaryPasses},sealHead:sealTest.hash,evidence:v.evidence});
  }
- if(req.method==="GET"&&url.pathname==="/api/capabilities")return send(res,200,{version:"6.0.0",serverValidation:true,deployBroker:true,nativeDeployBroker:true,rescue:true,sovereignCore:true,evidenceSeal:"SHA-256",missionGraph:"AION",duality:"DUALITY-X",agentShield:true,negativeKnowledge:true,experimentGenome:true,benchmark:"BENCHMARK-X10",adaptiveRouter:"JEV-X",evolutionEngine:"EVOLUTION-Ω",metaEvolution:"META-EVOLUTION-Ω",metaEvolution:"META-EVOLUTION-Ω",immutableMetaRails:true,rescuePolicy:{operationAttempts:"meta-policy 2-4",pipelineRestarts:2,serverRestart:"ON_FAILURE"},providers:["github","railway","openrouter-free","huggingface-zerogpu"],zeroCostGate:true,maxPayloadBytes:MAX});
+ if(req.method==="GET"&&url.pathname==="/api/capabilities")return send(res,200,{version:"6.0.0",serverValidation:true,deployBroker:true,nativeDeployBroker:true,rescue:true,sovereignCore:true,evidenceSeal:"SHA-256",missionGraph:"AION",duality:"DUALITY-X",agentShield:true,negativeKnowledge:true,experimentGenome:true,benchmark:"BENCHMARK-X10",adaptiveRouter:"JEV-X",evolutionEngine:"EVOLUTION-Ω",metaEvolution:"META-EVOLUTION-Ω",metaEvolution:"META-EVOLUTION-Ω",immutableMetaRails:true,rescuePolicy:{operationAttempts:"meta-policy 2-4",pipelineRestarts:2,serverRestart:"ON_FAILURE"},providers:["github","railway","astra-local-qwen","astra-local-deepseek","huggingface-zerogpu","openrouter-free"],zeroCostGate:true,maxPayloadBytes:MAX});
  if(req.method==="GET"&&url.pathname==="/api/rescue_status")return send(res,200,{status:"ARMED",events:rescueEvents.slice(-20),restartPolicy:"Railway ON_FAILURE",circuitBreaker:true});
  if(req.method==="POST"&&url.pathname==="/api/import_github"){const x=await body(req);try{return send(res,200,await importGithubProject(x))}catch(e){return send(res,502,{status:"FAIL",reason:String(e.message||e)})}}
  if(req.method==="POST"&&url.pathname==="/api/seal"){const x=await body(req);return send(res,200,{status:"PASS",seal:serverSeal(x.payload,x.previousHash||"GENESIS")})}
+ if(req.method==="GET"&&url.pathname==="/api/local_model_status"){const [builder,critic]=await Promise.all([localModelHealth("builder"),localModelHealth("critic")]);return send(res,200,{status:builder.status==="PASS"&&critic.status==="PASS"?"PASS":builder.status==="PASS"?"PARTIAL":"UNVERIFIED",builder,critic})}
+ if(req.method==="POST"&&url.pathname==="/api/local_text"){const x=await body(req);try{const out=await routedLocalText(x.system,x.user,x.requestedModel,x.maxTokens);return send(res,200,out)}catch(e){return send(res,503,{status:"FAIL",reason:String(e.message||e)})}}
+ if(req.method==="POST"&&url.pathname==="/api/inference_self_test"){try{const builder=await localText("Return exactly ASTRA_QWEN_OK.","Return exactly ASTRA_QWEN_OK.",64);let critic;try{critic=await localText("Return exactly ASTRA_DEEPSEEK_OK.","Return exactly ASTRA_DEEPSEEK_OK.","deepseek-critic-local",64)}catch(e){critic={error:String(e?.message||e)}};const bOk=/ASTRA_QWEN_OK/i.test(builder.text||""),cOk=/ASTRA_DEEPSEEK_OK/i.test(critic.text||"");return send(res,bOk&&cOk?200:206,{status:bOk&&cOk?"PASS":"PARTIAL",builder:{ok:bOk,model:builder.model,text:String(builder.text||"").slice(0,120)},critic:{ok:cOk,model:critic.model||"deepseek-critic-local",text:String(critic.text||"").slice(0,120),error:critic.error||null}})}catch(e){return send(res,503,{status:"FAIL",reason:String(e.message||e)})}}
  if(req.method==="POST"&&url.pathname==="/api/free_text"){const x=await body(req);try{return send(res,200,{status:"PASS",...(await zeroGpuText(x.system,x.user))})}catch(e){return send(res,503,{status:"PARTIAL",reason:String(e.message||e),provider:"Hugging Face ZeroGPU",model:"Qwen/Qwen3.8-27B"})}}
  if(req.method==="POST"&&url.pathname==="/api/free_image"){const x=await body(req);try{return send(res,200,{status:"PASS",...(await zeroGpuImage(x.prompt))})}catch(e){return send(res,503,{status:"PARTIAL",reason:String(e.message||e),provider:"Hugging Face ZeroGPU",model:"Qwen/Qwen-Image-2.1"})}}
  if(req.method==="POST"&&url.pathname==="/api/validate")return send(res,200,validate(await body(req)));
