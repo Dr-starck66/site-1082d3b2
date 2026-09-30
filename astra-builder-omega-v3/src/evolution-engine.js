@@ -13,7 +13,7 @@ const STRATEGIES=[
 ];
 
 export function seedPopulation(size=4,generation=1){
- return Array.from({length:Math.max(2,Math.min(6,size))},(_,i)=>({...STRATEGIES[(i+generation-1)%STRATEGIES.length],generation,index:i}));
+ return Array.from({length:Math.max(2,Math.min(6,size))},(_,i)=>{const strategy=STRATEGIES[(i+generation-1)%STRATEGIES.length];return{...strategy,strategy,generation,index:i}});
 }
 
 export function candidateFitness({files=[],evidence=[],trust=null,latencyMs=0,status="UNVERIFIED"}={}){
@@ -32,15 +32,16 @@ export function breedDirectives(elites=[],generation=2,size=4){
  if(!elites.length)return seedPopulation(size,generation);
  const out=[];
  for(let i=0;i<size;i++){
-  const a=elites[i%elites.length],b=elites[(i+1)%elites.length];
+  const a=elites[i%elites.length],b=elites[(i+1)%elites.length],sa=a.strategy||{label:a.label||a.id},sb=b.strategy||{label:b.label||b.id};
   const mutation=STRATEGIES[(generation+i+1)%STRATEGIES.length];
   out.push({
    id:"g"+generation+"-"+i,
-   label:"G"+generation+" · "+a.strategy.label+" × "+b.strategy.label+" + "+mutation.label,
+   label:"G"+generation+" · "+sa.label+" × "+sb.label+" + "+mutation.label,
    generation,index:i,
-   directive:"CROSSOVER: retain the strongest verified traits of "+a.strategy.label+" and "+b.strategy.label+". MUTATION: "+mutation.directive,
+   directive:"CROSSOVER: retain the strongest verified traits of "+sa.label+" and "+sb.label+". MUTATION: "+mutation.directive,
    parents:[a.id,b.id],
-   mutation:mutation.id
+   mutation:mutation.id,
+   strategy:mutation
   });
  }
  return out;
