@@ -1,5 +1,5 @@
 export function normalizeBase(url){return (url||"").trim().replace(/\/+$/,"")}
-export function effectiveModel(cfg,target){const base=normalizeBase(cfg.baseUrl);if(cfg.zeroCost&&base.includes("openrouter.ai"))return"openrouter/free";return target}
+export function effectiveModel(cfg,target){const base=normalizeBase(cfg.baseUrl);if(cfg.zeroCost&&base.includes("openrouter.ai"))return String(target||"").endsWith(":free")?target:"openrouter/free";return target}
 export function costStatus(cfg,kind="text"){
   const base=normalizeBase(kind==="image"?cfg.imageBaseUrl:cfg.baseUrl);
   if(!cfg.zeroCost)return"UNVERIFIED";
