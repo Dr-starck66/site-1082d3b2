@@ -104,8 +104,26 @@ async function auditRepairVerify(context){
 }
 async function improveCurrent(){
  const request=$("#improveInput").value.trim();if(!request||!state.files.length)return;$("#improveDialog").close();setStatus("RUNNING");setPhase("IMPROVE");rescue.checkpoint("before-improve");state.conversation.push({at:new Date().toISOString(),role:"user",content:request});
- try{state.spec=parse(await rescueChat(state.cfg,state.cfg.architect,prompts.evolveSpec,"REQUEST:\n"+request+"\nCURRENT SPEC:\n"+JSON.stringify(state.spec)));renderSpec();const out=parse(await rescueChat(state.cfg,state.cfg.frontend,prompts.improve,"REQUEST:\n"+request+"\nSPEC:\n"+JSON.stringify(state.spec)+"\nFILES:\n"+JSON.stringify(state.files)+"\nEVIDENCE:\n"+JSON.stringify(state.evidence)));const patch=safeFiles(out);if(!patch.length)throw new Error("Improve Ω returned no file changes");state.files=mergeFiles(state.files,patch);state.conversation.push({at:new Date().toISOString(),role:"assistant",content:out.summary||"Patch applied"});addEv("Improve with Ω","PASS",patch.length+" file(s) changed · "+(out.summary||""));renderFiles();renderPreview();await auditRepairVerify("Improve request: "+request);await persistWorkspace("Improve Ω: "+request.slice(0,100));rescue.checkpoint("improve-complete")}
- catch(e){const d=classifyError(e);addEv("Improve with Ω","FAIL",d.kind+" · "+String(e?.message||e));setStatus("FAIL")}
+ const started=Date.now(),baseFiles=state.files.map(x=>({...x})),baseSpec=structuredClone(state.spec),baseEvidence=state.evidence.map(x=>({...x})),baseMetric=metricSnapshot({files:baseFiles,evidence:baseEvidence,status:state.status});
+ try{
+  state.spec=parse(await rescueChat(state.cfg,state.cfg.architect,prompts.evolveSpec,"REQUEST:\n"+request+"\nCURRENT SPEC:\n"+JSON.stringify(state.spec)));state.mission=compileMission(state.spec,request);renderSpec();renderSovereign();
+  const common="REQUEST:\n"+request+"\nSPEC:\n"+JSON.stringify(state.spec)+"\nFILES:\n"+JSON.stringify(baseFiles)+"\nEVIDENCE:\n"+JSON.stringify(baseEvidence)+"\nKNOWN FAILURES TO AVOID:\n"+JSON.stringify(state.negativeKnowledge.hints(8));
+  const [rawA,rawB]=await Promise.all([
+   rescueChat(state.cfg,state.cfg.frontend,prompts.improve,common+"\nVARIANT:A conservative minimal-diff"),
+   rescueChat(state.cfg,state.cfg.frontend,prompts.improve,common+"\nVARIANT:B alternative architecture-aware improvement")
+  ]);
+  const outA=parse(rawA),outB=parse(rawB),patchA=shield(safeFiles(outA),"LoopForge A"),patchB=shield(safeFiles(outB),"LoopForge B");
+  if(!patchA.length&&!patchB.length)throw new Error("LoopForge returned no file changes");
+  const candA=mergeFiles(baseFiles,patchA),candB=mergeFiles(baseFiles,patchB),evA=staticChecks(candA,state.spec),evB=staticChecks(candB,state.spec),scoreA=scoreVariant(candA,evA),scoreB=scoreVariant(candB,evB),useB=scoreB>scoreA;
+  state.files=useB?candB:candA;const chosen=useB?outB:outA,chosenScore=useB?scoreB:scoreA;
+  addEv("LoopForge","PASS","variant "+(useB?"B":"A")+" selected · "+scoreA+" vs "+scoreB+" · score "+chosenScore);state.conversation.push({at:new Date().toISOString(),role:"assistant",content:chosen.summary||"Evolutionary patch selected"});
+  renderFiles();renderPreview();const ver=await auditRepairVerify("Improve request: "+request);
+  const afterMetric=metricSnapshot({files:state.files,evidence:state.evidence,startedAt:started,status:state.status}),cmp=compareBench(baseMetric,afterMetric);state.benchmarkRuns.push({label:"Improve Ω",at:new Date().toISOString(),metrics:afterMetric,comparison:cmp});
+  addEv("BENCHMARK-X10",cmp.verdict==="REGRESSION"?"PARTIAL":"PASS",cmp.verdict+" · Δ "+cmp.delta+" · base "+cmp.baseScore+" → "+cmp.nextScore);
+  if(cmp.verdict==="REGRESSION"&&ver?.verdict!=="PASS"){state.files=baseFiles;state.spec=baseSpec;state.mission=compileMission(baseSpec,"rollback");addEv("LoopForge rollback","PASS","regression rejected; previous genome restored");renderFiles();renderSpec();renderPreview();renderSovereign();await sealSovereign("rollback")}
+  else{captureGenome("Improve Ω: "+request.slice(0,70),state.genomes.at(-1)?.label||null);await sealSovereign("improvement-accepted")}
+  await persistWorkspace("Improve Ω: "+request.slice(0,100));rescue.checkpoint("improve-complete")
+ }catch(e){rememberFailure(e,"improveCurrent");const d=classifyError(e);addEv("Improve with Ω","FAIL",d.kind+" · "+String(e?.message||e));setStatus("FAIL");state.files=baseFiles;state.spec=baseSpec;renderFiles();renderSpec();renderPreview()}
 }
 async function importGithub(){
  const repo=$("#importRepo").value.trim(),ref=$("#importRef").value.trim()||"main";if(!repo)return;if(!state.cfg.githubToken){$("#workspaceDialog").close();$("#settingsDialog").showModal();addEv("GitHub import","UNVERIFIED","GitHub token required in Cloud models");return}
