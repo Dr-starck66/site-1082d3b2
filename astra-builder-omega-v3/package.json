@@ -1,1 +1,1 @@
-{"name":"astra-builder-omega-v4","version":"4.0.0","private":true,"type":"module","scripts":{"start":"node server.js"},"engines":{"node":">=20"}}
+{"name":"astra-builder-omega-v5","version":"5.0.0","private":true,"type":"module","scripts":{"start":"node server.js"},"engines":{"node":">=20"}}
