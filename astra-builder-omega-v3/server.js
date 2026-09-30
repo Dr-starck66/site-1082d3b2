@@ -3,6 +3,9 @@ import { readFile, stat } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 
 const root=process.cwd(),port=Number(process.env.PORT||3000),MAX=4*1024*1024;
+const rescueEvents=[];const rescueLog=(type,detail)=>{rescueEvents.push({at:new Date().toISOString(),type,detail:String(detail).slice(0,500)});if(rescueEvents.length>50)rescueEvents.shift();console.error("[ASTRA RESCUE Ω]",type,detail)};
+let shuttingDown=false;const fatal=(type,err)=>{if(shuttingDown)return;shuttingDown=true;rescueLog(type,err?.stack||err);setTimeout(()=>process.exit(1),75).unref()};
+process.on("uncaughtException",e=>fatal("uncaughtException",e));process.on("unhandledRejection",e=>fatal("unhandledRejection",e));
 const mime={".html":"text/html; charset=utf-8",".css":"text/css; charset=utf-8",".js":"text/javascript; charset=utf-8",".json":"application/json; charset=utf-8",".png":"image/png",".jpg":"image/jpeg",".jpeg":"image/jpeg",".webp":"image/webp",".svg":"image/svg+xml"};
 const send=(res,code,obj)=>{res.writeHead(code,{"content-type":"application/json; charset=utf-8","cache-control":"no-store"});res.end(JSON.stringify(obj))};
 async function body(req){let n=0,ch=[];for await(const c of req){n+=c.length;if(n>MAX)throw Object.assign(new Error("payload too large"),{status:413});ch.push(c)}return ch.length?JSON.parse(Buffer.concat(ch).toString("utf8")):{}}
@@ -95,12 +98,13 @@ async function deploymentStatus(deploy){
 }
 
 async function api(req,res,url){
- if(req.method==="GET"&&url.pathname==="/health")return send(res,200,{ok:true,service:"astra-builder-omega-v3",version:"3.1.0",nativeDeployBroker:true});
+ if(req.method==="GET"&&url.pathname==="/health")return send(res,200,{ok:true,service:"astra-builder-omega-v3",version:"3.2.0",nativeDeployBroker:true,rescue:"ARMED"});
  if(req.method==="GET"&&url.pathname==="/api/self_test"){
   const sample={spec:{acceptance:["UI renders","API health works","Auth and data contracts exist"]},files:[{path:"frontend/index.html",content:"<main>ASTRA test</main>"},{path:"backend/package.json",content:'{"name":"demo","version":"1.0.0"}'},{path:"backend/src/server.js",content:"app.get('/health',handler)"},{path:"backend/tests/server.test.js",content:"test health endpoint"},{path:"database/schema.sql",content:"create table users(id text primary key);"},{path:"auth/session.js",content:"export function sessionGuard(){}"},{path:"Dockerfile",content:"FROM node:22-alpine"},{path:"deploy.json",content:'{"provider":"railway","dockerfilePath":"Dockerfile","healthPath":"/health"}'},{path:"README.md",content:"demo"}]};
-  const v=validate(sample);return send(res,v.verdict==="PASS"?200:500,{ok:v.verdict==="PASS",verdict:v.verdict,evidence:v.evidence});
+  const v=validate(sample);const rescueOk=typeof fatal==="function"&&Array.isArray(rescueEvents);return send(res,v.verdict==="PASS"&&rescueOk?200:500,{ok:v.verdict==="PASS"&&rescueOk,verdict:v.verdict,rescue:rescueOk?"ARMED":"FAIL",evidence:v.evidence});
  }
- if(req.method==="GET"&&url.pathname==="/api/capabilities")return send(res,200,{version:"3.1.0",serverValidation:true,deployBroker:true,nativeDeployBroker:true,providers:["github","railway"],zeroCostGate:true,maxPayloadBytes:MAX});
+ if(req.method==="GET"&&url.pathname==="/api/capabilities")return send(res,200,{version:"3.2.0",serverValidation:true,deployBroker:true,nativeDeployBroker:true,rescue:true,rescuePolicy:{operationAttempts:3,pipelineRestarts:2,serverRestart:"ON_FAILURE"},providers:["github","railway"],zeroCostGate:true,maxPayloadBytes:MAX});
+ if(req.method==="GET"&&url.pathname==="/api/rescue_status")return send(res,200,{status:"ARMED",events:rescueEvents.slice(-20),restartPolicy:"Railway ON_FAILURE",circuitBreaker:true});
  if(req.method==="POST"&&url.pathname==="/api/validate")return send(res,200,validate(await body(req)));
  if(req.method==="POST"&&url.pathname==="/api/deploy-plan")return send(res,200,deployPlan(await body(req)));
  if(req.method==="POST"&&url.pathname==="/api/deploy"){
@@ -119,4 +123,4 @@ const srv=http.createServer(async(req,res)=>{try{
  const url=new URL(req.url||"/","http://localhost");if(url.pathname.startsWith("/api/")||url.pathname==="/health"){const done=await api(req,res,url);if(done!==false)return}
  let p=decodeURIComponent(url.pathname);if(p==="/")p="/index.html";const rel=normalize(p).replace(/^[/\\]+/,"");if(!safePath(rel)){res.writeHead(403);return res.end("Forbidden")}const f=join(root,rel);if(!f.startsWith(root)){res.writeHead(403);return res.end("Forbidden")}const st=await stat(f);if(!st.isFile())throw new Error("not file");const data=await readFile(f);res.writeHead(200,{"content-type":mime[extname(f)]||"application/octet-stream","cache-control":"public,max-age=300"});res.end(data)
 }catch(e){if(e?.status)return send(res,e.status,{error:e.message});res.writeHead(404,{"content-type":"text/plain; charset=utf-8"});res.end("Not found")}});
-srv.listen(port,"0.0.0.0",()=>console.log("ASTRA BUILDER Ω V3.1 listening",port));
+srv.listen(port,"0.0.0.0",()=>console.log("ASTRA BUILDER Ω V3.2 + RESCUE listening",port));
