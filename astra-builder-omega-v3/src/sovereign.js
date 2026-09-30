@@ -36,7 +36,7 @@ export function scoreVariant(files,evidence=[]){let score=0;score+=Math.min(35,(
 export function dualityVerdict(audit,verify){const high=(audit?.issues||[]).filter(x=>x.severity==="high").length;if(verify?.verdict==="FAIL"||high)return{status:"FAIL",reason:"arbiter rejected due to blocking contradiction"};if(verify?.verdict!=="PASS"||audit?.risk==="HIGH"||audit?.risk==="MEDIUM")return{status:"PARTIAL",reason:"proposer/skeptic disagreement remains"};return{status:"PASS",reason:"skeptic and independent arbiter converge"}}
 
 export function trustGate(evidence=[],threshold=78){
- const critical=/Server validation|Verify²|DUALITY-X|AgentShield|Public health gate|Root Dockerfile|Backend health|EVIDENLOCK/i;
+ const critical=/Server validation|Cloud Sandbox|Sandbox ·|Verify²|DUALITY-X|AgentShield|Public health gate|Root Dockerfile|Backend health|EVIDENLOCK/i;
  let score=100,criticalFail=false;
  for(const e of evidence){if(e.status==="FAIL"){score-=critical.test(e.name)?35:18;if(critical.test(e.name))criticalFail=true}else if(e.status==="PARTIAL")score-=critical.test(e.name)?10:4;else if(e.status==="UNVERIFIED")score-=critical.test(e.name)?12:5}
  score=Math.max(0,Math.min(100,score));const status=criticalFail||score<threshold-15?"FAIL":score<threshold?"PARTIAL":"PASS";
