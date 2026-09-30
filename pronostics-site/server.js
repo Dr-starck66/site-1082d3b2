@@ -1,60 +1,18 @@
-const http = require("http");
-const fs = require("fs");
-const path = require("path");
-
-const PORT = Number(process.env.PORT || 3000);
-const ROOT = path.join(__dirname, "public");
-
-const routes = {
-  "/": "index.html",
-  "/methode-pronostics-sportifs": "methode.html",
-  "/value-bet": "value-bet.html",
-  "/gestion-bankroll": "bankroll.html"
-};
-
-function origin(req) {
-  const proto = (req.headers["x-forwarded-proto"] || "https").split(",")[0].trim();
-  return proto + "://" + req.headers.host;
-}
-
-function send(res, status, type, body) {
-  res.writeHead(status, {
-    "Content-Type": type,
-    "Cache-Control": status === 200 ? "public, max-age=300" : "no-store",
-    "X-Content-Type-Options": "nosniff",
-    "X-Frame-Options": "SAMEORIGIN",
-    "Referrer-Policy": "strict-origin-when-cross-origin"
-  });
-  res.end(body);
-}
-
-http.createServer((req, res) => {
-  const url = new URL(req.url, "http://localhost");
-  if (url.pathname === "/health") return send(res, 200, "application/json; charset=utf-8", JSON.stringify({status:"ok"}));
-
-  if (url.pathname === "/robots.txt") {
-    const base = origin(req);
-    return send(res, 200, "text/plain; charset=utf-8", "User-agent: *\nAllow: /\nSitemap: " + base + "/sitemap.xml\n");
-  }
-
-  if (url.pathname === "/sitemap.xml") {
-    const base = origin(req);
-    const pages = ["/","/methode-pronostics-sportifs","/value-bet","/gestion-bankroll"];
-    const xml = '<?xml version="1.0" encoding="UTF-8"?>' +
-      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
-      pages.map(p => '<url><loc>' + base + p + '</loc><changefreq>weekly</changefreq><priority>' + (p === "/" ? "1.0" : "0.8") + '</priority></url>').join("") +
-      '</urlset>';
-    return send(res, 200, "application/xml; charset=utf-8", xml);
-  }
-
-  const file = routes[url.pathname];
-  if (!file) return send(res, 404, "text/html; charset=utf-8", "<h1>404</h1><p>Page introuvable.</p>");
-
-  try {
-    let html = fs.readFileSync(path.join(ROOT, file), "utf8");
-    html = html.replaceAll("__ORIGIN__", origin(req));
-    return send(res, 200, "text/html; charset=utf-8", html);
-  } catch (e) {
-    return send(res, 500, "text/plain; charset=utf-8", "Erreur interne");
-  }
-}).listen(PORT, "0.0.0.0", () => console.log("pronostics site listening on " + PORT));
+const http=require("http"),fs=require("fs"),path=require("path");const PORT=Number(process.env.PORT||3000);const ROOT=path.join(__dirname,"public");
+const routes={"/":"index.html","/methode-pronostics-sportifs":"methode.html","/value-bet":"value-bet.html","/gestion-bankroll":"bankroll.html","/pronostics-football":"pronostics-football.html","/pronostics-ligue-1":"pronostics-ligue-1.html","/pronostics-ligue-des-champions":"pronostics-ligue-des-champions.html","/pronostics-tennis":"pronostics-tennis.html","/pronostics-basketball":"pronostics-basketball.html","/xg-pronostics-football":"xg-pronostics-football.html","/probabilites-cotes-paris-sportifs":"probabilites-cotes.html","/over-under-buts":"over-under-buts.html","/btts-les-deux-equipes-marquent":"btts.html","/erreurs-pronostics-sportifs":"erreurs-pronostics.html","/forme-equipe-pronostic":"forme-equipe.html","/compositions-absences-pronostics":"compositions-absences.html","/a-propos":"a-propos.html","/methodologie":"methodologie.html","/politique-editoriale":"politique-editoriale.html","/sources-donnees":"sources-donnees.html","/changelog":"changelog.html"};
+const articles=[{"slug":"methode-pronostics-sportifs","title":"Méthode de pronostic sportif : construire une analyse fiable en 12 étapes","file":"methode.html"},{"slug":"value-bet","title":"Value bet : comprendre la valeur d’une cote sans confondre prix et pronostic","file":"value-bet.html"},{"slug":"gestion-bankroll","title":"Gestion de bankroll : protéger son capital et survivre à la variance","file":"bankroll.html"},{"slug":"pronostics-football","title":"Pronostics football : analyser un match sans se laisser piéger par le classement","file":"pronostics-football.html"},{"slug":"pronostics-ligue-1","title":"Pronostics Ligue 1 : méthode d’analyse pour le championnat français","file":"pronostics-ligue-1.html"},{"slug":"pronostics-ligue-des-champions","title":"Pronostics Ligue des champions : analyser les grands matchs européens","file":"pronostics-ligue-des-champions.html"},{"slug":"pronostics-tennis","title":"Pronostics tennis : surface, service, retour, fatigue et matchup","file":"pronostics-tennis.html"},{"slug":"pronostics-basketball","title":"Pronostics basketball : rythme, efficacité, absences et handicaps","file":"pronostics-basketball.html"},{"slug":"xg-pronostics-football","title":"xG et pronostics football : utiliser les expected goals sans les surinterpréter","file":"xg-pronostics-football.html"},{"slug":"probabilites-cotes-paris-sportifs","title":"Probabilités et cotes : convertir un prix de pari sportif sans se tromper","file":"probabilites-cotes.html"},{"slug":"over-under-buts","title":"Over/Under buts : analyser les totaux sans regarder seulement les moyennes","file":"over-under-buts.html"},{"slug":"btts-les-deux-equipes-marquent","title":"BTTS – les deux équipes marquent : méthode d’analyse du marché","file":"btts.html"},{"slug":"erreurs-pronostics-sportifs","title":"12 erreurs de pronostics sportifs qui détruisent une bonne analyse","file":"erreurs-pronostics.html"},{"slug":"forme-equipe-pronostic","title":"Forme d’une équipe : comment la mesurer sans tomber dans le piège des 5 derniers matchs","file":"forme-equipe.html"},{"slug":"compositions-absences-pronostics","title":"Compositions et absences : combien un joueur change vraiment un pronostic ?","file":"compositions-absences.html"}];
+const trust=[{"slug":"a-propos","title":"À propos de Pronostics Lab"},{"slug":"methodologie","title":"Méthodologie éditoriale et cadre d’analyse"},{"slug":"politique-editoriale","title":"Politique éditoriale"},{"slug":"sources-donnees","title":"Sources et données"},{"slug":"changelog","title":"Changelog éditorial"}];
+function origin(req){const proto=(req.headers["x-forwarded-proto"]||"https").split(",")[0].trim();return proto+"://"+req.headers.host}
+function send(res,status,type,body,cache="public, max-age=300"){res.writeHead(status,{"Content-Type":type,"Cache-Control":cache,"X-Content-Type-Options":"nosniff","X-Frame-Options":"SAMEORIGIN","Referrer-Policy":"strict-origin-when-cross-origin","X-Robots-Tag":"index, follow, max-image-preview:large"});res.end(body)}
+function safeStatic(urlPath,prefix){const rel=urlPath.slice(prefix.length);if(!rel||rel.includes("..")||rel.includes("\\"))return null;return path.join(ROOT,prefix.slice(1,-1),rel)}
+function mime(f){if(f.endsWith(".css"))return"text/css; charset=utf-8";if(f.endsWith(".svg"))return"image/svg+xml; charset=utf-8";return"application/octet-stream"}
+http.createServer((req,res)=>{const u=new URL(req.url,"http://localhost");const p=u.pathname;
+if(p.length>1&&p.endsWith("/")&&routes[p.slice(0,-1)]){res.writeHead(301,{Location:p.slice(0,-1)});return res.end()}
+if(p==="/health")return send(res,200,"application/json; charset=utf-8",JSON.stringify({status:"ok",pages:Object.keys(routes).length}),"no-store");
+if(p.startsWith("/assets/")||p.startsWith("/media/")){const pref=p.startsWith("/assets/")?"/assets/":"/media/";const f=safeStatic(p,pref);if(!f||!fs.existsSync(f))return send(res,404,"text/plain; charset=utf-8","Not found","no-store");return send(res,200,mime(f),fs.readFileSync(f),"public, max-age=31536000, immutable")}
+if(p==="/robots.txt"){const b=origin(req);return send(res,200,"text/plain; charset=utf-8","User-agent: *\nAllow: /\nSitemap: "+b+"/sitemap.xml\n","public, max-age=3600")}
+if(p==="/sitemap.xml"){const b=origin(req),items=[{slug:"",title:"Accueil"},...articles,...trust];const xml='<?xml version="1.0" encoding="UTF-8"?>'+'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">'+items.map((x,i)=>'<url><loc>'+b+'/'+x.slug+'</loc><lastmod>2026-09-30</lastmod><changefreq>'+(i===0?'daily':'monthly')+'</changefreq><priority>'+(i===0?'1.0':x.file?'0.8':'0.6')+'</priority>'+(x.file?'<image:image><image:loc>'+b+'/media/'+x.slug+'.svg</image:loc><image:title>'+x.title.replace(/[<&]/g,"")+'</image:title></image:image>':'')+'</url>').join("")+'</urlset>';return send(res,200,"application/xml; charset=utf-8",xml,"public, max-age=3600")}
+if(p==="/feed.xml"){const b=origin(req),rss='<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>Pronostics Lab</title><link>'+b+'/</link><description>Guides sur les pronostics sportifs</description><language>fr-FR</language>'+articles.map(a=>'<item><title>'+a.title.replace(/[<&]/g,"")+'</title><link>'+b+'/'+a.slug+'</link><guid>'+b+'/'+a.slug+'</guid><pubDate>Wed, 30 Sep 2026 12:00:00 GMT</pubDate></item>').join("")+'</channel></rss>';return send(res,200,"application/rss+xml; charset=utf-8",rss,"public, max-age=3600")}
+const f=routes[p];if(!f)return send(res,404,"text/html; charset=utf-8","<!doctype html><html lang=fr><head><meta name=robots content=noindex><title>404</title><link rel=stylesheet href=/assets/site.css></head><body><nav class="nav"><div class="wrap navrow"><a class="brand" href="/">PRONOSTICS LAB</a><div class="navlinks"><a href="/pronostics-football">Football</a><a href="/methode-pronostics-sportifs">Méthode</a><a href="/value-bet">Value</a><a href="/gestion-bankroll">Bankroll</a><a class="bet" href="https://betgpt.live/" rel="noopener">Voir BetGPT.live ↗</a></div></div></nav><main class=section><div class='wrap article'><h1>Page introuvable</h1><p><a href='/'>Retour à l’accueil</a></p></div></main><footer class="footer"><div class="wrap footer-grid"><div><strong>Pronostics Lab</strong><p>Guides méthodologiques sur l’analyse sportive, les probabilités et la gestion du risque. Aucun contenu ne garantit un gain.</p></div><div><a href="/a-propos">À propos</a><a href="/methodologie">Méthodologie</a><a href="/politique-editoriale">Politique éditoriale</a><a href="/sources-donnees">Sources</a><a href="/changelog">Changelog</a><a href="/feed.xml">RSS</a></div></div></footer></body></html>","no-store");
+try{let h=fs.readFileSync(path.join(ROOT,f),"utf8").replaceAll("__ORIGIN__",origin(req));return send(res,200,"text/html; charset=utf-8",h)}catch(e){return send(res,500,"text/plain; charset=utf-8","Erreur interne","no-store")}
+}).listen(PORT,"0.0.0.0",()=>console.log("pronostics seo site listening on "+PORT));
