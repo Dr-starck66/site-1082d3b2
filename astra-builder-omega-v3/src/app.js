@@ -144,6 +144,52 @@ async function improveCurrent(){
   await persistWorkspace("Improve Ω: "+request.slice(0,100));rescue.checkpoint("improve-complete")
  }catch(e){rememberFailure(e,"improveCurrent");const d=classifyError(e);addEv("Improve with Ω","FAIL",d.kind+" · "+String(e?.message||e));setStatus("FAIL");state.files=baseFiles;state.spec=baseSpec;renderFiles();renderSpec();renderPreview()}
 }
+async function evaluateEvolutionCandidate(candidate,baseFiles,generation){
+ const started=Date.now();
+ const prompt="EVOLUTION ENGINE Ω\nGENERATION:"+generation+"\nLINEAGE:"+candidate.label+"\nDIRECTIVE:"+candidate.directive+"\nSPEC:\n"+JSON.stringify(state.spec)+"\nFILES:\n"+JSON.stringify(baseFiles)+"\nKNOWN FAILURES:\n"+JSON.stringify(state.negativeKnowledge.hints(10))+"\nReturn only changed files.";
+ const raw=await rescueChat(state.cfg,state.cfg.frontend,prompts.improve,prompt),out=parse(raw),patch=safeFiles(out);
+ if(!patch.length)throw new Error("evolution candidate returned no patch");
+ const g=guardFiles(patch);if(g.verdict==="ISOLATE")throw new Error("AgentShield isolated candidate "+candidate.label+": "+g.isolated.join(", "));
+ const files=mergeFiles(baseFiles,g.allowed),localEvidence=staticChecks(files,state.spec);
+ const srv=await control("/api/validate",{spec:state.spec,files});
+ const evidence=[...localEvidence,...(srv.data?.evidence||[]).map(e=>({...e,name:"Server · "+e.name}))];
+ const trust=trustGate(evidence),status=evidence.some(x=>x.status==="FAIL")?"FAIL":trust.status;
+ const record=makeEvolutionRecord({candidate:{...candidate,spec:state.spec},files,evidence,cfg:state.cfg,status,latencyMs:Date.now()-started,trust});
+ if(g.verdict==="ESCALATE"){record.evidence=[...record.evidence,{name:"AgentShield escalation",status:"PARTIAL",detail:(g.escalated||[]).join(", ")}];record.status=record.status==="FAIL"?"FAIL":"PARTIAL";record.fitness-=6}
+ return record;
+}
+async function runEvolution(){
+ if(!state.files.length||state.evolution.running)return;
+ const originalFiles=state.files.map(x=>({...x})),originalSpec=structuredClone(state.spec),originalEvidence=state.evidence.map(x=>({...x})),originalStatus=state.status;
+ state.evolution={running:true,generation:0,decision:"STARTING",candidates:[],history:[]};renderEvolution();renderFiles();setStatus("RUNNING");rescue.checkpoint("before-evolution");
+ let baseFiles=originalFiles,previousBest=null,winner=null;
+ try{
+  for(let generation=1;generation<=DEFAULT_EVOLUTION.generations;generation++){
+   state.evolution.generation=generation;state.evolution.decision="EVOLVING";renderEvolution();
+   const population=generation===1?seedPopulation(DEFAULT_EVOLUTION.population,generation):breedDirectives(rankPopulation(state.evolution.candidates).slice(0,DEFAULT_EVOLUTION.elite),generation,DEFAULT_EVOLUTION.population);
+   const settled=await Promise.allSettled(population.map(x=>evaluateEvolutionCandidate(x,baseFiles,generation)));
+   const candidates=[];
+   settled.forEach((r,i)=>{if(r.status==="fulfilled")candidates.push(r.value);else{rememberFailure(r.reason,"evolution:g"+generation+":"+population[i].label);candidates.push({...population[i],fitness:-999,status:"FAIL",latencyMs:0,metrics:{quality:0},files:baseFiles,evidence:[{name:"Candidate failure",status:"FAIL",detail:String(r.reason?.message||r.reason)}]})}});
+   const ranked=rankPopulation(candidates);state.evolution.candidates=ranked;winner=ranked[0]||null;
+   const decision=evolutionDecision(previousBest,winner,DEFAULT_EVOLUTION.earlyStopDelta);state.evolution.decision=decision.action;state.evolution.history.push({generation,best:winner?{id:winner.id,label:winner.label,fitness:winner.fitness,status:winner.status}:null,decision,candidates:ranked.map(x=>({id:x.id,label:x.label,fitness:x.fitness,status:x.status}))});renderEvolution();
+   if(!winner||winner.status==="FAIL"){state.evolution.decision="ROLLBACK";throw new Error("no viable evolutionary candidate in generation "+generation)}
+   if(decision.action==="ROLLBACK")break;
+   baseFiles=winner.files;previousBest=winner;
+   if(decision.action==="EARLY_STOP")break;
+  }
+  if(!winner||winner.fitness<0)throw new Error("Evolution Engine produced no acceptable winner");
+  state.files=winner.files;state.selected=state.files[0]?.path||null;addEv("Evolution Engine Ω","PASS","winner "+winner.label+" · fitness "+winner.fitness);renderFiles();renderPreview();
+  const ver=await auditRepairVerify("Evolution Engine winner: "+winner.label);
+  const finalWinner={files:state.files,evidence:state.evidence,status:state.status},cmp=compareWinner({files:originalFiles,evidence:originalEvidence,status:originalStatus},finalWinner);
+  addEv("Evolution fitness delta",cmp.verdict==="REGRESSION"?"FAIL":"PASS",cmp.verdict+" · Δ "+cmp.delta+" · "+cmp.baseScore+" → "+cmp.nextScore);
+  if(cmp.verdict==="REGRESSION"||ver?.verdict==="FAIL"){
+   state.files=originalFiles;state.spec=originalSpec;state.evidence=originalEvidence;state.status=originalStatus;state.mission=compileMission(originalSpec,"evolution rollback");state.evolution.decision="ROLLBACK";addEv("Evolution rollback","PASS","previous verified genome restored");renderFiles();renderSpec();renderPreview();renderEvidence();renderSovereign();await sealSovereign("evolution-rollback");
+  }else{
+   state.evolution.decision="ACCEPTED";state.genomes.push(winner.genome);state.genomes=state.genomes.slice(-30);captureBenchmark("Evolution Ω",state.runStartedAt);await sealSovereign("evolution-winner");await persistWorkspace("Evolution Ω winner: "+winner.label);
+  }
+ }catch(e){rememberFailure(e,"runEvolution");state.files=originalFiles;state.spec=originalSpec;state.evidence=originalEvidence;state.status=originalStatus;state.evolution.decision="FAIL/ROLLBACK";addEv("Evolution Engine Ω","FAIL",String(e?.message||e));renderFiles();renderSpec();renderPreview();renderEvidence();renderSovereign()}
+ finally{state.evolution.running=false;renderEvolution();renderFiles();rescue.checkpoint("after-evolution")}
+}
 async function importGithub(){
  const repo=$("#importRepo").value.trim(),ref=$("#importRef").value.trim()||"main";if(!repo)return;if(!state.cfg.githubToken){$("#workspaceDialog").close();$("#settingsDialog").showModal();addEv("GitHub import","UNVERIFIED","GitHub token required in Cloud models");return}
  setStatus("RUNNING");setPhase("IMPORT");state.evidence=[];state.files=[];state.assets=[];state.workspaceId=null;state.history=[];state.conversation=[{at:new Date().toISOString(),role:"user",content:"Import "+repo+" @ "+ref}];state.evidenceChain=[];state.genomes=[];state.benchmarkRuns=[];renderEvidence();
@@ -213,5 +259,5 @@ async function run(rescueCycle=0){
 function exportZip(){const entries=state.files.map(f=>({name:f.path,bytes:f.content}));for(const a of state.assets)entries.push({name:a.name,bytes:a.bytes});entries.push({name:"astra-evidence.json",bytes:JSON.stringify({generatedAt:new Date().toISOString(),status:state.status,spec:state.spec,evidence:state.evidence,benchmark:state.bench},null,2)});entries.push({name:"astra-sovereign-proof-pack.json",bytes:JSON.stringify(proofPack(state),null,2)});const blob=makeZip(entries),u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=(state.spec?.appName||"astra-project").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")+".zip";a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
 function saveCfg(){const ids=["baseUrl","apiKey","architect","frontend","backend","ops","adversary","verifier","imageBaseUrl","imageKey","imageModel","githubToken","railwayToken","railwayWorkspaceId","repoName"];for(const id of ids)state.cfg[id]=$("#"+id).value.trim();state.cfg.zeroCost=$("#zeroCost").checked;state.cfg.attestedFree=$("#attestedFree").checked;state.cfg.privateRepo=$("#privateRepo").checked;sessionStorage.setItem("astra-v3-cfg",JSON.stringify({...state.cfg,apiKey:"",imageKey:"",githubToken:"",railwayToken:""}));routeSummary();renderFiles()}
 function loadCfg(){try{state.cfg={...state.cfg,...JSON.parse(sessionStorage.getItem("astra-v3-cfg")||"{}")}}catch{}for(const id of ["baseUrl","architect","frontend","backend","ops","adversary","verifier","imageBaseUrl","imageModel","railwayWorkspaceId","repoName"])$("#"+id).value=state.cfg[id]||"";$("#apiKey").value="";$("#imageKey").value="";$("#githubToken").value="";$("#railwayToken").value="";$("#zeroCost").checked=state.cfg.zeroCost;$("#attestedFree").checked=state.cfg.attestedFree;$("#privateRepo").checked=state.cfg.privateRepo!==false}
-$$('[data-preset]').forEach(b=>b.onclick=()=>$("#idea").value=b.dataset.preset);$("#runBtn").onclick=run;$("#exportBtn").onclick=exportZip;$("#proofPackBtn").onclick=exportProof;$("#deployPlanBtn").onclick=buildDeployPlan;$("#deployBtn").onclick=deployGenerated;$("#projectsBtn").onclick=async()=>{await renderWorkspaceList();$("#workspaceDialog").showModal()};$("#improveBtn").onclick=()=>$("#improveDialog").showModal();$("#applyImproveBtn").onclick=improveCurrent;$("#cancelImproveBtn").onclick=()=>$("#improveDialog").close();$("#closeImproveBtn").onclick=()=>$("#improveDialog").close();$("#closeWorkspaceBtn").onclick=()=>$("#workspaceDialog").close();$("#importRepoBtn").onclick=importGithub;$("#settingsBtn").onclick=()=>$("#settingsDialog").showModal();$("#settingsForm").addEventListener("submit",e=>{if(e.submitter?.value!=="cancel")saveCfg()});$("#benchmarkBtn").onclick=()=>{state.bench=benchmark(state.files,state.evidence,state.spec);renderBenchmark();document.querySelector('[data-tab="benchmark"]').click()};$("#downloadFileBtn").onclick=()=>{const f=state.files.find(x=>x.path===state.selected);if(!f)return;const u=URL.createObjectURL(new Blob([f.content],{type:"text/plain"})),a=document.createElement("a");a.href=u;a.download=f.path.split("/").pop();a.click();URL.revokeObjectURL(u)};$$('.tab').forEach(t=>t.onclick=()=>{$$('.tab').forEach(x=>x.classList.remove('active'));$$('.tabview').forEach(x=>x.classList.remove('active'));t.classList.add('active');$('#view-'+t.dataset.tab).classList.add('active')});
+$$('[data-preset]').forEach(b=>b.onclick=()=>$("#idea").value=b.dataset.preset);$("#runBtn").onclick=run;$("#exportBtn").onclick=exportZip;$("#proofPackBtn").onclick=exportProof;$("#evolveBtn").onclick=runEvolution;$("#deployPlanBtn").onclick=buildDeployPlan;$("#deployBtn").onclick=deployGenerated;$("#projectsBtn").onclick=async()=>{await renderWorkspaceList();$("#workspaceDialog").showModal()};$("#improveBtn").onclick=()=>$("#improveDialog").showModal();$("#applyImproveBtn").onclick=improveCurrent;$("#cancelImproveBtn").onclick=()=>$("#improveDialog").close();$("#closeImproveBtn").onclick=()=>$("#improveDialog").close();$("#closeWorkspaceBtn").onclick=()=>$("#workspaceDialog").close();$("#importRepoBtn").onclick=importGithub;$("#settingsBtn").onclick=()=>$("#settingsDialog").showModal();$("#settingsForm").addEventListener("submit",e=>{if(e.submitter?.value!=="cancel")saveCfg()});$("#benchmarkBtn").onclick=()=>{state.bench=benchmark(state.files,state.evidence,state.spec);renderBenchmark();document.querySelector('[data-tab="benchmark"]').click()};$("#downloadFileBtn").onclick=()=>{const f=state.files.find(x=>x.path===state.selected);if(!f)return;const u=URL.createObjectURL(new Blob([f.content],{type:"text/plain"})),a=document.createElement("a");a.href=u;a.download=f.path.split("/").pop();a.click();URL.revokeObjectURL(u)};$$('.tab').forEach(t=>t.onclick=()=>{$$('.tab').forEach(x=>x.classList.remove('active'));$$('.tabview').forEach(x=>x.classList.remove('active'));t.classList.add('active');$('#view-'+t.dataset.tab).classList.add('active')});
 loadCfg();seedAgents();ui();const recovered=rescue.restore();if(recovered)rescue.emit("RESTORE","PASS","checkpoint "+(recovered.label||"unknown")+" restored");rescue.installGlobal({restart:()=>location.reload()});renderWorkspaceList().catch(e=>addEv("Workspace","PARTIAL",String(e?.message||e)));loadCapabilities();
