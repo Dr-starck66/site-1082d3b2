@@ -28,7 +28,7 @@ function localKind(requestedModel="",system=""){
 async function localText(system,user,requestedModel,maxTokens=1536){
  const kind=localKind(requestedModel,system),base=localModelBase(kind);if(!base)throw new Error("local "+kind+" model endpoint not configured");
  const model=kind==="critic"?"gemma-critic-local":"qwen-coder-local";
- const r=await timeoutFetch(base+"/chat/completions",{method:"POST",headers:{"content-type":"application/json","authorization":"Bearer astra-private"},body:JSON.stringify({model,temperature:kind==="critic"?.2:.12,max_tokens:Math.max(32,Math.min(1536,Number(maxTokens)||1536)),chat_template_kwargs:undefined,undefined,messages:[{role:"system",content:String(system||"")},{role:"user",content:String(user||"")} ]})},180000);
+ const r=await timeoutFetch(base+"/chat/completions",{method:"POST",headers:{"content-type":"application/json","authorization":"Bearer astra-private"},body:JSON.stringify({model,temperature:kind==="critic"?.2:.12,max_tokens:Math.max(32,Math.min(1536,Number(maxTokens)||1536)),response_format:{type:"json_object"},messages:[{role:"system",content:String(system||"")},{role:"user",content:String(user||"")} ]})},180000);
  const raw=await r.text();if(!r.ok)throw new Error("local "+kind+" inference "+r.status+": "+raw.slice(0,280));
  let data;try{data=JSON.parse(raw)}catch{throw new Error("local "+kind+" inference non-JSON")}
  let text=String(data?.choices?.[0]?.message?.content||"");
