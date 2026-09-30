@@ -15,7 +15,7 @@ async function body(req){let n=0,ch=[];for await(const c of req){n+=c.length;if(
 const safePath=p=>typeof p==="string"&&p.length>0&&!p.startsWith("/")&&!p.includes("..")&&!p.includes("\\");
 const slug=s=>String(s||"astra-app").toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,54)||"astra-app";
 const timeoutFetch=(url,opts={},ms=15000)=>fetch(url,{...opts,signal:AbortSignal.timeout(ms)});
-const localModelBase=kind=>String(kind==="critic"?process.env.ASTRA_LOCAL_DEEPSEEK_BASE:process.env.ASTRA_LOCAL_QWEN_BASE||"").replace(/\/+$/,"");
+const localModelBase=kind=>String(kind==="critic"?process.env.ASTRA_LOCAL_CRITIC_BASE||process.env.ASTRA_LOCAL_DEEPSEEK_BASE:process.env.ASTRA_LOCAL_QWEN_BASE||"").replace(/\/+$/,"");
 async function localModelHealth(kind){
  const base=localModelBase(kind);if(!base)return{status:"UNVERIFIED",kind,reason:"private model base not configured"};
  const root=base.replace(/\/v1$/,"");
@@ -23,12 +23,12 @@ async function localModelHealth(kind){
 }
 function localKind(requestedModel="",system=""){
  const s=(String(requestedModel)+" "+String(system)).toLowerCase();
- return/(deepseek|adversary|critic|verify|skeptic)/.test(s)?"critic":"builder";
+ return/(gemma|deepseek|adversary|critic|verify|skeptic)/.test(s)?"critic":"builder";
 }
 async function localText(system,user,requestedModel,maxTokens=1536){
  const kind=localKind(requestedModel,system),base=localModelBase(kind);if(!base)throw new Error("local "+kind+" model endpoint not configured");
- const model=kind==="critic"?"deepseek-critic-local":"qwen-coder-local";
- const r=await timeoutFetch(base+"/chat/completions",{method:"POST",headers:{"content-type":"application/json","authorization":"Bearer astra-private"},body:JSON.stringify({model,temperature:kind==="critic"?.2:.12,max_tokens:Math.max(32,Math.min(1536,Number(maxTokens)||1536)),chat_template_kwargs:kind==="critic"?{enable_thinking:false}:undefined,reasoning_format:kind==="critic"?"deepseek":undefined,messages:[{role:"system",content:String(system||"")},{role:"user",content:String(user||"")} ]})},180000);
+ const model=kind==="critic"?"gemma-critic-local":"qwen-coder-local";
+ const r=await timeoutFetch(base+"/chat/completions",{method:"POST",headers:{"content-type":"application/json","authorization":"Bearer astra-private"},body:JSON.stringify({model,temperature:kind==="critic"?.2:.12,max_tokens:Math.max(32,Math.min(1536,Number(maxTokens)||1536)),chat_template_kwargs:undefined,undefined,messages:[{role:"system",content:String(system||"")},{role:"user",content:String(user||"")} ]})},180000);
  const raw=await r.text();if(!r.ok)throw new Error("local "+kind+" inference "+r.status+": "+raw.slice(0,280));
  let data;try{data=JSON.parse(raw)}catch{throw new Error("local "+kind+" inference non-JSON")}
  let text=String(data?.choices?.[0]?.message?.content||"");
@@ -187,7 +187,7 @@ async function api(req,res,url){
  if(req.method==="POST"&&url.pathname==="/api/seal"){const x=await body(req);return send(res,200,{status:"PASS",seal:serverSeal(x.payload,x.previousHash||"GENESIS")})}
  if(req.method==="GET"&&url.pathname==="/api/local_model_status"){const [builder,critic]=await Promise.all([localModelHealth("builder"),localModelHealth("critic")]);return send(res,200,{status:builder.status==="PASS"&&critic.status==="PASS"?"PASS":builder.status==="PASS"?"PARTIAL":"UNVERIFIED",builder,critic})}
  if(req.method==="POST"&&url.pathname==="/api/local_text"){const x=await body(req);try{const out=await routedLocalText(x.system,x.user,x.requestedModel,x.maxTokens);return send(res,200,out)}catch(e){return send(res,503,{status:"FAIL",reason:String(e.message||e)})}}
- if(req.method==="POST"&&url.pathname==="/api/inference_self_test"){try{const builder=await localText("Return exactly ASTRA_QWEN_OK.","Return exactly ASTRA_QWEN_OK.",64);let critic;try{critic=await localText("Return exactly ASTRA_DEEPSEEK_OK.","Return exactly ASTRA_DEEPSEEK_OK.","deepseek-critic-local",64)}catch(e){critic={error:String(e?.message||e)}};const bOk=/ASTRA_QWEN_OK/i.test(builder.text||""),cOk=/ASTRA_DEEPSEEK_OK/i.test(critic.text||"");return send(res,bOk&&cOk?200:206,{status:bOk&&cOk?"PASS":"PARTIAL",builder:{ok:bOk,model:builder.model,text:String(builder.text||"").slice(0,120)},critic:{ok:cOk,model:critic.model||"deepseek-critic-local",text:String(critic.text||"").slice(0,120),error:critic.error||null}})}catch(e){return send(res,503,{status:"FAIL",reason:String(e.message||e)})}}
+ if(req.method==="POST"&&url.pathname==="/api/inference_self_test"){try{const builder=await localText("Return exactly ASTRA_QWEN_OK.","Return exactly ASTRA_QWEN_OK.",64);let critic;try{critic=await localText("Return exactly ASTRA_CRITIC_OK.","Return exactly ASTRA_CRITIC_OK.","gemma-critic-local",64)}catch(e){critic={error:String(e?.message||e)}};const bOk=/ASTRA_QWEN_OK/i.test(builder.text||""),cOk=/ASTRA_CRITIC_OK/i.test(critic.text||"");return send(res,bOk&&cOk?200:206,{status:bOk&&cOk?"PASS":"PARTIAL",builder:{ok:bOk,model:builder.model,text:String(builder.text||"").slice(0,120)},critic:{ok:cOk,model:critic.model||"gemma-critic-local",text:String(critic.text||"").slice(0,120),error:critic.error||null}})}catch(e){return send(res,503,{status:"FAIL",reason:String(e.message||e)})}}
  if(req.method==="POST"&&url.pathname==="/api/free_text"){const x=await body(req);try{return send(res,200,{status:"PASS",...(await zeroGpuText(x.system,x.user))})}catch(e){return send(res,503,{status:"PARTIAL",reason:String(e.message||e),provider:"Hugging Face ZeroGPU",model:"Qwen/Qwen3.8-27B"})}}
  if(req.method==="POST"&&url.pathname==="/api/free_image"){const x=await body(req);try{return send(res,200,{status:"PASS",...(await zeroGpuImage(x.prompt))})}catch(e){return send(res,503,{status:"PARTIAL",reason:String(e.message||e),provider:"Hugging Face ZeroGPU",model:"Qwen/Qwen-Image-2.1"})}}
  if(req.method==="POST"&&url.pathname==="/api/validate")return send(res,200,validate(await body(req)));
@@ -223,6 +223,6 @@ srv.listen(port,"0.0.0.0",()=>{
 
  if(process.env.ASTRA_LOCAL_MODEL_PROBE_ON_BOOT==="1")setTimeout(async()=>{
   try{const q=await localText("Connectivity probe. Return exactly ASTRA_QWEN_OK.","ASTRA_QWEN_OK","qwen-coder-local",64);console.log("[ASTRA LOCAL MODEL PROBE] QWEN PASS",q.model,String(q.text).slice(0,100))}catch(e){console.error("[ASTRA LOCAL MODEL PROBE] QWEN FAIL",String(e?.message||e).slice(0,300))}
-  try{const d=await localText("Connectivity probe. Return exactly ASTRA_DEEPSEEK_OK.","ASTRA_DEEPSEEK_OK","deepseek-critic-local",256);console.log("[ASTRA LOCAL MODEL PROBE] DEEPSEEK PASS",d.model,String(d.text).slice(0,100))}catch(e){console.error("[ASTRA LOCAL MODEL PROBE] DEEPSEEK FAIL",String(e?.message||e).slice(0,300))}
+  try{const d=await localText("Connectivity probe. Return exactly ASTRA_CRITIC_OK.","ASTRA_CRITIC_OK","gemma-critic-local",256);console.log("[ASTRA LOCAL MODEL PROBE] CRITIC PASS",d.model,String(d.text).slice(0,100))}catch(e){console.error("[ASTRA LOCAL MODEL PROBE] CRITIC FAIL",String(e?.message||e).slice(0,300))}
  },1500);
 });
