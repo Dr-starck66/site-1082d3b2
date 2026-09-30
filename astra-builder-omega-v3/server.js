@@ -17,6 +17,18 @@ const slug=s=>String(s||"astra-app").toLowerCase().normalize("NFKD").replace(/[^
 const timeoutFetch=(url,opts={},ms=15000)=>fetch(url,{...opts,signal:AbortSignal.timeout(ms)});
 function canonical(v){if(Array.isArray(v))return v.map(canonical);if(v&&typeof v==="object"){const o={};for(const k of Object.keys(v).sort())o[k]=canonical(v[k]);return o}return v}
 function serverSeal(payload,previousHash="GENESIS"){const at=new Date().toISOString(),body={at,previousHash,payload:canonical(payload)},hash=createHash("sha256").update(JSON.stringify(body)).digest("hex");return{at,previousHash,hash,algorithm:"SHA-256",issuer:"ASTRA_CONTROL_PLANE"}}
+const ZERO_GPU_TEXT_HOST="https://steliotel-qwen3-8-27b-chat.hf.space";
+async function zeroGpuText(system,user){
+ const headers={"content-type":"application/json"};if(process.env.HF_TOKEN)headers.authorization="Bearer "+process.env.HF_TOKEN;
+ const message=("SYSTEM:\n"+String(system||"")+"\n\nUSER:\n"+String(user||"")).slice(0,120000);
+ const submit=await timeoutFetch(ZERO_GPU_TEXT_HOST+"/gradio_api/call/chat",{method:"POST",headers,body:JSON.stringify({data:[message,[],1536,0.2,false]})},30000);
+ const raw=await submit.text();if(!submit.ok)throw new Error("ZeroGPU text submit "+submit.status+": "+raw.slice(0,220));
+ let job;try{job=JSON.parse(raw)}catch{throw new Error("ZeroGPU text submit non-JSON")};if(!job?.event_id)throw new Error("ZeroGPU text event id missing");
+ const events=await timeoutFetch(ZERO_GPU_TEXT_HOST+"/gradio_api/call/chat/"+encodeURIComponent(job.event_id),{headers:process.env.HF_TOKEN?{authorization:"Bearer "+process.env.HF_TOKEN}:{}},150000);
+ const sse=await events.text();if(!events.ok)throw new Error("ZeroGPU text event "+events.status+": "+sse.slice(0,220));if(/event:\s*error/i.test(sse))throw new Error("ZeroGPU text generation failed: "+sse.slice(-400));
+ let out="";for(const line of sse.split(/\r?\n/)){if(!line.startsWith("data:"))continue;const d=line.slice(5).trim();try{const x=JSON.parse(d);if(Array.isArray(x)&&typeof x[0]==="string")out=x[0];else if(typeof x==="string")out=x}catch{}}
+ if(!out.trim())throw new Error("ZeroGPU text completion payload missing");return{text:out,provider:"Hugging Face ZeroGPU",model:"Qwen/Qwen3.8-27B",quotaMode:process.env.HF_TOKEN?"authenticated-free":"anonymous-free"};
+}
 const ZERO_GPU_IMAGE_HOST="https://baka999-qwen-image-2-1.hf.space";
 async function zeroGpuImage(prompt){
  if(!String(prompt||"").trim())throw new Error("image prompt missing");
@@ -145,6 +157,7 @@ async function api(req,res,url){
  if(req.method==="GET"&&url.pathname==="/api/rescue_status")return send(res,200,{status:"ARMED",events:rescueEvents.slice(-20),restartPolicy:"Railway ON_FAILURE",circuitBreaker:true});
  if(req.method==="POST"&&url.pathname==="/api/import_github"){const x=await body(req);try{return send(res,200,await importGithubProject(x))}catch(e){return send(res,502,{status:"FAIL",reason:String(e.message||e)})}}
  if(req.method==="POST"&&url.pathname==="/api/seal"){const x=await body(req);return send(res,200,{status:"PASS",seal:serverSeal(x.payload,x.previousHash||"GENESIS")})}
+ if(req.method==="POST"&&url.pathname==="/api/free_text"){const x=await body(req);try{return send(res,200,{status:"PASS",...(await zeroGpuText(x.system,x.user))})}catch(e){return send(res,503,{status:"PARTIAL",reason:String(e.message||e),provider:"Hugging Face ZeroGPU",model:"Qwen/Qwen3.8-27B"})}}
  if(req.method==="POST"&&url.pathname==="/api/free_image"){const x=await body(req);try{return send(res,200,{status:"PASS",...(await zeroGpuImage(x.prompt))})}catch(e){return send(res,503,{status:"PARTIAL",reason:String(e.message||e),provider:"Hugging Face ZeroGPU",model:"Qwen/Qwen-Image-2.1"})}}
  if(req.method==="POST"&&url.pathname==="/api/validate")return send(res,200,validate(await body(req)));
  if(req.method==="POST"&&url.pathname==="/api/deploy-plan")return send(res,200,deployPlan(await body(req)));
