@@ -6,6 +6,10 @@
     "node": ">=20"
   },
   "scripts": {
+    "prestart": "node generate-images.js",
     "start": "node server.js"
+  },
+  "dependencies": {
+    "sharp": "0.33.5"
   }
 }
