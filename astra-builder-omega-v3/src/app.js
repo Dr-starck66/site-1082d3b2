@@ -4,10 +4,13 @@ import{makeZip}from"./zip.js";
 import{prompts}from"./prompts.js";
 import{RescueSupervisor,classifyError,sleep}from"./rescue.js";
 import{saveWorkspace,getWorkspace,listWorkspaces,deleteWorkspace,snapshotOf}from"./workspace.js";
+import{compileMission,missionProgress,updateMission,guardFiles,NegativeKnowledge,createGenome,scoreVariant,dualityVerdict,sha256}from"./sovereign.js";
+import{metricSnapshot,compare as compareBench,matrix as benchmarkMatrix}from"./benchmark-x10.js";
+import{seal,verifyChain,proofPack}from"./evidenlock.js";
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const phases=["SPEC","IMPORT","IMPROVE","FRONTEND","BACKEND","DATABASE","AUTH","OPS","IMAGES","STATIC TEST","SERVER VALIDATE","ADVERSARY","REPAIR","VERIFY²","DEPLOY PLAN"];
 const defaults={baseUrl:"https://openrouter.ai/api/v1",apiKey:"",architect:"deepseek/deepseek-v3.2",frontend:"qwen/qwen3-coder-next",backend:"qwen/qwen3-coder-next",ops:"qwen/qwen3-coder-next",adversary:"deepseek/deepseek-v3.2",verifier:"qwen/qwen3.6-plus",imageBaseUrl:"",imageKey:"",imageModel:"black-forest-labs/FLUX.2-klein-4B",zeroCost:true,attestedFree:false,githubToken:"",railwayToken:"",railwayWorkspaceId:"",repoName:"",privateRepo:true};
-const state={cfg:{...defaults},files:[],assets:[],spec:null,evidence:[],agents:{},status:"UNVERIFIED",selected:null,bench:null,deployPlan:null,capabilities:null,deployedUrl:"",workspaceId:null,history:[],conversation:[]};
+const state={cfg:{...defaults},files:[],assets:[],spec:null,evidence:[],agents:{},status:"UNVERIFIED",selected:null,bench:null,deployPlan:null,capabilities:null,deployedUrl:"",workspaceId:null,history:[],conversation:[],mission:null,negativeKnowledge:new NegativeKnowledge(),evidenceChain:[],genomes:[],benchmarkRuns:[],runStartedAt:0};
 const RESCUE_KEY="astra-rescue-checkpoint-v1";
 function saveCheckpoint(label){
  const cp={label,savedAt:new Date().toISOString(),idea:$("#idea")?.value||"",spec:state.spec,files:state.files,evidence:state.evidence,status:state.status,phase:state.phase,bench:state.bench,deployPlan:state.deployPlan,deployedUrl:state.deployedUrl};
