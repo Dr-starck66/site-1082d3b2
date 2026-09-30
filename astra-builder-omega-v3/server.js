@@ -36,6 +36,12 @@ async function localText(system,user,requestedModel,maxTokens=1536){
  if(!text)throw new Error("local "+kind+" inference empty");
  return{text,provider:"ASTRA private llama.cpp",model,kind,route:"railway-private"};
 }
+function parseProbeJson(text){
+ const s=String(text||"").trim().replace(/^```(?:json)?/i,"").replace(/```$/,"").trim();
+ try{return JSON.parse(s)}catch{}
+ const a=s.indexOf("{"),b=s.lastIndexOf("}");if(a>=0&&b>a)return JSON.parse(s.slice(a,b+1));
+ throw new Error("structured JSON missing");
+}
 async function routedLocalText(system,user,requestedModel,maxTokens=1536){
  try{return{status:"PASS",...(await localText(system,user,requestedModel,maxTokens)),fallback:false}}
  catch(localError){
@@ -222,7 +228,7 @@ srv.listen(port,"0.0.0.0",()=>{
  },750);
 
  if(process.env.ASTRA_LOCAL_MODEL_PROBE_ON_BOOT==="1")setTimeout(async()=>{
-  try{const q=await localText("Connectivity probe. Return exactly ASTRA_QWEN_OK.","ASTRA_QWEN_OK","qwen-coder-local",64);console.log("[ASTRA LOCAL MODEL PROBE] QWEN PASS",q.model,String(q.text).slice(0,100))}catch(e){console.error("[ASTRA LOCAL MODEL PROBE] QWEN FAIL",String(e?.message||e).slice(0,300))}
-  try{const d=await localText("Connectivity probe. Return exactly ASTRA_CRITIC_OK.","ASTRA_CRITIC_OK","gemma-critic-local",256);console.log("[ASTRA LOCAL MODEL PROBE] CRITIC PASS",d.model,String(d.text).slice(0,100))}catch(e){console.error("[ASTRA LOCAL MODEL PROBE] CRITIC FAIL",String(e?.message||e).slice(0,300))}
+  try{const q=await localText("You are a JSON connectivity probe.","Return JSON only: {\"ok\":true,\"role\":\"builder\"}","qwen-coder-local",96),j=parseProbeJson(q.text);if(j.ok!==true||j.role!=="builder")throw new Error("unexpected Qwen JSON");console.log("[ASTRA LOCAL MODEL PROBE] QWEN JSON PASS",q.model,JSON.stringify(j))}catch(e){console.error("[ASTRA LOCAL MODEL PROBE] QWEN JSON FAIL",String(e?.message||e).slice(0,300))}
+  try{const d=await localText("You are a JSON connectivity probe.","Return JSON only: {\"ok\":true,\"role\":\"critic\"}","gemma-critic-local",128),j=parseProbeJson(d.text);if(j.ok!==true||j.role!=="critic")throw new Error("unexpected critic JSON: "+String(d.text).slice(0,120));console.log("[ASTRA LOCAL MODEL PROBE] CRITIC JSON PASS",d.model,JSON.stringify(j))}catch(e){console.error("[ASTRA LOCAL MODEL PROBE] CRITIC JSON FAIL",String(e?.message||e).slice(0,300))}
  },1500);
 });
