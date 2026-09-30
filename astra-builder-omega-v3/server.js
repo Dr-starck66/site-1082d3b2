@@ -255,7 +255,7 @@ srv.listen(port,"0.0.0.0",()=>{
  if(process.env.ASTRA_SANDBOX_PROBE_ON_BOOT==="1")setTimeout(async()=>{
   try{
    const r=await sandboxRun({files:[
-    {path:"package.json",content:JSON.stringify({name:"astra-sbx-probe",version:"1.0.0",scripts:{test:"node test.js",start:"node server.js"}})},
+    {path:"package.json",content:JSON.stringify({name:"astra-sbx-probe",version:"1.0.0",scripts:{build:"node -e \"process.exit(0)\"",test:"node test.js",start:"node server.js"}})},
     {path:"test.js",content:"if(2+2!==4)process.exit(1)"},
     {path:"server.js",content:"const http=require('http');http.createServer((q,s)=>{s.writeHead(q.url==='/health'?200:404);s.end('ok')}).listen(process.env.PORT,'127.0.0.1')"}
    ]});
