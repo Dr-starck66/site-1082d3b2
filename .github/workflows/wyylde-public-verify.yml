@@ -1,0 +1,55 @@
+name: Wyylde Public Verify
+on:
+  push:
+    paths:
+      - ".github/workflows/wyylde-public-verify.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify public Railway site
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://wyylde-avis-seo-clean-production.up.railway.app"
+          MAIN="https://wyyldeavisfrance.wordpress.com/"
+          echo "Checking $BASE"
+          curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL "$BASE/" -o /tmp/home.html
+          curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL "$BASE/health" -o /tmp/health.json
+          curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL "$BASE/wyylde-avis" -o /tmp/article.html
+          curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL "$BASE/robots.txt" -o /tmp/robots.txt
+          curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL "$BASE/sitemap.xml" -o /tmp/sitemap.xml
+          curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL "$BASE/media/wyylde-avis-hero.png" -o /tmp/hero.png
+
+          grep -Fq "$MAIN" /tmp/home.html
+          grep -Fq "Wyylde Avis 2026" /tmp/home.html
+          grep -Fq "$MAIN" /tmp/article.html
+          grep -Fq "Wyylde Avis 2026" /tmp/article.html
+          grep -Fq "<link rel=\"canonical\" href=\"$BASE/\"" /tmp/home.html
+          grep -Fq "<link rel=\"canonical\" href=\"$BASE/wyylde-avis\"" /tmp/article.html
+          grep -Fq '"status":"ok"' /tmp/health.json
+          grep -Fq '"articleCount":15' /tmp/health.json
+          grep -Fq '"imageCount":30' /tmp/health.json
+          grep -Fq "Sitemap: $BASE/sitemap.xml" /tmp/robots.txt
+          grep -Fq "$BASE/wyylde-avis" /tmp/sitemap.xml
+          grep -Fq "$BASE/media/wyylde-avis-hero.png" /tmp/sitemap.xml
+
+          python3 - <<'PY'
+          import struct
+          p="/tmp/hero.png"
+          with open(p,"rb") as f:
+              b=f.read(24)
+          assert b[:8] == b"\x89PNG\r\n\x1a\n", b[:8]
+          w,h=struct.unpack(">II", b[16:24])
+          assert (w,h)==(1600,900), (w,h)
+          print("PNG", w, h)
+          PY
+
+          CT="$(curl --retry 5 --retry-delay 2 --retry-all-errors -fsSI "$BASE/media/wyylde-avis-hero.png" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print tolower($2)}' | tail -1)"
+          echo "Content-Type: $CT"
+          [[ "$CT" == image/png* ]]
+
+          echo "PUBLIC_HTTP_PASS"
+          cat /tmp/health.json
