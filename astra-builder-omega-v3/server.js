@@ -4,6 +4,7 @@ import { extname, join, normalize } from "node:path";
 import { createHash } from "node:crypto";
 import { seedPopulation, rankPopulation, evolutionDecision } from "./src/evolution-engine.js";
 import { defaultMetaPolicy, normalizePolicy, mutatePolicies, rewardOutcome } from "./src/meta-evolution.js";
+import { prompts } from "./src/prompts.js";
 
 const root=process.cwd(),port=Number(process.env.PORT||3000),MAX=4*1024*1024;
 const rescueEvents=[];const rescueLog=(type,detail)=>{rescueEvents.push({at:new Date().toISOString(),type,detail:String(detail).slice(0,500)});if(rescueEvents.length>50)rescueEvents.shift();console.error("[ASTRA RESCUE Ω]",type,detail)};
@@ -70,6 +71,55 @@ async function sandboxRun(project){
  const r=await timeoutFetch(base+"/run",{method:"POST",headers:{"content-type":"application/json","authorization":"Bearer "+token},body:JSON.stringify({spec:project.spec||{},files:project.files||[]})},240000);
  const raw=await r.text();let data;try{data=JSON.parse(raw)}catch{throw new Error("sandbox non-JSON response")}
  if(!r.ok)throw new Error("sandbox "+r.status+": "+String(data?.reason||raw).slice(0,300));return data;
+}
+const goldenState={status:"IDLE",startedAt:null,finishedAt:null,phase:"IDLE",summary:null,error:null,manifest:[],evidence:[],seal:null,repairs:0};
+function parseModelJson(text){return parseProbeJson(text)}
+function filesFrom(x){return Array.isArray(x?.files)?x.files.filter(f=>safePath(f?.path)&&typeof f?.content==="string").map(f=>({path:f.path,content:f.content})):[]}
+function mergeProjectFiles(...sets){const m=new Map();for(const set of sets)for(const f of set||[])if(safePath(f?.path)&&typeof f?.content==="string")m.set(f.path,f);return[...m.values()]}
+function goldenLog(phase,detail){goldenState.phase=phase;console.log("[ASTRA GOLDEN RUN]",phase,detail||"")}
+async function goldenAgent(system,user,model="qwen-coder-local",tokens=3072){const r=await localText(system,user,model,tokens);return parseModelJson(r.text)}
+async function runGoldenRun(){
+ if(goldenState.status==="RUNNING")return goldenState;
+ Object.assign(goldenState,{status:"RUNNING",startedAt:new Date().toISOString(),finishedAt:null,phase:"START",summary:null,error:null,manifest:[],evidence:[],seal:null,repairs:0});
+ const mission="Build ASTRA Ledger, a production-style single-service SaaS issue tracker. Requirements: static responsive frontend, Node.js backend API, email/password authentication using Node crypto only, session cookies, SQL schema artifact, issue CRUD scoped to signed-in user, input validation, /health, Node built-in test runner tests, Dockerfile and deploy.json. Use NO external runtime dependencies so the sandbox can prove the whole project deterministically. Root package.json must provide build, test and start scripts. Frontend files live under public/. Backend entry is server.js. Database schema lives at database/schema.sql.";
+ let spec,files=[];
+ try{
+  goldenLog("ARCHITECT","local Qwen");
+  spec=await goldenAgent(prompts.architect,mission+"\nFor this Golden Run choose plain JavaScript + Node built-ins + static HTML/CSS/JS; no React and no npm dependencies.","qwen-coder-local",2048);
+  goldenLog("BUILD","specialist agents");
+  const specText=JSON.stringify(spec);
+  const agentCalls=[
+   goldenAgent("You are Ω Golden Frontend. JSON only {summary,files:[{path,content}]}. Create public/index.html, public/styles.css, public/app.js for the specified SaaS. No external CDN or dependencies. Real login/register/logout and issue CRUD UI calling relative /api endpoints. Accessible loading/error/empty states.",specText,"qwen-coder-local",3072),
+   goldenAgent("You are Ω Golden Backend. JSON only {summary,files:[{path,content}]}. Create root server.js and lib/repository.js. Node 22 built-ins only. Implement /health, /api/register, /api/login, /api/logout, /api/me and authenticated issue CRUD. Serve public/ statically. Bind HOST or 0.0.0.0 and process.env.PORT. Use an in-memory repository for runtime tests while keeping SQL schema as source-of-truth artifact.",specText,"qwen-coder-local",3072),
+   goldenAgent("You are Ω Golden Database. JSON only {summary,files:[{path,content}]}. Create database/schema.sql and database/README.md with users, sessions and issues tables, constraints/indexes, PostgreSQL-compatible SQL. No secrets.",specText,"qwen-coder-local",1536),
+   goldenAgent("You are Ω Golden Auth. JSON only {summary,files:[{path,content}]}. Create lib/auth.js and tests/auth.test.js using Node built-ins only. Password hashing must use crypto.scrypt or pbkdf2 with random salt and timingSafeEqual. Sessions use random bytes, HttpOnly SameSite cookies. No fake auth.",specText,"qwen-coder-local",2048),
+   goldenAgent("You are Ω Golden DevOps. JSON only {summary,files:[{path,content}]}. Create root package.json with scripts build='node scripts/build.js', test='node --test', start='node server.js'; scripts/build.js that validates required files and exits 0; tests/server.test.js with real HTTP health/auth/issue tests; Dockerfile for node:22-alpine; deploy.json with provider railway, rootDirectory '.', dockerfilePath 'Dockerfile', healthPath '/health', startCommand null; README.md and .gitignore. NO dependencies.",specText,"qwen-coder-local",3072)
+  ];
+  const outs=[];for(const p of agentCalls)outs.push(await p);
+  files=mergeProjectFiles(...outs.map(filesFrom));
+  goldenState.manifest=files.map(f=>f.path).sort();
+  goldenLog("SANDBOX-1",files.length+" files");
+  let sb=await sandboxRun({spec,files});goldenState.evidence.push({stage:"sandbox-1",status:sb.status,durationMs:sb.durationMs,evidence:sb.evidence});
+  goldenLog("ADVERSARY","Gemma critic");
+  const audit=await goldenAgent(prompts.adversary,"GOLDEN MISSION:\n"+mission+"\nSPEC:\n"+JSON.stringify(spec)+"\nFILES:\n"+JSON.stringify(files)+"\nSANDBOX:\n"+JSON.stringify(sb.evidence),"gemma-critic-local",1536);
+  goldenState.evidence.push({stage:"adversary",status:audit.risk==="HIGH"?"PARTIAL":"PASS",audit});
+  if(sb.status!=="PASS"||(audit.issues||[]).length){
+   goldenLog("REPAIR","Qwen repair");
+   const rep=await goldenAgent(prompts.repair,"GOLDEN MISSION:\n"+mission+"\nSPEC:\n"+JSON.stringify(spec)+"\nFILES:\n"+JSON.stringify(files)+"\nSANDBOX:\n"+JSON.stringify(sb.evidence)+"\nAUDIT:\n"+JSON.stringify(audit),"qwen-coder-local",3072);
+   const changed=filesFrom(rep);if(changed.length){files=mergeProjectFiles(files,changed);goldenState.repairs++;goldenState.manifest=files.map(f=>f.path).sort()}
+   goldenLog("SANDBOX-2","post-repair");
+   sb=await sandboxRun({spec,files});goldenState.evidence.push({stage:"sandbox-2",status:sb.status,durationMs:sb.durationMs,evidence:sb.evidence});
+  }
+  goldenLog("VERIFY²","Gemma independent verifier");
+  const verify=await goldenAgent(prompts.verify,"GOLDEN MISSION:\n"+mission+"\nSPEC:\n"+JSON.stringify(spec)+"\nFILES:\n"+JSON.stringify(files)+"\nEVIDENCE:\n"+JSON.stringify(goldenState.evidence),"gemma-critic-local",1536);
+  goldenState.evidence.push({stage:"verify2",status:verify.verdict||"PARTIAL",verify});
+  const finalSandbox=[...goldenState.evidence].reverse().find(x=>x.stage.startsWith("sandbox-"));
+  const final=finalSandbox?.status==="PASS"&&verify.verdict==="PASS"?"PASS":finalSandbox?.status==="FAIL"||verify.verdict==="FAIL"?"FAIL":"PARTIAL";
+  const seal=serverSeal({mission,spec,manifest:goldenState.manifest,evidence:goldenState.evidence,repairs:goldenState.repairs,final},"GENESIS");
+  Object.assign(goldenState,{status:final,phase:"DONE",finishedAt:new Date().toISOString(),seal,summary:{appName:spec?.appName||"ASTRA Ledger",files:files.length,repairs:goldenState.repairs,finalSandbox:finalSandbox?.status||"UNVERIFIED",verify:verify.verdict||"UNVERIFIED",seal:seal.hash}});
+  console.log("[ASTRA GOLDEN RUN] RESULT",JSON.stringify(goldenState.summary));
+  return goldenState;
+ }catch(e){goldenState.status="FAIL";goldenState.phase="ERROR";goldenState.finishedAt=new Date().toISOString();goldenState.error=String(e?.stack||e);console.error("[ASTRA GOLDEN RUN] FAIL",goldenState.error.slice(0,1200));return goldenState}
 }
 function canonical(v){if(Array.isArray(v))return v.map(canonical);if(v&&typeof v==="object"){const o={};for(const k of Object.keys(v).sort())o[k]=canonical(v[k]);return o}return v}
 function serverSeal(payload,previousHash="GENESIS"){const at=new Date().toISOString(),body={at,previousHash,payload:canonical(payload)},hash=createHash("sha256").update(JSON.stringify(body)).digest("hex");return{at,previousHash,hash,algorithm:"SHA-256",issuer:"ASTRA_CONTROL_PLANE"}}
@@ -219,6 +269,8 @@ async function api(req,res,url){
  if(req.method==="POST"&&url.pathname==="/api/inference_self_test"){try{const builder=await localText("Return exactly ASTRA_QWEN_OK.","Return exactly ASTRA_QWEN_OK.",64);let critic;try{critic=await localText("Return exactly ASTRA_CRITIC_OK.","Return exactly ASTRA_CRITIC_OK.","gemma-critic-local",64)}catch(e){critic={error:String(e?.message||e)}};const bOk=/ASTRA_QWEN_OK/i.test(builder.text||""),cOk=/ASTRA_CRITIC_OK/i.test(critic.text||"");return send(res,bOk&&cOk?200:206,{status:bOk&&cOk?"PASS":"PARTIAL",builder:{ok:bOk,model:builder.model,text:String(builder.text||"").slice(0,120)},critic:{ok:cOk,model:critic.model||"gemma-critic-local",text:String(critic.text||"").slice(0,120),error:critic.error||null}})}catch(e){return send(res,503,{status:"FAIL",reason:String(e.message||e)})}}
  if(req.method==="POST"&&url.pathname==="/api/free_text"){const x=await body(req);try{return send(res,200,{status:"PASS",...(await zeroGpuText(x.system,x.user))})}catch(e){return send(res,503,{status:"PARTIAL",reason:String(e.message||e),provider:"Hugging Face ZeroGPU",model:"Qwen/Qwen3.8-27B"})}}
  if(req.method==="POST"&&url.pathname==="/api/free_image"){const x=await body(req);try{return send(res,200,{status:"PASS",...(await zeroGpuImage(x.prompt))})}catch(e){return send(res,503,{status:"PARTIAL",reason:String(e.message||e),provider:"Hugging Face ZeroGPU",model:"Qwen/Qwen-Image-2.1"})}}
+ if(req.method==="GET"&&url.pathname==="/api/golden_run_status")return send(res,200,{...goldenState,error:goldenState.error?String(goldenState.error).slice(0,800):null});
+ if(req.method==="POST"&&url.pathname==="/api/golden_run"){const result=await runGoldenRun();return send(res,result.status==="PASS"?200:result.status==="FAIL"?500:206,{...result,error:result.error?String(result.error).slice(0,800):null})}
  if(req.method==="GET"&&url.pathname==="/api/sandbox_status")return send(res,200,await sandboxStatus());
  if(req.method==="POST"&&url.pathname==="/api/sandbox_run"){const x=await body(req);try{return send(res,200,await sandboxRun(x))}catch(e){return send(res,502,{status:"FAIL",reason:String(e?.message||e)})}}
  if(req.method==="POST"&&url.pathname==="/api/validate")return send(res,200,validate(await body(req)));
@@ -252,6 +304,7 @@ srv.listen(port,"0.0.0.0",()=>{
   }catch(e){console.error("[ASTRA MODEL PROBE] IMAGE ROUTE FAIL",String(e?.message||e).slice(0,300))}
  },750);
 
+ if(process.env.ASTRA_GOLDEN_RUN_ON_BOOT==="1")setTimeout(()=>{runGoldenRun().catch(e=>console.error("[ASTRA GOLDEN RUN] UNCAUGHT",e))},2500);
  if(process.env.ASTRA_SANDBOX_PROBE_ON_BOOT==="1")setTimeout(async()=>{
   try{
    const r=await sandboxRun({files:[
