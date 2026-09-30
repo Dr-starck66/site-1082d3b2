@@ -68,8 +68,10 @@ async function sealSovereign(kind){
  state.evidenceChain.push({...record,serverHash});const v=await verifyChain(state.evidenceChain);addEv("EVIDENLOCK",v.status,state.evidenceChain.length+" sealed record(s) · "+record.hash.slice(0,12));renderSovereign();return record;
 }
 function shield(files,context){
- const g=guardFiles(files);addEv("AgentShield",g.verdict==="ALLOW"?"PASS":"FAIL",g.reason+(g.blocked.length?" · "+g.blocked.join(", "):""));
- if(g.verdict!=="ALLOW")throw new Error("AgentShield blocked "+context+": "+g.blocked.join(", "));return g.allowed;
+ const g=guardFiles(files),status=g.verdict==="ALLOW"?"PASS":g.verdict==="ESCALATE"?"PARTIAL":"FAIL",details=[g.reason,g.escalated?.length?"escalate: "+g.escalated.join(", "):"",g.isolated?.length?"isolated: "+g.isolated.join(", "):""].filter(Boolean).join(" · ");addEv("AgentShield",status,details);
+ if(g.verdict==="ISOLATE")throw new Error("AgentShield isolated "+context+": "+g.isolated.join(", "));
+ if(g.verdict==="ESCALATE")addEv("Capability Firewall","PARTIAL","enhanced verification required for "+context);
+ return g.allowed;
 }
 function rememberFailure(error,context,rootCause=""){const sig=state.negativeKnowledge.record(error,{context,phase:state.phase},rootCause);addEv("Negative Knowledge","PARTIAL","recorded "+sig);renderSovereign();return sig}
 function captureGenome(label,parent=null){
