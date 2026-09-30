@@ -173,7 +173,7 @@ async function evaluateEvolutionCandidate(candidate,baseFiles,generation){
  const files=mergeFiles(baseFiles,g.allowed),localEvidence=staticChecks(files,state.spec);
  const srv=await control("/api/validate",{spec:state.spec,files});
  const evidence=[...localEvidence,...(srv.data?.evidence||[]).map(e=>({...e,name:"Server · "+e.name}))];
- const trust=trustGate(evidence),status=evidence.some(x=>x.status==="FAIL")?"FAIL":trust.status;
+ const trust=trustGate(evidence,currentPolicy().trustThreshold),status=evidence.some(x=>x.status==="FAIL")?"FAIL":trust.status;
  const record=makeEvolutionRecord({candidate:{...candidate,spec:state.spec},files,evidence,cfg:state.cfg,status,latencyMs:Date.now()-started,trust});
  if(g.verdict==="ESCALATE"){record.evidence=[...record.evidence,{name:"AgentShield escalation",status:"PARTIAL",detail:(g.escalated||[]).join(", ")}];record.status=record.status==="FAIL"?"FAIL":"PARTIAL";record.fitness-=6}
  return record;
@@ -184,14 +184,15 @@ async function runEvolution(){
  state.evolution={running:true,generation:0,decision:"STARTING",candidates:[],history:[]};renderEvolution();renderFiles();setStatus("RUNNING");rescue.checkpoint("before-evolution");
  let baseFiles=originalFiles,previousBest=null,winner=null;
  try{
-  for(let generation=1;generation<=DEFAULT_EVOLUTION.generations;generation++){
+  const evoPolicy=currentPolicy();
+  for(let generation=1;generation<=evoPolicy.generations;generation++){
    state.evolution.generation=generation;state.evolution.decision="EVOLVING";renderEvolution();
-   const population=generation===1?seedPopulation(DEFAULT_EVOLUTION.population,generation):breedDirectives(rankPopulation(state.evolution.candidates).slice(0,DEFAULT_EVOLUTION.elite),generation,DEFAULT_EVOLUTION.population);
+   const population=generation===1?seedPopulation(evoPolicy.population,generation):breedDirectives(rankPopulation(state.evolution.candidates).slice(0,evoPolicy.elite),generation,evoPolicy.population);
    const settled=await Promise.allSettled(population.map(x=>evaluateEvolutionCandidate(x,baseFiles,generation)));
    const candidates=[];
    settled.forEach((r,i)=>{if(r.status==="fulfilled")candidates.push(r.value);else{rememberFailure(r.reason,"evolution:g"+generation+":"+population[i].label);candidates.push({...population[i],fitness:-999,status:"FAIL",latencyMs:0,metrics:{quality:0},files:baseFiles,evidence:[{name:"Candidate failure",status:"FAIL",detail:String(r.reason?.message||r.reason)}]})}});
    const ranked=rankPopulation(candidates);state.evolution.candidates=ranked;winner=ranked[0]||null;
-   const decision=evolutionDecision(previousBest,winner,DEFAULT_EVOLUTION.earlyStopDelta);state.evolution.decision=decision.action;state.evolution.history.push({generation,best:winner?{id:winner.id,label:winner.label,fitness:winner.fitness,status:winner.status}:null,decision,candidates:ranked.map(x=>({id:x.id,label:x.label,fitness:x.fitness,status:x.status}))});renderEvolution();
+   const decision=evolutionDecision(previousBest,winner,evoPolicy.earlyStopDelta);state.evolution.decision=decision.action;state.evolution.history.push({generation,best:winner?{id:winner.id,label:winner.label,fitness:winner.fitness,status:winner.status}:null,decision,candidates:ranked.map(x=>({id:x.id,label:x.label,fitness:x.fitness,status:x.status}))});renderEvolution();
    if(!winner||winner.status==="FAIL"){state.evolution.decision="ROLLBACK";throw new Error("no viable evolutionary candidate in generation "+generation)}
    if(decision.action==="ROLLBACK")break;
    baseFiles=winner.files;previousBest=winner;
@@ -224,10 +225,10 @@ function seedAgents(){state.agents={};agent("Architect",state.cfg.architect);age
 async function generateAssets(){const briefs=state.spec?.imageBriefs||[];if(!briefs.length){addEv("Image briefs","PASS","aucune image requise");return}if(!state.cfg.imageBaseUrl){addEv("Image engine","PARTIAL",briefs.length+" image(s) demandée(s), endpoint gratuit non configuré");return}for(const b of briefs){const a=await rescueImage(state.cfg,b.prompt);const blob=new Blob([a.bytes],{type:a.mime}),dataUrl=await new Promise((resolve,reject)=>{const fr=new FileReader;fr.onload=()=>resolve(fr.result);fr.onerror=reject;fr.readAsDataURL(blob)});state.assets.push({id:b.id,name:"assets/"+b.id+".png",bytes:a.bytes,dataUrl})}addEv("Image engine","PASS",state.assets.length+" asset(s) généré(s) via endpoint attesté gratuit")}
 async function control(path,payload){return rescue.run("CONTROL "+path,async()=>{const r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});const raw=await r.text();let data;try{data=JSON.parse(raw)}catch{data={raw}};if(!r.ok&&r.status!==501)throw new Error("Control plane "+r.status+": "+raw.slice(0,220));return{ok:r.ok,status:r.status,data}},{attempts:3})}
 async function serverValidate(){setPhase("SERVER VALIDATE");const r=await control("/api/validate",{spec:state.spec,files:state.files});for(const e of r.data.evidence||[])addEv("Server · "+e.name,e.status,e.detail);addEv("Server validation",r.data.verdict||"UNVERIFIED",r.data.summary||"control plane response");return r.data}
-async function buildDeployPlan(){setPhase("DEPLOY PLAN");const r=await control("/api/deploy-plan",{spec:state.spec,files:state.files});state.deployPlan=r.data;state.trust=trustGate(state.evidence);addEv("Q-NAV X Trust Gate",state.trust.status,"score "+state.trust.score+"/"+state.trust.threshold+" · "+state.trust.reason);const st=state.trust.status==="FAIL"?"FAIL":r.data?.status||"UNVERIFIED";addEv("Deploy plan",st,r.data?.note||"plan generated");$("#deployReadiness").textContent=st;evolveMission("DEPLOY",st==="FAIL"?"FAIL":"PARTIAL");renderFiles();renderSovereign();return r.data}
+async function buildDeployPlan(){setPhase("DEPLOY PLAN");const r=await control("/api/deploy-plan",{spec:state.spec,files:state.files});state.deployPlan=r.data;state.trust=trustGate(state.evidence,currentPolicy().trustThreshold);addEv("Q-NAV X Trust Gate",state.trust.status,"score "+state.trust.score+"/"+state.trust.threshold+" · "+state.trust.reason);const st=state.trust.status==="FAIL"?"FAIL":r.data?.status||"UNVERIFIED";addEv("Deploy plan",st,r.data?.note||"plan generated");$("#deployReadiness").textContent=st;evolveMission("DEPLOY",st==="FAIL"?"FAIL":"PARTIAL");renderFiles();renderSovereign();return r.data}
 async function deployGenerated(){
  if(!state.files.length)return;
- state.trust=trustGate(state.evidence);if(state.trust.status!=="PASS"){addEv("Generated app deployment","FAIL","Q-NAV X blocked deploy at trust "+state.trust.score+"/"+state.trust.threshold);renderFiles();return}
+ state.trust=trustGate(state.evidence,currentPolicy().trustThreshold);if(state.trust.status!=="PASS"){addEv("Generated app deployment","FAIL","Q-NAV X blocked deploy at trust "+state.trust.score+"/"+state.trust.threshold);renderFiles();return}
  if(!state.cfg.githubToken||!state.cfg.railwayToken){addEv("Generated app deployment","UNVERIFIED","GitHub/Railway credentials missing");$("#settingsDialog").showModal();return}
  $("#deployBtn").disabled=true;addEv("Generated app deployment","PARTIAL","GitHub push + Railway deployment starting");
  try{
