@@ -77,7 +77,15 @@ function parseModelJson(text){return parseProbeJson(text)}
 function filesFrom(x){return Array.isArray(x?.files)?x.files.filter(f=>safePath(f?.path)&&typeof f?.content==="string").map(f=>({path:f.path,content:f.content})):[]}
 function mergeProjectFiles(...sets){const m=new Map();for(const set of sets)for(const f of set||[])if(safePath(f?.path)&&typeof f?.content==="string")m.set(f.path,f);return[...m.values()]}
 function goldenLog(phase,detail){goldenState.phase=phase;console.log("[ASTRA GOLDEN RUN]",phase,detail||"")}
-async function goldenAgent(system,user,model="qwen-coder-local",tokens=3072){const r=await localText(system,user,model,tokens);return parseModelJson(r.text)}
+async function goldenAgent(system,user,model="qwen-coder-local",tokens=3072){
+ let last;
+ for(let attempt=1;attempt<=2;attempt++){
+  const u=attempt===1?user:user+"\\nRESCUE RETRY: previous response was truncated or invalid JSON. Return one COMPLETE SHORT JSON object only. Keep code concise; no commentary; close every quote, array and object.";
+  try{const r=await localText(system,u,model,tokens);return parseModelJson(r.text)}
+  catch(e){last=e;console.error("[ASTRA GOLDEN RUN] AGENT RETRY",attempt,String(e?.message||e).slice(0,240))}
+ }
+ throw last;
+}
 async function runGoldenRun(){
  if(goldenState.status==="RUNNING")return goldenState;
  Object.assign(goldenState,{status:"RUNNING",startedAt:new Date().toISOString(),finishedAt:null,phase:"START",summary:null,error:null,manifest:[],evidence:[],seal:null,repairs:0});
@@ -90,10 +98,10 @@ async function runGoldenRun(){
   const specText=JSON.stringify(spec);
   const agentCalls=[
    ()=>goldenAgent("You are Ω Golden Frontend. JSON only {summary,files:[{path,content}]}. Create public/index.html, public/styles.css, public/app.js for the specified SaaS. No external CDN or dependencies. Real login/register/logout and issue CRUD UI calling relative /api endpoints. Accessible loading/error/empty states.",specText,"qwen-coder-local",3072),
-   ()=>goldenAgent("You are Ω Golden Backend. JSON only {summary,files:[{path,content}]}. Create root server.js and lib/repository.js. Node 22 built-ins only. Implement /health, /api/register, /api/login, /api/logout, /api/me and authenticated issue CRUD. Serve public/ statically. Bind HOST or 0.0.0.0 and process.env.PORT. Use an in-memory repository for runtime tests while keeping SQL schema as source-of-truth artifact.",specText,"qwen-coder-local",3072),
+   ()=>goldenAgent("You are Ω Golden Backend. JSON only {summary,files:[{path,content}]}. Create root server.js, lib/repository.js and tests/server.test.js. Node 22 built-ins only. Implement /health, /api/register, /api/login, /api/logout, /api/me and authenticated issue CRUD. Serve public/ statically. Bind HOST or 0.0.0.0 and process.env.PORT. tests/server.test.js must start the server on an ephemeral port and exercise health, register/login and issue CRUD. Use an in-memory repository for runtime tests while keeping SQL schema as source-of-truth artifact.",specText,"qwen-coder-local",3072),
    ()=>goldenAgent("You are Ω Golden Database. JSON only {summary,files:[{path,content}]}. Create database/schema.sql and database/README.md with users, sessions and issues tables, constraints/indexes, PostgreSQL-compatible SQL. No secrets.",specText,"qwen-coder-local",1536),
    ()=>goldenAgent("You are Ω Golden Auth. JSON only {summary,files:[{path,content}]}. Create lib/auth.js and tests/auth.test.js using Node built-ins only. Password hashing must use crypto.scrypt or pbkdf2 with random salt and timingSafeEqual. Sessions use random bytes, HttpOnly SameSite cookies. No fake auth.",specText,"qwen-coder-local",2048),
-   ()=>goldenAgent("You are Ω Golden DevOps. JSON only {summary,files:[{path,content}]}. Create root package.json with scripts build='node scripts/build.js', test='node --test', start='node server.js'; scripts/build.js that validates required files and exits 0; tests/server.test.js with real HTTP health/auth/issue tests; Dockerfile for node:22-alpine; deploy.json with provider railway, rootDirectory '.', dockerfilePath 'Dockerfile', healthPath '/health', startCommand null; README.md and .gitignore. NO dependencies.",specText,"qwen-coder-local",3072)
+   ()=>goldenAgent("You are Ω Golden DevOps. JSON only {summary,files:[{path,content}]}. Create ONLY these concise root files: package.json with scripts build=node scripts/build.js, test=node --test, start=node server.js; scripts/build.js that checks required files; Dockerfile for node:22-alpine; deploy.json with provider railway, rootDirectory ., dockerfilePath Dockerfile, healthPath /health, startCommand null; README.md under 25 lines; .gitignore. NO tests here and NO dependencies.",specText,"qwen-coder-local",2048)
   ];
   const outs=[];for(const call of agentCalls)outs.push(await call());
   files=mergeProjectFiles(...outs.map(filesFrom));
