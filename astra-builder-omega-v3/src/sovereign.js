@@ -34,3 +34,11 @@ export function createGenome({spec,files,evidence,cfg,status,label="run",parent=
 }
 export function scoreVariant(files,evidence=[]){let score=0;score+=Math.min(35,(files?.length||0)*1.2);score+=evidence.filter(x=>x.status==="PASS").length*4;score-=evidence.filter(x=>x.status==="FAIL").length*12;score-=evidence.filter(x=>x.status==="PARTIAL").length*2;if((files||[]).some(x=>x.path==="Dockerfile"))score+=8;if((files||[]).some(x=>/test|spec/i.test(x.path)))score+=8;return Math.round(score*10)/10}
 export function dualityVerdict(audit,verify){const high=(audit?.issues||[]).filter(x=>x.severity==="high").length;if(verify?.verdict==="FAIL"||high)return{status:"FAIL",reason:"arbiter rejected due to blocking contradiction"};if(verify?.verdict!=="PASS"||audit?.risk==="HIGH"||audit?.risk==="MEDIUM")return{status:"PARTIAL",reason:"proposer/skeptic disagreement remains"};return{status:"PASS",reason:"skeptic and independent arbiter converge"}}
+
+export function trustGate(evidence=[],threshold=78){
+ const critical=/Server validation|Verify²|DUALITY-X|AgentShield|Public health gate|Root Dockerfile|Backend health|EVIDENLOCK/i;
+ let score=100,criticalFail=false;
+ for(const e of evidence){if(e.status==="FAIL"){score-=critical.test(e.name)?35:18;if(critical.test(e.name))criticalFail=true}else if(e.status==="PARTIAL")score-=critical.test(e.name)?10:4;else if(e.status==="UNVERIFIED")score-=critical.test(e.name)?12:5}
+ score=Math.max(0,Math.min(100,score));const status=criticalFail||score<threshold-15?"FAIL":score<threshold?"PARTIAL":"PASS";
+ return{status,score,threshold,criticalFail,reason:criticalFail?"critical evidence failed":status==="PASS"?"trust threshold satisfied":"insufficient verified evidence"};
+}
