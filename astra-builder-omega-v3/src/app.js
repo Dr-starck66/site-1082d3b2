@@ -183,6 +183,7 @@ async function evaluateEvolutionCandidate(candidate,baseFiles,generation){
 }
 async function runEvolution(){
  if(!state.files.length||state.evolution.running)return;
+ beginMetaOperation("Evolution Ω");
  const originalFiles=state.files.map(x=>({...x})),originalSpec=structuredClone(state.spec),originalEvidence=state.evidence.map(x=>({...x})),originalStatus=state.status;
  state.evolution={running:true,generation:0,decision:"STARTING",candidates:[],history:[]};renderEvolution();renderFiles();setStatus("RUNNING");rescue.checkpoint("before-evolution");
  let baseFiles=originalFiles,previousBest=null,winner=null;
@@ -209,9 +210,9 @@ async function runEvolution(){
   if(cmp.verdict==="REGRESSION"||ver?.verdict==="FAIL"){
    state.files=originalFiles;state.spec=originalSpec;state.evidence=originalEvidence;state.status=originalStatus;state.mission=compileMission(originalSpec,"evolution rollback");state.evolution.decision="ROLLBACK";addEv("Evolution rollback","PASS","previous verified genome restored");renderFiles();renderSpec();renderPreview();renderEvidence();renderSovereign();await sealSovereign("evolution-rollback");
   }else{
-   state.evolution.decision="ACCEPTED";state.genomes.push(winner.genome);state.genomes=state.genomes.slice(-30);captureBenchmark("Evolution Ω",state.runStartedAt);await sealSovereign("evolution-winner");await persistWorkspace("Evolution Ω winner: "+winner.label);
+   state.evolution.decision="ACCEPTED";state.genomes.push(winner.genome);state.genomes=state.genomes.slice(-30);captureBenchmark("Evolution Ω",state.runStartedAt);await sealSovereign("evolution-winner");finishMetaOperation(state.status);await persistWorkspace("Evolution Ω winner: "+winner.label);
   }
- }catch(e){rememberFailure(e,"runEvolution");state.files=originalFiles;state.spec=originalSpec;state.evidence=originalEvidence;state.status=originalStatus;state.evolution.decision="FAIL/ROLLBACK";addEv("Evolution Engine Ω","FAIL",String(e?.message||e));renderFiles();renderSpec();renderPreview();renderEvidence();renderSovereign()}
+ }catch(e){rememberFailure(e,"runEvolution");state.files=originalFiles;state.spec=originalSpec;state.evidence=originalEvidence;state.status=originalStatus;state.evolution.decision="FAIL/ROLLBACK";addEv("Evolution Engine Ω","FAIL",String(e?.message||e));finishMetaOperation("FAIL");renderFiles();renderSpec();renderPreview();renderEvidence();renderSovereign()}
  finally{state.evolution.running=false;renderEvolution();renderFiles();rescue.checkpoint("after-evolution")}
 }
 async function importGithub(){
