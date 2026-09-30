@@ -55,7 +55,7 @@ export function finishMetaRun(meta,run,outcome){
  const reward=rewardOutcome(outcome),entry={at:new Date().toISOString(),runId:run.runId,policyId:run.policy.id,policyName:run.policy.name,mode:run.mode,reward,...outcome};
  let s={...meta,history:[...(meta.history||[]),entry].slice(-200)},decision={action:"KEEP",reason:"insufficient evidence",reward};
  const stats=policyStats(s.history),active=stats[s.activePolicy.id],trial=s.trialPolicy&&stats[s.trialPolicy.id];
- if(s.trialPolicy&&trial?.samples>=2&&active?.samples>=2){
+ if(s.trialPolicy&&trial?.samples>=3&&active?.samples>=3){
   if(trial.avgReward>active.avgReward+2){const old=s.activePolicy;s.activePolicy=normalizePolicy({...s.trialPolicy,generation:Math.max(s.generation+1,s.trialPolicy.generation)});s.generation=s.activePolicy.generation;s.candidates=mutatePolicies(s.activePolicy);s.trialPolicy=null;decision={action:"PROMOTE",reason:"trial beat active by "+Math.round((trial.avgReward-active.avgReward)*10)/10,from:old.id,to:s.activePolicy.id}}
   else if(trial.avgReward<active.avgReward-1){decision={action:"REJECT",reason:"trial underperformed active",trial:s.trialPolicy.id};s.candidates=(s.candidates||[]).filter(x=>x.id!==s.trialPolicy.id);s.trialPolicy=null;if(!s.candidates.length)s.candidates=mutatePolicies(s.activePolicy)}
   else{decision={action:"MORE_EVIDENCE",reason:"difference not decisive",trial:s.trialPolicy.id}}
@@ -66,8 +66,17 @@ export function forceMetaEvolution(meta){
  const stats=policyStats(meta.history),s={...meta};if(!s.candidates?.length)s.candidates=mutatePolicies(s.activePolicy);
  const ranked=s.candidates.map(p=>({p,stat:stats[p.id]||{samples:0,avgReward:-Infinity}})).sort((a,b)=>b.stat.avgReward-a.stat.avgReward);
  const eligible=ranked.find(x=>x.stat.samples>=2);
- if(eligible&&eligible.stat.avgReward>(stats[s.activePolicy.id]?.avgReward??-Infinity)+2){const old=s.activePolicy;s.activePolicy=eligible.p;s.generation=s.activePolicy.generation;s.candidates=mutatePolicies(s.activePolicy);s.trialPolicy=null;s.lastDecision="PROMOTE";s.decisions=[...(s.decisions||[]),{at:new Date().toISOString(),action:"PROMOTE",from:old.id,to:s.activePolicy.id,reason:"manual meta-evolution evidence gate"}].slice(-80)}
+ if(eligible&&eligible.stat.samples>=3&&eligible.stat.avgReward>(stats[s.activePolicy.id]?.avgReward??-Infinity)+2){const old=s.activePolicy;s.activePolicy=eligible.p;s.generation=s.activePolicy.generation;s.candidates=mutatePolicies(s.activePolicy);s.trialPolicy=null;s.lastDecision="PROMOTE";s.decisions=[...(s.decisions||[]),{at:new Date().toISOString(),action:"PROMOTE",from:old.id,to:s.activePolicy.id,reason:"manual meta-evolution evidence gate"}].slice(-80)}
  else{s.trialPolicy=ranked[0]?.p||s.candidates[0]||null;s.lastDecision=s.trialPolicy?"TRIAL_QUEUED":"NO_CANDIDATE"}
  return saveMetaState(s);
 }
 export function metaSummary(meta){return{generation:meta.generation,active:normalizePolicy(meta.activePolicy),trial:meta.trialPolicy?normalizePolicy(meta.trialPolicy):null,candidates:(meta.candidates||[]).map(normalizePolicy),stats:policyStats(meta.history),lastDecision:meta.lastDecision,historyCount:(meta.history||[]).length,rails:META_RAILS}}
+
+export function metaSelfTest(){
+ const base=freshMetaState(),p=base.activePolicy;
+ const railPass=p.rails.zeroCostGate===true&&p.rails.agentShield===true&&p.rails.evidenlock===true&&p.rails.publicHealthGate===true&&p.rails.rollback===true&&p.rails.failClosedDeploy===true;
+ const bounded=p.population<=META_RAILS.maxPopulation&&p.generations<=META_RAILS.maxGenerations&&p.trustThreshold>=META_RAILS.minTrustThreshold;
+ const reward=rewardOutcome({quality:90,trustScore:90,fail:0,partial:0,latencyMs:1000,tests:4,status:"PASS",deployPass:true});
+ const mutations=mutatePolicies(p,4);
+ return{status:railPass&&bounded&&reward>0&&mutations.length===4?"PASS":"FAIL",rails:railPass,bounded,reward,mutations:mutations.length,minPromotionSamples:3};
+}
