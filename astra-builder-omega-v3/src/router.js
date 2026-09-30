@@ -1,8 +1,9 @@
 export function normalizeBase(url){return (url||"").trim().replace(/\/+$/,"")}
-export function effectiveModel(cfg,target){const base=normalizeBase(cfg.baseUrl);if(cfg.zeroCost&&base.includes("openrouter.ai"))return String(target||"").endsWith(":free")?target:"openrouter/free";return target}
+export function effectiveModel(cfg,target){const base=normalizeBase(cfg.baseUrl);if(base.startsWith("astra://local/"))return /deepseek|adversary|verify|critic/i.test(String(target||""))?"deepseek-critic-local":"qwen-coder-local";if(cfg.zeroCost&&base.includes("openrouter.ai"))return String(target||"").endsWith(":free")?target:"openrouter/free";return target}
 export function costStatus(cfg,kind="text"){
   const base=normalizeBase(kind==="image"?cfg.imageBaseUrl:cfg.baseUrl);
   if(!cfg.zeroCost)return"UNVERIFIED";
+  if(kind==="text"&&base.startsWith("astra://local/"))return"PASS";
   if(kind==="text"&&base.includes("openrouter.ai"))return"PASS";
   if(kind==="image"&&base.startsWith("astra://zerogpu/"))return"PASS";
   if(cfg.attestedFree&&base)return"PARTIAL";
@@ -10,6 +11,11 @@ export function costStatus(cfg,kind="text"){
 }
 export async function chat(cfg,model,system,user){
   const base=normalizeBase(cfg.baseUrl);if(!base)throw new Error("Endpoint texte manquant");
+  if(base.startsWith("astra://local/")){
+    const res=await fetch("/api/local_text",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system,user,requestedModel:model,maxTokens:1536})});
+    const raw=await res.text();if(!res.ok)throw new Error("Local model "+res.status+": "+raw.slice(0,240));
+    const data=JSON.parse(raw);if(!data?.text)throw new Error("Local model response invalid");return String(data.text);
+  }
   if(cfg.zeroCost&&base.includes("openrouter.ai")&&!cfg.apiKey){
     const res=await fetch("/api/free_text",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system,user,requestedModel:model})});
     const raw=await res.text();if(!res.ok)throw new Error("ZeroGPU text "+res.status+": "+raw.slice(0,240));
