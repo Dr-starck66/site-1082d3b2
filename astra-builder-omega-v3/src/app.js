@@ -145,7 +145,7 @@ async function auditRepairVerify(context){
  captureBenchmark("cycle",cycleStarted);captureGenome(context.slice(0,80));await sealSovereign("verified-cycle");return ver;
 }
 async function improveCurrent(){
- const request=$("#improveInput").value.trim();if(!request||!state.files.length)return;$("#improveDialog").close();setStatus("RUNNING");setPhase("IMPROVE");rescue.checkpoint("before-improve");state.conversation.push({at:new Date().toISOString(),role:"user",content:request});
+ const request=$("#improveInput").value.trim();if(!request||!state.files.length)return;$("#improveDialog").close();beginMetaOperation("Improve Ω");setStatus("RUNNING");setPhase("IMPROVE");rescue.checkpoint("before-improve");state.conversation.push({at:new Date().toISOString(),role:"user",content:request});
  const started=Date.now(),baseFiles=state.files.map(x=>({...x})),baseSpec=structuredClone(state.spec),baseEvidence=state.evidence.map(x=>({...x})),baseMetric=metricSnapshot({files:baseFiles,evidence:baseEvidence,status:state.status});
  try{
   state.spec=parse(await rescueChat(state.cfg,state.cfg.architect,prompts.evolveSpec,"REQUEST:\n"+request+"\nCURRENT SPEC:\n"+JSON.stringify(state.spec)));state.mission=compileMission(state.spec,request);renderSpec();renderSovereign();
@@ -164,8 +164,8 @@ async function improveCurrent(){
   addEv("BENCHMARK-X10",cmp.verdict==="REGRESSION"?"PARTIAL":"PASS",cmp.verdict+" · Δ "+cmp.delta+" · base "+cmp.baseScore+" → "+cmp.nextScore);
   if(cmp.verdict==="REGRESSION"&&ver?.verdict!=="PASS"){state.files=baseFiles;state.spec=baseSpec;state.mission=compileMission(baseSpec,"rollback");addEv("LoopForge rollback","PASS","regression rejected; previous genome restored");renderFiles();renderSpec();renderPreview();renderSovereign();await sealSovereign("rollback")}
   else{captureGenome("Improve Ω: "+request.slice(0,70),state.genomes.at(-1)?.label||null);await sealSovereign("improvement-accepted")}
-  await persistWorkspace("Improve Ω: "+request.slice(0,100));rescue.checkpoint("improve-complete")
- }catch(e){rememberFailure(e,"improveCurrent");const d=classifyError(e);addEv("Improve with Ω","FAIL",d.kind+" · "+String(e?.message||e));setStatus("FAIL");state.files=baseFiles;state.spec=baseSpec;renderFiles();renderSpec();renderPreview()}
+  finishMetaOperation(state.status);await persistWorkspace("Improve Ω: "+request.slice(0,100));rescue.checkpoint("improve-complete")
+ }catch(e){rememberFailure(e,"improveCurrent");const d=classifyError(e);addEv("Improve with Ω","FAIL",d.kind+" · "+String(e?.message||e));setStatus("FAIL");finishMetaOperation("FAIL");state.files=baseFiles;state.spec=baseSpec;renderFiles();renderSpec();renderPreview()}
 }
 async function evaluateEvolutionCandidate(candidate,baseFiles,generation){
  const started=Date.now();
@@ -254,7 +254,7 @@ async function deployGenerated(){
 async function loadCapabilities(){try{const r=await fetch("/api/capabilities");state.capabilities=await r.json();addEv("Control plane","PASS","server v"+state.capabilities.version+", validation active");addEv("Deploy broker",state.capabilities.deployBroker?"PASS":"UNVERIFIED",state.capabilities.nativeDeployBroker?"GitHub + Railway native broker ready":"broker unavailable");renderFiles()}catch{addEv("Control plane","FAIL","/api/capabilities inaccessible")}}
 async function run(rescueCycle=0){
  const idea=$("#idea").value.trim();if(!idea)return;
- if(rescueCycle===0){state.workspaceId=null;state.history=[];state.conversation=[{at:new Date().toISOString(),role:"user",content:idea}];state.evidenceChain=[];state.genomes=[];state.benchmarkRuns=[];state.mission=null}
+ if(rescueCycle===0){state.workspaceId=null;state.history=[];state.conversation=[{at:new Date().toISOString(),role:"user",content:idea}];state.evidenceChain=[];state.genomes=[];state.benchmarkRuns=[];state.mission=null;beginMetaOperation("Initial generation")}
  state.runStartedAt=Date.now();setStatus("RUNNING");$("#runBtn").disabled=true;$("#errorBox").classList.add("hidden");state.files=[];state.assets=[];state.evidence=[];state.spec=null;state.bench=null;seedAgents();renderFiles();renderSovereign();
  try{
   addEv("Zero-cost text gate",costStatus(state.cfg,"text"),costStatus(state.cfg,"text")==="PASS"?"OpenRouter free router forcé":"endpoint personnalisé: coût non prouvé par ASTRA");
@@ -267,11 +267,11 @@ async function run(rescueCycle=0){
   state.files=mergeFiles(front,back,db,auth,ops);state.selected=state.files[0]?.path||null;for(const n of state.mission.nodes.filter(x=>x.type==="FEATURE"))n.status="PASS";renderFiles();selectFile(state.selected);renderPreview();renderSovereign();
   setPhase("IMAGES");await generateAssets();renderPreview();renderEvidence();
   await auditRepairVerify("Initial generation");
-  state.bench=benchmark(state.files,state.evidence,state.spec);renderBenchmark();captureBenchmark("initial",state.runStartedAt);captureGenome("Initial generation");await sealSovereign("initial-generation");await persistWorkspace("Initial generation");rescue.checkpoint("pipeline-complete");rescue.clearRestartCounter();
+  state.bench=benchmark(state.files,state.evidence,state.spec);renderBenchmark();captureBenchmark("initial",state.runStartedAt);captureGenome("Initial generation");await sealSovereign("initial-generation");finishMetaOperation(state.status);await persistWorkspace("Initial generation");rescue.checkpoint("pipeline-complete");rescue.clearRestartCounter();
  }catch(e){
   const m=e instanceof Error?e.message:String(e),d=classifyError(e);rememberFailure(e,"run:"+state.phase);rescue.checkpoint("pipeline-error:"+d.kind);
   if(d.retryable&&rescueCycle<2){rescue.emit("PIPELINE_RESTART","PARTIAL",d.kind+" · restart "+(rescueCycle+1)+"/2");await sleep(900*Math.pow(2,rescueCycle));return await run(rescueCycle+1)}
-  rescue.emit("CIRCUIT_BREAKER","FAIL",d.kind+" · "+m);addEv("Pipeline","FAIL",m);setStatus("FAIL");$("#errorBox").textContent="ASTRA RESCUE Ω a arrêté les retries pour éviter une boucle : "+m;$("#errorBox").classList.remove("hidden")
+  rescue.emit("CIRCUIT_BREAKER","FAIL",d.kind+" · "+m);addEv("Pipeline","FAIL",m);setStatus("FAIL");finishMetaOperation("FAIL");$("#errorBox").textContent="ASTRA RESCUE Ω a arrêté les retries pour éviter une boucle : "+m;$("#errorBox").classList.remove("hidden")
  }finally{$("#runBtn").disabled=false}
 }
 function exportZip(){const entries=state.files.map(f=>({name:f.path,bytes:f.content}));for(const a of state.assets)entries.push({name:a.name,bytes:a.bytes});entries.push({name:"astra-evidence.json",bytes:JSON.stringify({generatedAt:new Date().toISOString(),status:state.status,spec:state.spec,evidence:state.evidence,benchmark:state.bench},null,2)});entries.push({name:"astra-sovereign-proof-pack.json",bytes:JSON.stringify(proofPack(state),null,2)});const blob=makeZip(entries),u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=(state.spec?.appName||"astra-project").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")+".zip";a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
