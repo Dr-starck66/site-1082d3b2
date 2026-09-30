@@ -122,7 +122,8 @@ async function api(req,res,url){
  }
  if(req.method==="GET"&&url.pathname==="/api/capabilities")return send(res,200,{version:"3.2.0",serverValidation:true,deployBroker:true,nativeDeployBroker:true,rescue:true,rescuePolicy:{operationAttempts:3,pipelineRestarts:2,serverRestart:"ON_FAILURE"},providers:["github","railway"],zeroCostGate:true,maxPayloadBytes:MAX});
  if(req.method==="GET"&&url.pathname==="/api/rescue_status")return send(res,200,{status:"ARMED",events:rescueEvents.slice(-20),restartPolicy:"Railway ON_FAILURE",circuitBreaker:true});
- if(req.method==="POST"&&url.pathname==="/api/import_github"){const x=await body(req);try{return send(res,200,await importGithubProject(x))}catch(e){return send(res,502,{status:"FAIL",reason:String(e.message||e)})}}\n if(req.method==="POST"&&url.pathname==="/api/seal"){const x=await body(req);return send(res,200,{status:"PASS",seal:serverSeal(x.payload,x.previousHash||"GENESIS")})}
+ if(req.method==="POST"&&url.pathname==="/api/import_github"){const x=await body(req);try{return send(res,200,await importGithubProject(x))}catch(e){return send(res,502,{status:"FAIL",reason:String(e.message||e)})}}
+ if(req.method==="POST"&&url.pathname==="/api/seal"){const x=await body(req);return send(res,200,{status:"PASS",seal:serverSeal(x.payload,x.previousHash||"GENESIS")})}
  if(req.method==="POST"&&url.pathname==="/api/validate")return send(res,200,validate(await body(req)));
  if(req.method==="POST"&&url.pathname==="/api/deploy-plan")return send(res,200,deployPlan(await body(req)));
  if(req.method==="POST"&&url.pathname==="/api/deploy"){
