@@ -14,11 +14,13 @@ export function compileMission(spec,request=""){
 export function missionProgress(m){const n=m?.nodes||[],done=n.filter(x=>x.status==="PASS").length;return{done,total:n.length,pct:n.length?Math.round(done/n.length*100):0}}
 export function updateMission(m,type,status){if(!m)return m;return{...m,nodes:m.nodes.map(n=>n.type===type?{...n,status}:n)}}
 export function guardFiles(files,{allowWorkflows=true}={}){
- const blocked=[],allowed=[];for(const f of files||[]){const p=String(f.path||"");
-  const bad=!p||p.startsWith("/")||p.includes("..")||/^\.git\//i.test(p)||/(^|\/)\.env$/i.test(p)||/private.?key|id_rsa|credentials\.json/i.test(p)||(!allowWorkflows&&/^\.github\/workflows\//i.test(p));
-  (bad?blocked:allowed).push(f)
+ const isolated=[],escalated=[],allowed=[];for(const f of files||[]){const p=String(f.path||"");
+  const sensitive=!p||p.startsWith("/")||p.includes("..")||/^\.git\//i.test(p)||/(^|\/)\.env$/i.test(p)||/private.?key|id_rsa|credentials\.json/i.test(p)||(!allowWorkflows&&/^\.github\/workflows\//i.test(p));
+  const highImpact=/^\.github\/workflows\//i.test(p)||/(^|\/)Dockerfile$/i.test(p)||/(^|\/)deploy\.json$/i.test(p)||/(^|\/)railway\.json$/i.test(p);
+  if(sensitive)isolated.push(f);else{allowed.push(f);if(highImpact)escalated.push(f)}
  }
- return{verdict:blocked.length?"BLOCK":"ALLOW",allowed,blocked:blocked.map(x=>x.path),reason:blocked.length?"AgentShield blocked protected/sensitive paths":"capability policy satisfied"};
+ const verdict=isolated.length?"ISOLATE":escalated.length?"ESCALATE":"ALLOW";
+ return{verdict,allowed,isolated:isolated.map(x=>x.path),escalated:escalated.map(x=>x.path),reason:verdict==="ISOLATE"?"sensitive paths isolated":verdict==="ESCALATE"?"high-impact files require enhanced verification":"capability policy satisfied"};
 }
 export function signature(err){const s=String(err?.message||err||"unknown").toLowerCase().replace(/[0-9a-f]{8,}/g,"#").replace(/\d+/g,"#").replace(/\s+/g," ").slice(0,240);let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return"NK-"+(h>>>0).toString(16)}
 export class NegativeKnowledge{
