@@ -25,16 +25,27 @@ function localKind(requestedModel="",system=""){
  const s=(String(requestedModel)+" "+String(system)).toLowerCase();
  return/(gemma|deepseek|adversary|critic|verify|skeptic)/.test(s)?"critic":"builder";
 }
+function builderRouteProfile(system,user,requestedModel,maxTokens){
+ const s=(String(system||"")+" "+String(user||"")+" "+String(requestedModel||"")).toLowerCase();
+ let score=0;
+ const signals=[/full[- ]?stack/,/authentication|oauth|session/,/database|postgres|schema|migration/,/deploy|docker|railway|vercel|netlify/,/security|rbac|permission/,/backend|api|webhook/,/refactor|architecture|multi-agent|repository/,/payment|stripe|billing/];
+ for(const re of signals)if(re.test(s))score++;
+ const len=s.length;if(len>12000)score+=3;else if(len>6000)score+=2;else if(len>2500)score+=1;
+ if(score>=4)return{mode:"DEEP",score,maxTokens:Math.max(1536,Math.min(3072,Number(maxTokens)||3072)),timeoutMs:240000,temperature:.1};
+ if(score>=2)return{mode:"STANDARD",score,maxTokens:Math.max(1024,Math.min(2048,Number(maxTokens)||2048)),timeoutMs:210000,temperature:.12};
+ return{mode:"FAST",score,maxTokens:Math.max(512,Math.min(1024,Number(maxTokens)||1024)),timeoutMs:150000,temperature:.1};
+}
 async function localText(system,user,requestedModel,maxTokens=1536){
  const kind=localKind(requestedModel,system),base=localModelBase(kind);if(!base)throw new Error("local "+kind+" model endpoint not configured");
  const model=kind==="critic"?"gemma-critic-local":"qwen-coder-local";
- const r=await timeoutFetch(base+"/chat/completions",{method:"POST",headers:{"content-type":"application/json","authorization":"Bearer astra-private"},body:JSON.stringify({model,temperature:kind==="critic"?.2:.12,max_tokens:Math.max(32,Math.min(1536,Number(maxTokens)||1536)),response_format:{type:"json_object"},messages:[{role:"system",content:String(system||"")},{role:"user",content:String(user||"")} ]})},180000);
+ const profile=kind==="critic"?{mode:"CRITIC",score:0,maxTokens:Math.max(256,Math.min(1536,Number(maxTokens)||1536)),timeoutMs:180000,temperature:.2}:builderRouteProfile(system,user,requestedModel,maxTokens);
+ const r=await timeoutFetch(base+"/chat/completions",{method:"POST",headers:{"content-type":"application/json","authorization":"Bearer astra-private"},body:JSON.stringify({model,temperature:profile.temperature,max_tokens:profile.maxTokens,response_format:{type:"json_object"},messages:[{role:"system",content:String(system||"")},{role:"user",content:String(user||"")} ]})},profile.timeoutMs);
  const raw=await r.text();if(!r.ok)throw new Error("local "+kind+" inference "+r.status+": "+raw.slice(0,280));
  let data;try{data=JSON.parse(raw)}catch{throw new Error("local "+kind+" inference non-JSON")}
  let text=String(data?.choices?.[0]?.message?.content||"");
  if(kind==="critic")text=text.replace(/<think>[\s\S]*?<\/think>/gi,"").trim();
  if(!text)throw new Error("local "+kind+" inference empty");
- return{text,provider:"ASTRA private llama.cpp",model,kind,route:"railway-private"};
+ return{text,provider:"ASTRA private llama.cpp",model,kind,route:"railway-private",routeMode:profile.mode,routeScore:profile.score,tokenBudget:profile.maxTokens};
 }
 function parseProbeJson(text){
  const s=String(text||"").trim().replace(/^```(?:json)?/i,"").replace(/```$/,"").trim();
@@ -187,7 +198,7 @@ async function api(req,res,url){
   const sample={spec:{acceptance:["UI renders","API health works","Auth and data contracts exist"]},files:[{path:"frontend/index.html",content:"<main>ASTRA test</main>"},{path:"backend/package.json",content:'{"name":"demo","version":"1.0.0"}'},{path:"backend/src/server.js",content:"app.get('/health',handler)"},{path:"backend/tests/server.test.js",content:"test health endpoint"},{path:"database/schema.sql",content:"create table users(id text primary key);"},{path:"auth/session.js",content:"export function sessionGuard(){}"},{path:"Dockerfile",content:"FROM node:22-alpine"},{path:"deploy.json",content:'{"provider":"railway","dockerfilePath":"Dockerfile","healthPath":"/health"}'},{path:"README.md",content:"demo"}]};
   const v=validate(sample),rescueOk=typeof fatal==="function"&&Array.isArray(rescueEvents),sealTest=serverSeal({selfTest:true},"GENESIS"),sealOk=/^[a-f0-9]{64}$/.test(sealTest.hash),pop=seedPopulation(4,1).map((x,i)=>({...x,fitness:10-i})),ranked=rankPopulation(pop),evoDecision=evolutionDecision(null,ranked[0]),evolutionOk=pop.length===4&&ranked[0]?.fitness===10&&evoDecision.action==="CONTINUE",metaPolicy=normalizePolicy({...defaultMetaPolicy(),trustThreshold:1,population:99,rescueAttempts:99,adversaryPasses:99}),mutants=mutatePolicies(defaultMetaPolicy(),4),metaRewardPass=rewardOutcome({quality:95,trustScore:90,tests:5,status:"PASS",fail:0,partial:0,latencyMs:1000,deployPass:true}),metaRewardFail=rewardOutcome({quality:30,trustScore:20,tests:0,status:"FAIL",fail:2,partial:3,latencyMs:20000,deployPass:false}),metaOk=metaPolicy.trustThreshold>=76&&metaPolicy.population<=5&&metaPolicy.rescueAttempts<=4&&metaPolicy.adversaryPasses<=2&&mutants.length===4&&metaRewardPass>metaRewardFail;return send(res,v.verdict==="PASS"&&rescueOk&&sealOk&&evolutionOk&&metaOk?200:500,{ok:v.verdict==="PASS"&&rescueOk&&sealOk&&evolutionOk&&metaOk,verdict:v.verdict,rescue:rescueOk?"ARMED":"FAIL",sovereignSeal:sealOk?"PASS":"FAIL",evolutionEngine:evolutionOk?"PASS":"FAIL",metaEvolution:metaOk?"PASS":"FAIL",metaSafetyRails:{trustThreshold:metaPolicy.trustThreshold,population:metaPolicy.population,rescueAttempts:metaPolicy.rescueAttempts,adversaryPasses:metaPolicy.adversaryPasses},sealHead:sealTest.hash,evidence:v.evidence});
  }
- if(req.method==="GET"&&url.pathname==="/api/capabilities")return send(res,200,{version:"6.0.0",serverValidation:true,deployBroker:true,nativeDeployBroker:true,rescue:true,sovereignCore:true,evidenceSeal:"SHA-256",missionGraph:"AION",duality:"DUALITY-X",agentShield:true,negativeKnowledge:true,experimentGenome:true,benchmark:"BENCHMARK-X10",adaptiveRouter:"JEV-X",evolutionEngine:"EVOLUTION-Ω",metaEvolution:"META-EVOLUTION-Ω",immutableMetaRails:true,rescuePolicy:{operationAttempts:"meta-policy 2-4",pipelineRestarts:2,serverRestart:"ON_FAILURE"},providers:["github","railway","astra-local-qwen","astra-local-deepseek","huggingface-zerogpu","openrouter-free"],zeroCostGate:true,maxPayloadBytes:MAX});
+ if(req.method==="GET"&&url.pathname==="/api/capabilities")return send(res,200,{version:"6.0.0",serverValidation:true,deployBroker:true,nativeDeployBroker:true,rescue:true,sovereignCore:true,evidenceSeal:"SHA-256",missionGraph:"AION",duality:"DUALITY-X",agentShield:true,negativeKnowledge:true,experimentGenome:true,benchmark:"BENCHMARK-X10",adaptiveRouter:"JEV-X",evolutionEngine:"EVOLUTION-Ω",metaEvolution:"META-EVOLUTION-Ω",immutableMetaRails:true,rescuePolicy:{operationAttempts:"meta-policy 2-4",pipelineRestarts:2,serverRestart:"ON_FAILURE"},providers:["github","railway","astra-local-qwen-3b","astra-local-gemma","huggingface-zerogpu","openrouter-free"],zeroCostGate:true,maxPayloadBytes:MAX});
  if(req.method==="GET"&&url.pathname==="/api/rescue_status")return send(res,200,{status:"ARMED",events:rescueEvents.slice(-20),restartPolicy:"Railway ON_FAILURE",circuitBreaker:true});
  if(req.method==="POST"&&url.pathname==="/api/import_github"){const x=await body(req);try{return send(res,200,await importGithubProject(x))}catch(e){return send(res,502,{status:"FAIL",reason:String(e.message||e)})}}
  if(req.method==="POST"&&url.pathname==="/api/seal"){const x=await body(req);return send(res,200,{status:"PASS",seal:serverSeal(x.payload,x.previousHash||"GENESIS")})}
