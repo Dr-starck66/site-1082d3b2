@@ -28,7 +28,7 @@ function localKind(requestedModel="",system=""){
 async function localText(system,user,requestedModel,maxTokens=1536){
  const kind=localKind(requestedModel,system),base=localModelBase(kind);if(!base)throw new Error("local "+kind+" model endpoint not configured");
  const model=kind==="critic"?"deepseek-critic-local":"qwen-coder-local";
- const r=await timeoutFetch(base+"/chat/completions",{method:"POST",headers:{"content-type":"application/json","authorization":"Bearer astra-private"},body:JSON.stringify({model,temperature:kind==="critic"?.2:.12,max_tokens:Math.max(32,Math.min(1536,Number(maxTokens)||1536)),messages:[{role:"system",content:String(system||"")},{role:"user",content:String(user||"")} ]})},180000);
+ const r=await timeoutFetch(base+"/chat/completions",{method:"POST",headers:{"content-type":"application/json","authorization":"Bearer astra-private"},body:JSON.stringify({model,temperature:kind==="critic"?.2:.12,max_tokens:Math.max(32,Math.min(1536,Number(maxTokens)||1536)),chat_template_kwargs:kind==="critic"?{enable_thinking:false}:undefined,reasoning_format:kind==="critic"?"deepseek":undefined,messages:[{role:"system",content:String(system||"")},{role:"user",content:String(user||"")} ]})},180000);
  const raw=await r.text();if(!r.ok)throw new Error("local "+kind+" inference "+r.status+": "+raw.slice(0,280));
  let data;try{data=JSON.parse(raw)}catch{throw new Error("local "+kind+" inference non-JSON")}
  let text=String(data?.choices?.[0]?.message?.content||"");
@@ -223,6 +223,6 @@ srv.listen(port,"0.0.0.0",()=>{
 
  if(process.env.ASTRA_LOCAL_MODEL_PROBE_ON_BOOT==="1")setTimeout(async()=>{
   try{const q=await localText("Connectivity probe. Return exactly ASTRA_QWEN_OK.","ASTRA_QWEN_OK","qwen-coder-local",64);console.log("[ASTRA LOCAL MODEL PROBE] QWEN PASS",q.model,String(q.text).slice(0,100))}catch(e){console.error("[ASTRA LOCAL MODEL PROBE] QWEN FAIL",String(e?.message||e).slice(0,300))}
-  try{const d=await localText("Connectivity probe. Return exactly ASTRA_DEEPSEEK_OK.","ASTRA_DEEPSEEK_OK","deepseek-critic-local",64);console.log("[ASTRA LOCAL MODEL PROBE] DEEPSEEK PASS",d.model,String(d.text).slice(0,100))}catch(e){console.error("[ASTRA LOCAL MODEL PROBE] DEEPSEEK FAIL",String(e?.message||e).slice(0,300))}
+  try{const d=await localText("Connectivity probe. Return exactly ASTRA_DEEPSEEK_OK.","ASTRA_DEEPSEEK_OK","deepseek-critic-local",256);console.log("[ASTRA LOCAL MODEL PROBE] DEEPSEEK PASS",d.model,String(d.text).slice(0,100))}catch(e){console.error("[ASTRA LOCAL MODEL PROBE] DEEPSEEK FAIL",String(e?.message||e).slice(0,300))}
  },1500);
 });
