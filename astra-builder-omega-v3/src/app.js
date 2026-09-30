@@ -48,6 +48,33 @@ function previewDoc(){const m=Object.fromEntries(state.files.map(f=>[f.path,f.co
 function renderPreview(){const f=$("#preview"),empty=$("#previewEmpty");if(state.files.some(x=>x.path==="preview/index.html")){f.style.display="block";empty.classList.add("hidden");f.srcdoc=previewDoc()}else{f.style.display="none";empty.classList.remove("hidden")}}
 function renderSpec(){$("#specViewer").textContent=JSON.stringify(state.spec||{status:"waiting"},null,2)}
 function renderBenchmark(){const b=state.bench;if(!b){$("#benchmarkView").innerHTML="<p>Aucun benchmark exécuté.</p>";return}$("#benchmarkView").innerHTML=`<div class="bench-grid"><div class="bench-card"><small>Evidence quality</small><b>${b.quality}%</b></div><div class="bench-card"><small>Completeness</small><b>${b.completeness}%</b></div><div class="bench-card"><small>Architecture</small><b>${b.architecture}%</b></div></div><table class="bench-table"><tr><th>Mesure</th><th>ASTRA</th><th>Lovable</th><th>Bolt</th></tr><tr><td>Files</td><td>${b.files}</td><td>UNVERIFIED</td><td>UNVERIFIED</td></tr><tr><td>Tests</td><td>${b.tests}</td><td>UNVERIFIED</td><td>UNVERIFIED</td></tr><tr><td>Résultat comparatif</td><td>Mesuré localement</td><td>UNVERIFIED</td><td>UNVERIFIED</td></tr></table><p class="muted">${escapeHtml(b.note)}</p>`}
+function renderSovereign(){
+ const root=$("#sovereignView");if(!root)return;const mp=missionProgress(state.mission);$("#missionScore").textContent=mp.pct+"%";$("#chainScore").textContent=String(state.evidenceChain.length);$("#genomeScore").textContent=String(state.genomes.length);
+ const mission=(state.mission?.nodes||[]).map(n=>`<div class="ev"><div><b>${escapeHtml(n.id+" · "+n.title)}</b><small>${escapeHtml(n.type+" · deps "+(n.deps||[]).join(","))}</small></div><span class="${String(n.status||"UNVERIFIED").toLowerCase()}">${n.status||"WAIT"}</span></div>`).join("");
+ const nk=state.negativeKnowledge.hints(6).map(x=>`<div class="ev"><div><b>${escapeHtml(x.signature)}</b><small>${escapeHtml(x.message)}</small></div><span class="partial">×${x.count}</span></div>`).join("");
+ const head=state.evidenceChain.at(-1)?.hash||"GENESIS";
+ const genomes=state.genomes.slice(-5).reverse().map(g=>`<div class="ev"><div><b>${escapeHtml(g.label)}</b><small>${escapeHtml(g.createdAt+" · "+g.traits.files+" files · Q"+g.traits.evidenceQuality)}</small></div><span class="${String(g.traits.status||"UNVERIFIED").toLowerCase()}">${g.traits.status}</span></div>`).join("");
+ root.innerHTML=`<div class="card"><small>AION MISSION GRAPH</small>${mission||'<p class="muted">No mission yet.</p>'}</div><div class="card"><small>NEGATIVE KNOWLEDGE GRAPH</small>${nk||'<p class="muted">No known failure pattern.</p>'}</div><div class="card"><small>EXPERIMENT GENOME / LOOPFORGE</small>${genomes||'<p class="muted">No genome yet.</p>'}</div><div class="card"><small>EVIDENLOCK HEAD</small><p class="muted" style="word-break:break-all">${escapeHtml(head)}</p></div>`;
+}
+async function sealSovereign(kind){
+ const filesDigest=await sha256(state.files.map(f=>({path:f.path,content:f.content})));const prev=state.evidenceChain.at(-1)?.hash||"GENESIS";
+ const record=await seal(prev,{status:state.status,spec:state.spec,evidence:state.evidence,filesDigest,mission:state.mission,genomes:state.genomes.slice(-3)},kind);state.evidenceChain.push(record);const v=await verifyChain(state.evidenceChain);addEv("EVIDENLOCK",v.status,state.evidenceChain.length+" sealed record(s) · "+record.hash.slice(0,12));renderSovereign();return record;
+}
+function shield(files,context){
+ const g=guardFiles(files);addEv("AgentShield",g.verdict==="ALLOW"?"PASS":"FAIL",g.reason+(g.blocked.length?" · "+g.blocked.join(", "):""));
+ if(g.verdict!=="ALLOW")throw new Error("AgentShield blocked "+context+": "+g.blocked.join(", "));return g.allowed;
+}
+function rememberFailure(error,context,rootCause=""){const sig=state.negativeKnowledge.record(error,{context,phase:state.phase},rootCause);addEv("Negative Knowledge","PARTIAL","recorded "+sig);renderSovereign();return sig}
+function captureGenome(label,parent=null){
+ const g=createGenome({spec:state.spec,files:state.files,evidence:state.evidence,cfg:state.cfg,status:state.status,label,parent});state.genomes.push(g);state.genomes=state.genomes.slice(-30);renderSovereign();return g;
+}
+function captureBenchmark(label,startedAt=state.runStartedAt){
+ const metrics=metricSnapshot({files:state.files,evidence:state.evidence,startedAt,status:state.status});const sample={label,at:new Date().toISOString(),metrics};state.benchmarkRuns.push(sample);state.benchmarkRuns=state.benchmarkRuns.slice(-50);return sample;
+}
+function evolveMission(type,status){state.mission=updateMission(state.mission,type,status);renderSovereign()}
+function exportProof(){
+ const pack=proofPack(state),blob=new Blob([JSON.stringify(pack,null,2)],{type:"application/json"}),u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download="astra-sovereign-proof-pack.json";a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);
+}
 async function persistWorkspace(message){
  try{const record=await saveWorkspace(snapshotOf({...state,idea:$("#idea")?.value||"",history:state.history,conversation:state.conversation},message));
  state.workspaceId=record.id;state.history=record.history||[];state.conversation=record.conversation||[];
@@ -79,7 +106,7 @@ async function importGithub(){
  try{const r=await control("/api/import_github",{githubToken:state.cfg.githubToken,repo,ref});if(!r.data?.files?.length)throw new Error(r.data?.reason||"No files imported");state.files=r.data.files;const reversePayload=state.files.slice(0,70).map(f=>({path:f.path,excerpt:f.content.slice(0,2200)}));state.spec=parse(await rescueChat(state.cfg,state.cfg.architect,prompts.reverseArchitect,"REPOSITORY: "+repo+" @ "+ref+"\nFILES:\n"+JSON.stringify(reversePayload)));$("#idea").value="Imported from GitHub: "+repo;state.selected=state.files[0]?.path||null;addEv("GitHub import","PASS",r.data.stats.files+" files · "+r.data.stats.bytes+" bytes"+(r.data.stats.truncated?" · truncated":""));renderFiles();renderSpec();renderPreview();await auditRepairVerify("Imported existing application "+repo+" @ "+ref);await persistWorkspace("Imported "+repo+" @ "+ref);$("#workspaceDialog").close();rescue.checkpoint("import-complete")}
  catch(e){addEv("GitHub import","FAIL",String(e?.message||e));setStatus("FAIL")}
 }
-function ui(){renderPhases();routeSummary();renderAgents();renderFiles();renderSpec();renderBenchmark()}
+function ui(){renderPhases();routeSummary();renderAgents();renderFiles();renderSpec();renderBenchmark();renderSovereign()}
 function seedAgents(){state.agents={};agent("Architect",state.cfg.architect);agent("Frontend+UX",state.cfg.frontend);agent("Backend",state.cfg.backend);agent("Database",state.cfg.backend);agent("Auth+Security",state.cfg.backend);agent("DevOps-X",state.cfg.ops);agent("Adversary",state.cfg.adversary);agent("Verify²",state.cfg.verifier);agent("Image",state.cfg.imageModel)}
 async function generateAssets(){const briefs=state.spec?.imageBriefs||[];if(!briefs.length){addEv("Image briefs","PASS","aucune image requise");return}if(!state.cfg.imageBaseUrl){addEv("Image engine","PARTIAL",briefs.length+" image(s) demandée(s), endpoint gratuit non configuré");return}for(const b of briefs){const a=await rescueImage(state.cfg,b.prompt);const blob=new Blob([a.bytes],{type:a.mime}),dataUrl=await new Promise((resolve,reject)=>{const fr=new FileReader;fr.onload=()=>resolve(fr.result);fr.onerror=reject;fr.readAsDataURL(blob)});state.assets.push({id:b.id,name:"assets/"+b.id+".png",bytes:a.bytes,dataUrl})}addEv("Image engine","PASS",state.assets.length+" asset(s) généré(s) via endpoint attesté gratuit")}
 async function control(path,payload){return rescue.run("CONTROL "+path,async()=>{const r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});const raw=await r.text();let data;try{data=JSON.parse(raw)}catch{data={raw}};if(!r.ok&&r.status!==501)throw new Error("Control plane "+r.status+": "+raw.slice(0,220));return{ok:r.ok,status:r.status,data}},{attempts:3})}
