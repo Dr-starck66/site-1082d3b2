@@ -2,6 +2,7 @@ import http from "node:http";
 import { readFile, stat } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 import { createHash } from "node:crypto";
+import { seedPopulation, rankPopulation, evolutionDecision } from "./src/evolution-engine.js";
 
 const root=process.cwd(),port=Number(process.env.PORT||3000),MAX=4*1024*1024;
 const rescueEvents=[];const rescueLog=(type,detail)=>{rescueEvents.push({at:new Date().toISOString(),type,detail:String(detail).slice(0,500)});if(rescueEvents.length>50)rescueEvents.shift();console.error("[ASTRA RESCUE Ω]",type,detail)};
@@ -115,12 +116,12 @@ async function importGithubProject(input){
 }
 
 async function api(req,res,url){
- if(req.method==="GET"&&url.pathname==="/health")return send(res,200,{ok:true,service:"astra-builder-omega-v3",version:"4.0.0",nativeDeployBroker:true,rescue:"ARMED"});
+ if(req.method==="GET"&&url.pathname==="/health")return send(res,200,{ok:true,service:"astra-builder-omega-v3",version:"5.0.0",nativeDeployBroker:true,rescue:"ARMED"});
  if(req.method==="GET"&&url.pathname==="/api/self_test"){
   const sample={spec:{acceptance:["UI renders","API health works","Auth and data contracts exist"]},files:[{path:"frontend/index.html",content:"<main>ASTRA test</main>"},{path:"backend/package.json",content:'{"name":"demo","version":"1.0.0"}'},{path:"backend/src/server.js",content:"app.get('/health',handler)"},{path:"backend/tests/server.test.js",content:"test health endpoint"},{path:"database/schema.sql",content:"create table users(id text primary key);"},{path:"auth/session.js",content:"export function sessionGuard(){}"},{path:"Dockerfile",content:"FROM node:22-alpine"},{path:"deploy.json",content:'{"provider":"railway","dockerfilePath":"Dockerfile","healthPath":"/health"}'},{path:"README.md",content:"demo"}]};
-  const v=validate(sample),rescueOk=typeof fatal==="function"&&Array.isArray(rescueEvents),sealTest=serverSeal({selfTest:true},"GENESIS"),sealOk=/^[a-f0-9]{64}$/.test(sealTest.hash);return send(res,v.verdict==="PASS"&&rescueOk&&sealOk?200:500,{ok:v.verdict==="PASS"&&rescueOk&&sealOk,verdict:v.verdict,rescue:rescueOk?"ARMED":"FAIL",sovereignSeal:sealOk?"PASS":"FAIL",sealHead:sealTest.hash,evidence:v.evidence});
+  const v=validate(sample),rescueOk=typeof fatal==="function"&&Array.isArray(rescueEvents),sealTest=serverSeal({selfTest:true},"GENESIS"),sealOk=/^[a-f0-9]{64}$/.test(sealTest.hash),pop=seedPopulation(4,1).map((x,i)=>({...x,fitness:10-i})),ranked=rankPopulation(pop),evoDecision=evolutionDecision(null,ranked[0]),evolutionOk=pop.length===4&&ranked[0]?.fitness===10&&evoDecision.action==="CONTINUE";return send(res,v.verdict==="PASS"&&rescueOk&&sealOk&&evolutionOk?200:500,{ok:v.verdict==="PASS"&&rescueOk&&sealOk&&evolutionOk,verdict:v.verdict,rescue:rescueOk?"ARMED":"FAIL",sovereignSeal:sealOk?"PASS":"FAIL",evolutionEngine:evolutionOk?"PASS":"FAIL",sealHead:sealTest.hash,evidence:v.evidence});
  }
- if(req.method==="GET"&&url.pathname==="/api/capabilities")return send(res,200,{version:"4.0.0",serverValidation:true,deployBroker:true,nativeDeployBroker:true,rescue:true,sovereignCore:true,evidenceSeal:"SHA-256",missionGraph:"AION",duality:"DUALITY-X",agentShield:true,negativeKnowledge:true,experimentGenome:true,benchmark:"BENCHMARK-X10",adaptiveRouter:"JEV-X",rescuePolicy:{operationAttempts:3,pipelineRestarts:2,serverRestart:"ON_FAILURE"},providers:["github","railway"],zeroCostGate:true,maxPayloadBytes:MAX});
+ if(req.method==="GET"&&url.pathname==="/api/capabilities")return send(res,200,{version:"4.0.0",serverValidation:true,deployBroker:true,nativeDeployBroker:true,rescue:true,sovereignCore:true,evidenceSeal:"SHA-256",missionGraph:"AION",duality:"DUALITY-X",agentShield:true,negativeKnowledge:true,experimentGenome:true,benchmark:"BENCHMARK-X10",adaptiveRouter:"JEV-X",evolutionEngine:"EVOLUTION-Ω",rescuePolicy:{operationAttempts:3,pipelineRestarts:2,serverRestart:"ON_FAILURE"},providers:["github","railway"],zeroCostGate:true,maxPayloadBytes:MAX});
  if(req.method==="GET"&&url.pathname==="/api/rescue_status")return send(res,200,{status:"ARMED",events:rescueEvents.slice(-20),restartPolicy:"Railway ON_FAILURE",circuitBreaker:true});
  if(req.method==="POST"&&url.pathname==="/api/import_github"){const x=await body(req);try{return send(res,200,await importGithubProject(x))}catch(e){return send(res,502,{status:"FAIL",reason:String(e.message||e)})}}
  if(req.method==="POST"&&url.pathname==="/api/seal"){const x=await body(req);return send(res,200,{status:"PASS",seal:serverSeal(x.payload,x.previousHash||"GENESIS")})}
@@ -142,4 +143,4 @@ const srv=http.createServer(async(req,res)=>{try{
  const url=new URL(req.url||"/","http://localhost");if(url.pathname.startsWith("/api/")||url.pathname==="/health"){const done=await api(req,res,url);if(done!==false)return}
  let p=decodeURIComponent(url.pathname);if(p==="/")p="/index.html";const rel=normalize(p).replace(/^[/\\]+/,"");if(!safePath(rel)){res.writeHead(403);return res.end("Forbidden")}const f=join(root,rel);if(!f.startsWith(root)){res.writeHead(403);return res.end("Forbidden")}const st=await stat(f);if(!st.isFile())throw new Error("not file");const data=await readFile(f);res.writeHead(200,{"content-type":mime[extname(f)]||"application/octet-stream","cache-control":"public,max-age=300"});res.end(data)
 }catch(e){if(e?.status)return send(res,e.status,{error:e.message});res.writeHead(404,{"content-type":"text/plain; charset=utf-8"});res.end("Not found")}});
-srv.listen(port,"0.0.0.0",()=>console.log("ASTRA BUILDER Ω V4 SOVEREIGN FABRIC listening",port));
+srv.listen(port,"0.0.0.0",()=>console.log("ASTRA BUILDER Ω V5 EVOLUTION ENGINE listening",port));
