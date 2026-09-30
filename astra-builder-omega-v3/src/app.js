@@ -57,8 +57,10 @@ function renderSovereign(){
  root.innerHTML=`<div class="card"><small>AION MISSION GRAPH</small>${mission||'<p class="muted">No mission yet.</p>'}</div><div class="card"><small>NEGATIVE KNOWLEDGE GRAPH</small>${nk||'<p class="muted">No known failure pattern.</p>'}</div><div class="card"><small>EXPERIMENT GENOME / LOOPFORGE</small>${genomes||'<p class="muted">No genome yet.</p>'}</div><div class="card"><small>EVIDENLOCK HEAD</small><p class="muted" style="word-break:break-all">${escapeHtml(head)}</p></div>`;
 }
 async function sealSovereign(kind){
- const filesDigest=await sha256(state.files.map(f=>({path:f.path,content:f.content})));const prev=state.evidenceChain.at(-1)?.hash||"GENESIS";
- const record=await seal(prev,{status:state.status,spec:state.spec,evidence:state.evidence,filesDigest,mission:state.mission,genomes:state.genomes.slice(-3)},kind);state.evidenceChain.push(record);const v=await verifyChain(state.evidenceChain);addEv("EVIDENLOCK",v.status,state.evidenceChain.length+" sealed record(s) · "+record.hash.slice(0,12));renderSovereign();return record;
+ const filesDigest=await sha256(state.files.map(f=>({path:f.path,content:f.content}))),prev=state.evidenceChain.at(-1)?.hash||"GENESIS",payload={status:state.status,spec:state.spec,evidence:state.evidence,filesDigest,mission:state.mission,genomes:state.genomes.slice(-3)};
+ const record=await seal(prev,payload,kind);let serverHash="";
+ try{const sr=await control("/api/seal",{previousHash:prev,payload});serverHash=sr.data?.seal?.hash||"";addEv("Sealed Sovereign Core",serverHash?"PASS":"PARTIAL",serverHash?"server seal "+serverHash.slice(0,12):"server seal missing")}catch(e){addEv("Sealed Sovereign Core","PARTIAL",String(e?.message||e))}
+ state.evidenceChain.push({...record,serverHash});const v=await verifyChain(state.evidenceChain);addEv("EVIDENLOCK",v.status,state.evidenceChain.length+" sealed record(s) · "+record.hash.slice(0,12));renderSovereign();return record;
 }
 function shield(files,context){
  const g=guardFiles(files);addEv("AgentShield",g.verdict==="ALLOW"?"PASS":"FAIL",g.reason+(g.blocked.length?" · "+g.blocked.join(", "):""));
