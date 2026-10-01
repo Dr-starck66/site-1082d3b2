@@ -431,7 +431,7 @@ srv.listen(port,"0.0.0.0",()=>{
  if(process.env.ASTRA_OWNER_ACTION_PROBE_ON_BOOT==="1")setTimeout(async()=>{
   try{const r=await runOwnerActionProbe();console.log("[ASTRA OWNER ACTION PROBE]",r.status,r.mode,r.trace?.length,r.final?.text)}
   catch(e){console.error("[ASTRA OWNER ACTION PROBE] FAIL",String(e?.message||e).slice(0,700))}
- },1600);
+ },9000);
 
  if(process.env.ASTRA_CLAW_PROBE_ON_BOOT==="1")setTimeout(async()=>{
   try{const r=await runClaw({url:"https://example.com",goal:"ASTRA Claw smoke test",maxSteps:1});console.log("[ASTRA CLAW PROBE]",r.status,r.mode,r.visited?.[0]?.status,r.final?.title,Buffer.byteLength(r.screenshotB64||"","base64")+" bytes")}
