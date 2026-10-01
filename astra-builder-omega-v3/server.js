@@ -314,7 +314,7 @@ async function api(req,res,url){
  if(req.method==="GET"&&url.pathname==="/api/claw_status"){return send(res,200,{status:"PASS",...clawSelfTest()})}
  if(req.method==="POST"&&url.pathname==="/api/claw/run"){
   const x=await body(req);try{
-   const result=await runClaw({url:x.url,goal:x.goal,maxSteps:x.maxSteps,agent:async input=>{const r=await routedLocalText("You are ASTRA Claw Ω navigator. READ ONLY. JSON only: {decision:\\"FOLLOW\\"|\\"STOP\\",href:\\"\\",rationale:\\"\\",findings:[]}. If the goal is already satisfied, STOP. Follow only a href exactly present in the supplied same-origin list.",JSON.stringify(input),"qwen-coder-local",420);return parseProbeJson(r.text)}});
+   const result=await runClaw({url:x.url,goal:x.goal,maxSteps:x.maxSteps,agent:async input=>{const r=await routedLocalText("You are ASTRA Claw Ω navigator. READ ONLY. JSON only: {decision:'FOLLOW'|'STOP',href:'',rationale:'',findings:[]}. If the goal is already satisfied, STOP. Follow only a href exactly present in the supplied same-origin list.",JSON.stringify(input),"qwen-coder-local",420);return parseProbeJson(r.text)}});
    return send(res,200,result);
   }catch(e){return send(res,502,{status:"FAIL",reason:String(e.message||e)})}
  }
