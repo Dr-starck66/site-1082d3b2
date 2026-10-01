@@ -28,7 +28,7 @@ function routerAuthorized(req){
  const auth=String(req.headers?.authorization||"");
  return auth===("Bearer "+token);
 }
-const localModelBase=kind=>String(kind==="chat"?(process.env.ASTRA_LOCAL_CHAT_BASE||""):kind==="critic"?(process.env.ASTRA_LOCAL_CRITIC_BASE||process.env.ASTRA_LOCAL_DEEPSEEK_BASE||""):kind==="fast"?(process.env.ASTRA_LOCAL_QWEN_FAST_BASE||""):(process.env.ASTRA_LOCAL_QWEN_BASE||"")).replace(/\/+$/,"");
+const localModelBase=kind=>String(kind==="chat"?(process.env.ASTRA_LOCAL_CHAT_BASE||""):kind==="critic"?(process.env.ASTRA_LOCAL_CRITIC_BASE||process.env.ASTRA_LOCAL_DEEPSEEK_BASE||""):kind==="fast"?(process.env.ASTRA_LOCAL_QWEN_FAST_BASE||""):kind==="standard"?(process.env.ASTRA_LOCAL_QWEN_STANDARD_BASE||""):(process.env.ASTRA_LOCAL_QWEN_BASE||"")).replace(/\/+$/,"");
 async function localModelHealth(kind){
  const base=localModelBase(kind);if(!base)return{status:"UNVERIFIED",kind,reason:"private model base not configured"};
  const root=base.replace(/\/v1$/,"");
@@ -37,6 +37,7 @@ async function localModelHealth(kind){
 function localKind(requestedModel="",system=""){
  const m=String(requestedModel||"").toLowerCase();
  if(/qwen-fast|fast-local/.test(m))return"fast";
+ if(/qwen-standard|standard-local/.test(m))return"standard";
  if(/qwen-chat|chat-local|sports-chat/.test(m))return"chat";
  if(/qwen|coder-local|builder/.test(m))return"builder";
  if(/gemma|deepseek|critic/.test(m))return"critic";
@@ -65,8 +66,8 @@ function withModelLane(kind,fn){
 }
 async function localText(system,user,requestedModel,maxTokens=1536){
  const kind=localKind(requestedModel,system),base=localModelBase(kind);if(!base)throw new Error("local "+kind+" model endpoint not configured");
- const model=kind==="critic"?"gemma-critic-local":kind==="fast"?"qwen-fast-local":kind==="chat"?"qwen-chat-local":"qwen-coder-local";
- const profile=kind==="critic"?{mode:"CRITIC",score:0,maxTokens:Math.max(128,Math.min(768,Number(maxTokens)||512)),timeoutMs:90000,temperature:.15}:kind==="fast"?{mode:"FAST",score:0,maxTokens:Math.max(96,Math.min(384,Number(maxTokens)||256)),timeoutMs:60000,temperature:.1}:kind==="chat"?{mode:"CHAT",score:0,maxTokens:Math.max(96,Math.min(384,Number(maxTokens)||256)),timeoutMs:60000,temperature:.05}:builderRouteProfile(system,user,requestedModel,maxTokens);
+ const model=kind==="critic"?"gemma-critic-local":kind==="fast"?"qwen-fast-local":kind==="standard"?"qwen-standard-local":kind==="chat"?"qwen-chat-local":"qwen-coder-local";
+ const profile=kind==="critic"?{mode:"CRITIC",score:0,maxTokens:Math.max(128,Math.min(768,Number(maxTokens)||512)),timeoutMs:90000,temperature:.15}:kind==="fast"?{mode:"FAST",score:0,maxTokens:Math.max(96,Math.min(384,Number(maxTokens)||256)),timeoutMs:60000,temperature:.1}:kind==="standard"?{mode:"STANDARD",score:2,maxTokens:Math.max(512,Math.min(1536,Number(maxTokens)||1024)),timeoutMs:120000,temperature:.12}:kind==="chat"?{mode:"CHAT",score:0,maxTokens:Math.max(96,Math.min(384,Number(maxTokens)||256)),timeoutMs:60000,temperature:.05}:builderRouteProfile(system,user,requestedModel,maxTokens);
  return withModelLane(kind,async()=>{
   const r=await timeoutFetch(base+"/chat/completions",{method:"POST",headers:{"content-type":"application/json","authorization":"Bearer astra-private"},body:JSON.stringify({model,temperature:profile.temperature,max_tokens:profile.maxTokens,response_format:{type:"json_object"},messages:[{role:"system",content:String(system||"")},{role:"user",content:String(user||"")} ]})},profile.timeoutMs);
   const raw=await r.text();if(!r.ok)throw new Error("local "+kind+" inference "+r.status+": "+raw.slice(0,280));
@@ -87,7 +88,7 @@ async function routedLocalText(system,user,requestedModel,maxTokens=1536){
  try{return{status:"PASS",...(await localText(system,user,requestedModel,maxTokens)),fallback:false,fallbackScope:"NONE"}}
  catch(localError){
   const primaryKind=localKind(requestedModel,system);
-  const rescueModels=primaryKind==="chat"?["qwen-fast-local","gemma-critic-local"]:primaryKind==="critic"?["qwen-coder-local","qwen-fast-local"]:primaryKind==="fast"?["qwen-chat-local","gemma-critic-local"]:["qwen-fast-local","gemma-critic-local"];
+  const rescueModels=primaryKind==="chat"?["qwen-fast-local","qwen-standard-local","gemma-critic-local"]:primaryKind==="critic"?["qwen-standard-local","qwen-coder-local","qwen-fast-local"]:primaryKind==="fast"?["qwen-standard-local","qwen-chat-local","gemma-critic-local"]:primaryKind==="standard"?["qwen-coder-local","qwen-fast-local","gemma-critic-local"]:["qwen-standard-local","qwen-fast-local","gemma-critic-local"];
   const failures=[String(localError?.message||localError).slice(0,220)];
   for(const rescueModel of rescueModels){
    try{
@@ -494,7 +495,7 @@ async function api(req,res,url){
 
  if(req.method==="POST"&&url.pathname==="/api/import_github"){const x=await body(req);try{return send(res,200,await importGithubProject(x))}catch(e){return send(res,502,{status:"FAIL",reason:String(e.message||e)})}}
  if(req.method==="POST"&&url.pathname==="/api/seal"){const x=await body(req);return send(res,200,{status:"PASS",seal:serverSeal(x.payload,x.previousHash||"GENESIS")})}
- if(req.method==="GET"&&url.pathname==="/api/local_model_status"){const [chat,fast,builder,critic]=await Promise.all([localModelHealth("chat"),localModelHealth("fast"),localModelHealth("builder"),localModelHealth("critic")]);const pass=[chat,fast,builder,critic].filter(x=>x.status==="PASS").length;return send(res,200,{status:chat.status==="PASS"&&pass>=3?"PASS":pass>=2?"PARTIAL":"UNVERIFIED",chat,fast,builder,critic})}
+ if(req.method==="GET"&&url.pathname==="/api/local_model_status"){const [chat,fast,standard,builder,critic]=await Promise.all([localModelHealth("chat"),localModelHealth("fast"),localModelHealth("standard"),localModelHealth("builder"),localModelHealth("critic")]);const pass=[chat,fast,standard,builder,critic].filter(x=>x.status==="PASS").length;return send(res,200,{status:pass===5?"PASS":pass>=3?"PARTIAL":"UNVERIFIED",chat,fast,standard,builder,critic})}
  if(req.method==="POST"&&url.pathname==="/api/router_chat"){
   if(!routerAuthorized(req))return send(res,401,{status:"FAIL",reason:"unauthorized"});
   const x=await body(req),system=String(x.system||""),user=String(x.user||"");
@@ -504,9 +505,9 @@ async function api(req,res,url){
    return send(res,out.status==="PASS"?200:206,out);
   }catch(e){return send(res,503,{status:"FAIL",router:"ASTRA SUPER ROUTER Ω",reason:String(e?.message||e).slice(0,500)})}
  }
- if(req.method==="POST"&&url.pathname==="/api/router_profile"){const x=await body(req);const kind=localKind(x.requestedModel,x.system);return send(res,200,{status:"PASS",kind,profile:kind==="critic"?{mode:"CRITIC",score:0,maxTokens:Math.max(256,Math.min(1536,Number(x.maxTokens)||1536))}:kind==="fast"?{mode:"FAST",score:0,maxTokens:Math.max(128,Math.min(768,Number(x.maxTokens)||512))}:builderRouteProfile(x.system,x.user,x.requestedModel,x.maxTokens)})}
+ if(req.method==="POST"&&url.pathname==="/api/router_profile"){const x=await body(req);const kind=localKind(x.requestedModel,x.system);return send(res,200,{status:"PASS",kind,profile:kind==="critic"?{mode:"CRITIC",score:0,maxTokens:Math.max(128,Math.min(768,Number(x.maxTokens)||512))}:kind==="fast"?{mode:"FAST",score:0,maxTokens:Math.max(96,Math.min(384,Number(x.maxTokens)||256))}:kind==="standard"?{mode:"STANDARD",score:2,maxTokens:Math.max(512,Math.min(1536,Number(x.maxTokens)||1024))}:builderRouteProfile(x.system,x.user,x.requestedModel,x.maxTokens)})}
  if(req.method==="POST"&&url.pathname==="/api/local_text"){const x=await body(req);try{const out=await routedLocalText(x.system,x.user,x.requestedModel,x.maxTokens);return send(res,200,out)}catch(e){return send(res,503,{status:"FAIL",reason:String(e.message||e)})}}
- if(req.method==="POST"&&url.pathname==="/api/inference_self_test"){try{let fast;try{fast=await localText("Return exactly ASTRA_FAST_OK.","Return exactly ASTRA_FAST_OK.","qwen-fast-local",64)}catch(e){fast={error:String(e?.message||e)}};const builder=await localText("Return exactly ASTRA_QWEN_OK.","Return exactly ASTRA_QWEN_OK.","qwen-coder-local",64);let critic;try{critic=await localText("Return exactly ASTRA_CRITIC_OK.","Return exactly ASTRA_CRITIC_OK.","gemma-critic-local",64)}catch(e){critic={error:String(e?.message||e)}};const fOk=/ASTRA_FAST_OK/i.test(fast.text||""),bOk=/ASTRA_QWEN_OK/i.test(builder.text||""),cOk=/ASTRA_CRITIC_OK/i.test(critic.text||"");return send(res,fOk&&bOk&&cOk?200:206,{status:fOk&&bOk&&cOk?"PASS":"PARTIAL",fast:{ok:fOk,model:fast.model||"qwen-fast-local",text:String(fast.text||"").slice(0,120),error:fast.error||null},builder:{ok:bOk,model:builder.model,text:String(builder.text||"").slice(0,120)},critic:{ok:cOk,model:critic.model||"gemma-critic-local",text:String(critic.text||"").slice(0,120),error:critic.error||null}})}catch(e){return send(res,503,{status:"FAIL",reason:String(e.message||e)})}}
+ if(req.method==="POST"&&url.pathname==="/api/inference_self_test"){try{let fast,standard,critic;try{fast=await localText("Return exactly ASTRA_FAST_OK.","Return exactly ASTRA_FAST_OK.","qwen-fast-local",64)}catch(e){fast={error:String(e?.message||e)}};try{standard=await localText("Return exactly ASTRA_STANDARD_OK.","Return exactly ASTRA_STANDARD_OK.","qwen-standard-local",64)}catch(e){standard={error:String(e?.message||e)}};const builder=await localText("Return exactly ASTRA_QWEN_OK.","Return exactly ASTRA_QWEN_OK.","qwen-coder-local",64);try{critic=await localText("Return exactly ASTRA_CRITIC_OK.","Return exactly ASTRA_CRITIC_OK.","gemma-critic-local",64)}catch(e){critic={error:String(e?.message||e)}};const fOk=/ASTRA_FAST_OK/i.test(fast.text||""),sOk=/ASTRA_STANDARD_OK/i.test(standard.text||""),bOk=/ASTRA_QWEN_OK/i.test(builder.text||""),cOk=/ASTRA_CRITIC_OK/i.test(critic.text||"");return send(res,fOk&&sOk&&bOk&&cOk?200:206,{status:fOk&&sOk&&bOk&&cOk?"PASS":"PARTIAL",fast:{ok:fOk,model:fast.model||"qwen-fast-local",error:fast.error||null},standard:{ok:sOk,model:standard.model||"qwen-standard-local",error:standard.error||null},builder:{ok:bOk,model:builder.model},critic:{ok:cOk,model:critic.model||"gemma-critic-local",error:critic.error||null}})}catch(e){return send(res,503,{status:"FAIL",reason:String(e.message||e)})}}
  if(req.method==="POST"&&url.pathname==="/api/free_text"){const x=await body(req);try{return send(res,200,{status:"PASS",...(await zeroGpuText(x.system,x.user))})}catch(e){return send(res,503,{status:"PARTIAL",reason:String(e.message||e),provider:"Hugging Face ZeroGPU",model:"Qwen/Qwen3.8-27B"})}}
  if(req.method==="POST"&&url.pathname==="/api/free_image"){const x=await body(req);try{return send(res,200,{status:"PASS",...(await zeroGpuImage(x.prompt))})}catch(e){return send(res,503,{status:"PARTIAL",reason:String(e.message||e),provider:"Hugging Face ZeroGPU",model:"Qwen/Qwen-Image-2.1"})}}
  if(req.method==="GET"&&url.pathname==="/api/golden_run_status")return send(res,200,{...goldenState,error:goldenState.error?String(goldenState.error).slice(0,800):null});
