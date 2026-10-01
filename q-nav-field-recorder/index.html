@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#06100f">
+<title>Q-NAV X Field Recorder V1.2</title>
+<style>
+:root{--bg:#06100f;--panel:#0b1d1a;--line:rgba(160,230,214,.14);--text:#eafff9;--muted:#7b9b94;--mint:#83efd6;--amber:#efc66e;--red:#ef9999;--blue:#9cc7ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0,rgba(66,195,166,.13),transparent 30%),var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:980px;margin:auto;padding:22px 18px 48px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center;border-bottom:1px solid var(--line);padding-bottom:18px}
+.brand b{letter-spacing:.13em}.brand small{display:block;color:var(--muted);margin-top:3px}.pill{padding:7px 10px;border:1px solid var(--line);border-radius:999px;font-size:10px;color:var(--muted)}
+.hero{padding:44px 0 26px}.eyebrow{font-size:10px;color:var(--mint);font-weight:800;letter-spacing:.15em}h1{font-size:clamp(38px,8vw,68px);line-height:.96;letter-spacing:-.055em;margin:15px 0}.hero p{color:#86a69f;line-height:1.65;max-width:760px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.card{border:1px solid var(--line);background:rgba(8,27,24,.8);border-radius:12px;padding:14px}.card span{font-size:9px;color:#66877f;letter-spacing:.08em;text-transform:uppercase}.card strong{display:block;margin-top:7px;font-size:20px}
+.panel{margin-top:14px;border:1px solid var(--line);background:rgba(8,27,24,.78);border-radius:14px;padding:18px}.panel h2{font-size:12px;letter-spacing:.09em;text-transform:uppercase;margin:0 0 15px}
+.controls{display:flex;gap:9px;flex-wrap:wrap}.btn{border:1px solid var(--line);background:#0b211d;color:#b8d0ca;border-radius:9px;padding:11px 14px;font-weight:700}.btn.primary{background:var(--mint);color:#052019;border-color:transparent}.btn.danger{color:#f2aaaa}.btn:disabled{opacity:.45;cursor:not-allowed}
+.statusgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.sensor{border:1px solid var(--line);border-radius:9px;padding:11px}.sensor b{display:block;font-size:11px}.sensor small{color:#688b82}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;background:#63756f}.ok .dot{background:var(--mint)}.warn .dot{background:var(--amber)}.bad .dot{background:var(--red)}
+.log{height:165px;overflow:auto;background:#061815;border:1px solid var(--line);border-radius:9px;padding:10px;font:10px ui-monospace,SFMono-Regular,Consolas,monospace;color:#7fa198;white-space:pre-wrap}
+.note{margin-top:12px;font-size:10px;color:#66877f;line-height:1.55}.manifest{font:10px ui-monospace,monospace;overflow-wrap:anywhere;color:#89aaa2}
+@media(max-width:760px){.grid{grid-template-columns:repeat(2,1fr)}.statusgrid{grid-template-columns:1fr 1fr}}
+@media(max-width:460px){.grid,.statusgrid{grid-template-columns:1fr}.top .pill{display:none}.hero{padding-top:30px}}
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div class="brand"><b>Q‑NAV X</b><small>Field Recorder · V1.2</small></div>
+    <div class="pill" id="securePill">checking secure context…</div>
+  </div>
+
+  <section class="hero">
+    <div class="eyebrow">PROPRIETARY DATA LAYER</div>
+    <h1>Capture le terrain.<br>Construis le moat.</h1>
+    <p>Enregistre localement les capteurs disponibles du smartphone. Aucun upload automatique : la session reste sur l’appareil jusqu’à l’export.</p>
+  </section>
+
+  <div class="grid">
+    <div class="card"><span>Échantillons</span><strong id="samples">0</strong></div>
+    <div class="card"><span>Durée</span><strong id="duration">0 s</strong></div>
+    <div class="card"><span>GPS</span><strong id="gpsCount">0</strong></div>
+    <div class="card"><span>MAG</span><strong id="magCount">0</strong></div>
+  </div>
+
+  <section class="panel">
+    <h2>01 · Acquisition</h2>
+    <div class="controls">
+      <button class="btn primary" id="startBtn">Démarrer la capture</button>
+      <button class="btn danger" id="stopBtn" disabled>Arrêter</button>
+      <button class="btn" id="clearBtn">Effacer</button>
+    </div>
+    <div class="note">Pour les capteurs web, HTTPS et une interaction utilisateur sont généralement nécessaires. Le magnétomètre web reste expérimental et peut être indisponible même si le téléphone possède physiquement un compas.</div>
+  </section>
+
+  <section class="panel">
+    <h2>02 · Capabilities</h2>
+    <div class="statusgrid" id="capabilities"></div>
+  </section>
+
+  <section class="panel">
+    <h2>03 · Export evidence-grade</h2>
+    <div class="controls">
+      <button class="btn" id="ndjsonBtn" disabled>Exporter NDJSON</button>
+      <button class="btn" id="csvBtn" disabled>Exporter CSV</button>
+      <button class="btn" id="manifestBtn" disabled>Exporter Manifest</button>
+    </div>
+    <p class="manifest" id="manifestView">Aucun manifeste calculé.</p>
+  </section>
+
+  <section class="panel">
+    <h2>04 · Live log</h2>
+    <div class="log" id="log"></div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const state = {
+    recording:false, seq:0, records:[], sessionId:null, startedWall:null, startedMono:null,
+    geoWatch:null, mag:null, timers:[], capabilities:{}
+  };
+
+  const log = msg => {
+    const t = new Date().toLocaleTimeString();
+    $('#log').textContent += `[${t}] ${msg}\n`;
+    $('#log').scrollTop = $('#log').scrollHeight;
+  };
+
+  const capabilityDefs = [
+    ['secure','Secure Context'],
+    ['gps','Geolocation'],
+    ['motion','Device Motion'],
+    ['orientation','Device Orientation'],
+    ['mag','Magnetometer API'],
+  ];
+
+  function setCap(key, status, detail='') {
+    state.capabilities[key] = {status,detail};
+    renderCaps();
+  }
+
+  function renderCaps() {
+    $('#capabilities').innerHTML = capabilityDefs.map(([k,label]) => {
+      const c = state.capabilities[k] || {status:'UNVERIFIED',detail:'not tested'};
+      const cls = c.status==='AVAILABLE'?'ok':(c.status==='UNAVAILABLE'?'bad':'warn');
+      return `<div class="sensor ${cls}"><b><span class="dot"></span>${label}</b><small>${c.status}${c.detail?' · '+c.detail:''}</small></div>`;
+    }).join('');
+  }
+
+  function updateCounters() {
+    $('#samples').textContent = state.records.length;
+    $('#gpsCount').textContent = state.records.filter(r=>r.sensor==='gps').length;
+    $('#magCount').textContent = state.records.filter(r=>r.sensor==='mag').length;
+    if (state.recording) {
+      const s = (performance.now()-state.startedMono)/1000;
+      $('#duration').textContent = s<60 ? `${s.toFixed(1)} s` : `${(s/60).toFixed(1)} min`;
+    }
+    const has = state.records.length > 0;
+    ['ndjsonBtn','csvBtn','manifestBtn'].forEach(id => $('#'+id).disabled = !has);
+  }
+
+  function push(sensor,x=null,y=null,z=null,unit='',accuracy=null,extra={}) {
+    if (!state.recording) return;
+    state.records.push({
+      seq: state.seq++,
+      session_id: state.sessionId,
+      t_wall_ms: Date.now(),
+      t_mono_ms: performance.now(),
+      sensor,
+      x: Number.isFinite(x)?x:null,
+      y: Number.isFinite(y)?y:null,
+      z: Number.isFinite(z)?z:null,
+      unit,
+      accuracy: Number.isFinite(accuracy)?accuracy:null,
+      extra
+    });
+  }
+
+  const onMotion = e => {
+    const a = e.acceleration || {};
+    const g = e.accelerationIncludingGravity || {};
+    const r = e.rotationRate || {};
+    if ([a.x,a.y,a.z].some(Number.isFinite)) push('accel',a.x,a.y,a.z,'m/s2',null,{interval_ms:e.interval||null});
+    if ([g.x,g.y,g.z].some(Number.isFinite)) push('accel_gravity',g.x,g.y,g.z,'m/s2',null,{interval_ms:e.interval||null});
+    if ([r.alpha,r.beta,r.gamma].some(Number.isFinite)) push('gyro',r.alpha,r.beta,r.gamma,'deg/s',null,{interval_ms:e.interval||null,axes:'alpha,beta,gamma'});
+  };
+
+  const onOrientation = e => {
+    push('orientation',e.alpha,e.beta,e.gamma,'deg',null,{absolute:!!e.absolute});
+  };
+
+  async function requestMotionPermission() {
+    let ok = false;
+    try {
+      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+        ok = (await DeviceMotionEvent.requestPermission()) === 'granted';
+      } else {
+        ok = 'DeviceMotionEvent' in window;
+      }
+      if (ok) {
+        window.addEventListener('devicemotion',onMotion,{passive:true});
+        setCap('motion','AVAILABLE');
+      } else setCap('motion','UNAVAILABLE','permission denied');
+    } catch(e) { setCap('motion','UNAVAILABLE',e.name||'error'); }
+
+    try {
+      let oriOk = false;
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        oriOk = (await DeviceOrientationEvent.requestPermission()) === 'granted';
+      } else oriOk = 'DeviceOrientationEvent' in window;
+      if (oriOk) {
+        window.addEventListener('deviceorientation',onOrientation,{passive:true});
+        setCap('orientation','AVAILABLE');
+      } else setCap('orientation','UNAVAILABLE');
+    } catch(e) { setCap('orientation','UNAVAILABLE',e.name||'error'); }
+  }
+
+  function startGps() {
+    if (!navigator.geolocation) { setCap('gps','UNAVAILABLE'); return; }
+    state.geoWatch = navigator.geolocation.watchPosition(pos => {
+      const c=pos.coords;
+      push('gps',c.longitude,c.latitude,c.altitude,'lon_deg,lat_deg,m',
+           c.accuracy,{altitude_accuracy:c.altitudeAccuracy,heading:c.heading,speed:c.speed});
+      setCap('gps','AVAILABLE',`${Math.round(c.accuracy||0)}m`);
+    }, err => {
+      setCap('gps','UNAVAILABLE',err.message);
+      log('GPS: '+err.message);
+    }, {enableHighAccuracy:true,maximumAge:0,timeout:15000});
+  }
+
+  async function startMag() {
+    if (!('Magnetometer' in window)) {
+      setCap('mag','UNAVAILABLE','browser API absent');
+      return;
+    }
+    try {
+      state.mag = new Magnetometer({frequency:20,referenceFrame:'device'});
+      state.mag.addEventListener('reading',() => {
+        push('mag',state.mag.x,state.mag.y,state.mag.z,'uT');
+        setCap('mag','AVAILABLE','20Hz requested');
+      });
+      state.mag.addEventListener('error',e => {
+        setCap('mag','UNAVAILABLE',e.error?.name||'sensor error');
+        log('MAG error: '+(e.error?.message||e.error?.name||'unknown'));
+      });
+      state.mag.start();
+    } catch(e) {
+      setCap('mag','UNAVAILABLE',e.name||'constructor failed');
+      log('MAG unavailable: '+e.message);
+    }
+  }
+
+  function stopSensors() {
+    if (state.geoWatch!==null) navigator.geolocation.clearWatch(state.geoWatch);
+    state.geoWatch=null;
+    try { state.mag?.stop(); } catch {}
+    state.mag=null;
+    window.removeEventListener('devicemotion',onMotion);
+    window.removeEventListener('deviceorientation',onOrientation);
+    state.timers.forEach(clearInterval); state.timers=[];
+  }
+
+  async function start() {
+    if (state.recording) return;
+    state.records=[]; state.seq=0;
+    state.sessionId = crypto.randomUUID ? crypto.randomUUID() : `qnav-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    state.startedWall=Date.now(); state.startedMono=performance.now();
+    state.recording=true;
+    $('#startBtn').disabled=true; $('#stopBtn').disabled=false; $('#clearBtn').disabled=true;
+    log('Session '+state.sessionId+' started.');
+    await requestMotionPermission();
+    startGps();
+    await startMag();
+    state.timers.push(setInterval(updateCounters,250));
+    push('session_event',0,0,0,'',{},{event:'start',user_agent:navigator.userAgent,secure_context:isSecureContext});
+  }
+
+  async function stop() {
+    if (!state.recording) return;
+    push('session_event',0,0,0,'',null,{event:'stop'});
+    state.recording=false;
+    stopSensors();
+    $('#startBtn').disabled=false; $('#stopBtn').disabled=true; $('#clearBtn').disabled=false;
+    updateCounters();
+    await computeManifest();
+    log(`Stopped. ${state.records.length} records.`);
+  }
+
+  function ndjson() {
+    return state.records.map(r=>JSON.stringify(r)).join('\n')+'\n';
+  }
+
+  async function sha256(text) {
+    if (!crypto.subtle) return null;
+    const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));
+    return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+  }
+
+  async function computeManifest() {
+    const body=ndjson();
+    const hash=await sha256(body);
+    const counts={};
+    state.records.forEach(r=>counts[r.sensor]=(counts[r.sensor]||0)+1);
+    state.manifest={
+      format:'qnav-field-recorder-manifest/v1',
+      recorder_version:'1.2',
+      session_id:state.sessionId,
+      started_wall_ms:state.startedWall,
+      stopped_wall_ms:Date.now(),
+      record_count:state.records.length,
+      sensor_counts:counts,
+      secure_context:isSecureContext,
+      capabilities:state.capabilities,
+      ndjson_sha256:hash,
+      hash_status:hash?'VERIFIED':'UNVERIFIED',
+      privacy:'local-only until manual export'
+    };
+    $('#manifestView').textContent=JSON.stringify(state.manifest,null,2);
+    return state.manifest;
+  }
+
+  function download(name,text,type='text/plain') {
+    const blob=new Blob([text],{type});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  }
+
+  function csvEscape(v) {
+    if (v===null||v===undefined) return '';
+    const s=typeof v==='object'?JSON.stringify(v):String(v);
+    return /[",\n]/.test(s)?`"${s.replaceAll('"','""')}"`:s;
+  }
+
+  function asCsv() {
+    const cols=['seq','session_id','t_wall_ms','t_mono_ms','sensor','x','y','z','unit','accuracy','extra'];
+    return cols.join(',')+'\n'+state.records.map(r=>cols.map(c=>csvEscape(r[c])).join(',')).join('\n')+'\n';
+  }
+
+  $('#startBtn').onclick=start;
+  $('#stopBtn').onclick=stop;
+  $('#clearBtn').onclick=async()=>{
+    stopSensors();state.records=[];state.seq=0;state.sessionId=null;state.manifest=null;
+    $('#manifestView').textContent='Aucun manifeste calculé.';$('#duration').textContent='0 s';updateCounters();log('Local buffer cleared.');
+  };
+  $('#ndjsonBtn').onclick=()=>download(`qnav-${state.sessionId}.ndjson`,ndjson(),'application/x-ndjson');
+  $('#csvBtn').onclick=()=>download(`qnav-${state.sessionId}.csv`,asCsv(),'text/csv');
+  $('#manifestBtn').onclick=async()=>download(`qnav-${state.sessionId}-manifest.json`,JSON.stringify(await computeManifest(),null,2),'application/json');
+
+  setCap('secure',isSecureContext?'AVAILABLE':'UNAVAILABLE',location.protocol);
+  setCap('gps','UNVERIFIED');setCap('motion','UNVERIFIED');setCap('orientation','UNVERIFIED');
+  setCap('mag','UNVERIFIED',('Magnetometer' in window)?'API detected':'API not detected');
+  $('#securePill').textContent=isSecureContext?'✓ HTTPS / secure context':'⚠ secure context required';
+  renderCaps();updateCounters();
+})();
+</script>
+</body>
+</html>
