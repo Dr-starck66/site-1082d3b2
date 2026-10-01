@@ -1,6 +1,7 @@
 import { chromium } from "playwright-core";
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
+import { existsSync } from "node:fs";
 
 const PRIVATE_HOSTS=new Set(["localhost","metadata.google.internal","astra-local-qwen","astra-local-deepseek","astra-cloud-sandbox"]);
 const privateV4=ip=>{const p=ip.split(".").map(Number);return p[0]===10||p[0]===127||(p[0]===172&&p[1]>=16&&p[1]<=31)||(p[0]===192&&p[1]===168)||(p[0]===169&&p[1]===254)||(p[0]===100&&p[1]>=64&&p[1]<=127)||p[0]===0};
@@ -17,7 +18,7 @@ export async function assertPublicUrl(raw,{dns=true}={}){
  if(dns){const rows=await lookup(u.hostname,{all:true,verbatim:true});if(!rows.length)throw new Error("CLAW_URL_GATE: DNS unresolved");for(const r of rows){if((isIP(r.address)===4&&privateV4(r.address))||(isIP(r.address)===6&&privateV6(r.address)))throw new Error("CLAW_URL_GATE: hostname resolves to private/internal address")}}
  return u;
 }
-function browserPath(){return process.env.CHROMIUM_PATH||"/usr/bin/chromium-browser"}
+function browserPath(){if(process.env.CHROMIUM_PATH)return process.env.CHROMIUM_PATH;if(existsSync("/usr/bin/chromium-browser"))return"/usr/bin/chromium-browser";if(existsSync("/usr/bin/chromium"))return"/usr/bin/chromium";return"/usr/bin/chromium-browser"}
 function cleanText(s,n=12000){return String(s||"").replace(/\s+/g," ").trim().slice(0,n)}
 async function snapshot(page){
  const data=await page.evaluate(()=>({
@@ -54,6 +55,6 @@ export async function runClaw({url,goal,maxSteps=3,agent}){
  }finally{await browser.close()}
 }
 export function clawSelfTest(){
- const blocked=["127.0.0.1","10.0.0.1","astra-local-qwen.railway.internal"].every(hostBlocked);
- return{ok:blocked,status:blocked?"PASS":"FAIL",mode:"READ_ONLY_BROWSER",browserPath:browserPath()};
+ const blocked=["127.0.0.1","10.0.0.1","astra-local-qwen.railway.internal"].every(hostBlocked),binary=existsSync(browserPath()),ok=blocked&&binary;
+ return{ok,status:ok?"PASS":"FAIL",mode:"READ_ONLY_BROWSER",browserPath:browserPath(),binary,networkGuard:blocked};
 }
