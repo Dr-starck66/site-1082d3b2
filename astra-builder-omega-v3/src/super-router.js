@@ -78,7 +78,7 @@ async function health(){
     state.health={at:now(),data};
     return data;
   }catch(error){
-    const data={status:"UNVERIFIED",builder:{status:"UNVERIFIED"},critic:{status:"UNVERIFIED"},reason:String(error)};
+    const data={status:"UNVERIFIED",fast:{status:"UNVERIFIED"},builder:{status:"UNVERIFIED"},critic:{status:"UNVERIFIED"},reason:String(error)};
     state.health={at:now(),data};return data;
   }
 }
@@ -89,17 +89,24 @@ function negativePenalty(kind,profile){
 function score(kind,profile,h){
   const id=providerId(kind),m=state.metrics.get(id)||{},hs=healthRank(h?.[id]?.status||"UNVERIFIED");
   let s=hs*30-(m.ewmaLatency||0)/10000-negativePenalty(kind,profile);
-  const criticPreferred=profile.criticRole;
-  if((kind==="critic")===criticPreferred)s+=45;else s-=10;
-  if(profile.role==="security"&&kind==="critic")s+=12;
-  if(profile.mode==="DEEP"&&kind==="builder"&&!criticPreferred)s+=8;
+  if(profile.criticRole){
+    s+=kind==="critic"?75:kind==="builder"?5:-35;
+  }else if(profile.mode==="FAST"){
+    s+=kind==="fast"?75:kind==="builder"?20:-25;
+  }else if(profile.mode==="STANDARD"){
+    s+=kind==="builder"?70:kind==="fast"?10:-20;
+  }else{
+    s+=kind==="builder"?85:kind==="critic"?0:-60;
+  }
+  if(profile.role==="security"&&kind==="critic")s+=15;
   if(circuitOpen(kind))s-=1000;
   return s;
 }
 export async function routePlan(system,user,requestedModel){
   const profile=profileTask(system,user,requestedModel),h=await health();
-  const choices=["builder","critic"].map(kind=>({kind,model:modelFor(kind),score:score(kind,profile,h),health:h?.[providerId(kind)]?.status||"UNVERIFIED",circuitOpen:circuitOpen(kind)})).sort((a,b)=>b.score-a.score);
-  return{profile,healthStatus:h?.status||"UNVERIFIED",choices,policy:{zeroCostFirst:true,localFirst:true,failClosed:true,circuitMs:CIRCUIT_MS,failThreshold:FAIL_THRESHOLD}};
+  const pool=profile.criticRole?["critic","builder","fast"]:profile.mode==="FAST"?["fast","builder","critic"]:["builder","fast","critic"];
+  const choices=pool.map(kind=>({kind,model:modelFor(kind),score:score(kind,profile,h),health:h?.[providerId(kind)]?.status||"UNVERIFIED",circuitOpen:circuitOpen(kind)})).sort((a,b)=>b.score-a.score);
+  return{profile,healthStatus:h?.status||"UNVERIFIED",choices,policy:{zeroCostFirst:true,localFirst:true,failClosed:true,expressLane:true,circuitMs:CIRCUIT_MS,failThreshold:FAIL_THRESHOLD}};
 }
 function parseMaybeJson(text){
   const s=String(text||"").trim().replace(/^```(?:json)?/i,"").replace(/```$/,"").trim();
