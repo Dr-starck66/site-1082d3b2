@@ -39,8 +39,8 @@ export function profileTask(system="",user="",requestedModel=""){
   return{role,complexity,risk,requiresJson,criticRole,mode,tokenBudget,contextChars:text.length};
 }
 
-function providerId(kind){return kind==="critic"?"critic":"builder"}
-function modelFor(kind){return kind==="critic"?"gemma-critic-local":"qwen-coder-local"}
+function providerId(kind){return kind}
+function modelFor(kind){return kind==="critic"?"gemma-critic-local":kind==="fast"?"qwen-fast-local":kind==="standard"?"qwen-standard-local":"qwen-coder-local"}
 function circuit(kind){
   const id=providerId(kind),c=state.circuits.get(id)||{failures:0,openUntil:0,lastError:""};
   if(c.openUntil&&c.openUntil<=now()){c.openUntil=0;c.failures=0}
@@ -78,7 +78,7 @@ async function health(){
     state.health={at:now(),data};
     return data;
   }catch(error){
-    const data={status:"UNVERIFIED",fast:{status:"UNVERIFIED"},builder:{status:"UNVERIFIED"},critic:{status:"UNVERIFIED"},reason:String(error)};
+    const data={status:"UNVERIFIED",fast:{status:"UNVERIFIED"},standard:{status:"UNVERIFIED"},builder:{status:"UNVERIFIED"},critic:{status:"UNVERIFIED"},reason:String(error)};
     state.health={at:now(),data};return data;
   }
 }
@@ -90,13 +90,13 @@ function score(kind,profile,h){
   const id=providerId(kind),m=state.metrics.get(id)||{},hs=healthRank(h?.[id]?.status||"UNVERIFIED");
   let s=hs*30-(m.ewmaLatency||0)/10000-negativePenalty(kind,profile);
   if(profile.criticRole){
-    s+=kind==="critic"?75:kind==="builder"?5:-35;
+    s+=kind==="critic"?85:kind==="standard"?20:kind==="builder"?10:-35;
   }else if(profile.mode==="FAST"){
-    s+=kind==="fast"?75:kind==="builder"?20:-25;
+    s+=kind==="fast"?85:kind==="standard"?35:kind==="builder"?5:-30;
   }else if(profile.mode==="STANDARD"){
-    s+=kind==="builder"?70:kind==="fast"?10:-20;
+    s+=kind==="standard"?90:kind==="builder"?45:kind==="fast"?15:-20;
   }else{
-    s+=kind==="builder"?85:kind==="critic"?0:-60;
+    s+=kind==="builder"?95:kind==="standard"?55:kind==="critic"?0:-60;
   }
   if(profile.role==="security"&&kind==="critic")s+=15;
   if(circuitOpen(kind))s-=1000;
@@ -104,9 +104,9 @@ function score(kind,profile,h){
 }
 export async function routePlan(system,user,requestedModel){
   const profile=profileTask(system,user,requestedModel),h=await health();
-  const pool=profile.criticRole?["critic","builder","fast"]:profile.mode==="FAST"?["fast","builder","critic"]:["builder","fast","critic"];
+  const pool=profile.criticRole?["critic","standard","builder","fast"]:profile.mode==="FAST"?["fast","standard","builder","critic"]:profile.mode==="STANDARD"?["standard","builder","fast","critic"]:["builder","standard","critic","fast"];
   const choices=pool.map(kind=>({kind,model:modelFor(kind),score:score(kind,profile,h),health:h?.[providerId(kind)]?.status||"UNVERIFIED",circuitOpen:circuitOpen(kind)})).sort((a,b)=>b.score-a.score);
-  return{profile,healthStatus:h?.status||"UNVERIFIED",choices,policy:{zeroCostFirst:true,localFirst:true,failClosed:true,expressLane:true,circuitMs:CIRCUIT_MS,failThreshold:FAIL_THRESHOLD}};
+  return{profile,healthStatus:h?.status||"UNVERIFIED",choices,policy:{zeroCostFirst:true,localFirst:true,failClosed:true,expressLane:true,standardLane:true,circuitMs:CIRCUIT_MS,failThreshold:FAIL_THRESHOLD}};
 }
 function parseMaybeJson(text){
   const s=String(text||"").trim().replace(/^```(?:json)?/i,"").replace(/```$/,"").trim();
