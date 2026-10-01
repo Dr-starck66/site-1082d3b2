@@ -97,7 +97,7 @@ function score(kind,profile,h){
 }
 export async function routePlan(system,user,requestedModel){
   const profile=profileTask(system,user,requestedModel),h=await health();
-  const choices=["builder","critic"].map(kind=>({kind,model:modelFor(kind),score:score(kind,profile,h),health:h?.[providerId(kind)]?.status||"UNVERIFIED",circuitOpen:circuitOpen(kind)}).sort((a,b)=>b.score-a.score);
+  const choices=["builder","critic"].map(kind=>({kind,model:modelFor(kind),score:score(kind,profile,h),health:h?.[providerId(kind)]?.status||"UNVERIFIED",circuitOpen:circuitOpen(kind)})).sort((a,b)=>b.score-a.score);
   return{profile,healthStatus:h?.status||"UNVERIFIED",choices,policy:{zeroCostFirst:true,localFirst:true,failClosed:true,circuitMs:CIRCUIT_MS,failThreshold:FAIL_THRESHOLD}};
 }
 function parseMaybeJson(text){
