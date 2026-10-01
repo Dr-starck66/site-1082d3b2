@@ -22,9 +22,10 @@ const roleRules=[
 ];
 
 export function profileTask(system="",user="",requestedModel=""){
-  const text=(String(system)+"\n"+String(user)+"\n"+String(requestedModel)).toLowerCase();
+  const systemText=String(system).toLowerCase(),text=(String(system)+"\n"+String(user)+"\n"+String(requestedModel)).toLowerCase();
   let role="general";
-  for(const [r,re] of roleRules){if(re.test(text)){role=r;break}}
+  for(const [r,re] of roleRules){if(re.test(systemText)){role=r;break}}
+  if(role==="general")for(const [r,re] of roleRules){if(re.test(text)){role=r;break}}
   let complexity=0,risk=0;
   const complexitySignals=[/full.?stack/,/multi.?agent/,/repository|codebase/,/authentication|oauth|session/,/database|postgres|migration/,/deploy|docker|railway/,/tests?|benchmark/,/integration|webhook/,/refactor|architecture/,/search|pipeline|dashboard/];
   for(const re of complexitySignals)if(re.test(text))complexity++;
