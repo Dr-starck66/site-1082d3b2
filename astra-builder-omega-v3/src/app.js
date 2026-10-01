@@ -129,12 +129,31 @@ async function renderWorkspaceList(){
 async function loadWorkspaceById(id){
  const p=await getWorkspace(id);if(!p)return;state.workspaceId=p.id;state.spec=p.spec||null;state.files=p.files||[];state.evidence=p.evidence||[];state.bench=p.bench||null;state.deployPlan=p.deployPlan||null;state.deployedUrl=p.deployedUrl||"";state.trust=p.trust||null;state.sandbox=p.sandbox||null;state.history=p.history||[];state.conversation=p.conversation||[];state.mission=p.mission||null;state.evidenceChain=p.evidenceChain||[];state.genomes=p.genomes||[];state.benchmarkRuns=p.benchmarkRuns||[];if(p.evolution)state.evolution={...p.evolution,running:false,decision:p.evolution.running?"RESUMABLE":p.evolution.decision};$("#idea").value=p.idea||"";state.selected=state.files[0]?.path||null;renderFiles();renderSpec();renderPreview();renderEvidence();renderBenchmark();renderSovereign();setStatus(state.evidence.some(x=>x.status==="FAIL")?"FAIL":"PARTIAL");$("#workspaceDialog").close();rescue.checkpoint("workspace-open:"+id);
 }
+function repairFocusPaths(audit={}){
+ const paths=new Set((audit.issues||[]).map(x=>x?.path).filter(Boolean));
+ for(const e of state.evidence||[]){
+  if(e.status==="PASS")continue;
+  const s=String(e.name||"")+" "+String(e.detail||"");
+  for(const m of s.matchAll(/(?:^|\s)((?:frontend|backend|public|preview|src|lib|tests|database|scripts)\/[A-Za-z0-9._\/-]+\.(?:js|mjs|cjs|ts|tsx|jsx|json|sql|html|css))/g))paths.add(m[1]);
+ }
+ return [...paths].filter(p=>state.files.some(f=>f.path===p)).slice(0,8);
+}
+function compactRepairFiles(files,focus=[]){
+ const preferred=[...focus,"package.json","Dockerfile","deploy.json","frontend/package.json","backend/package.json","public/app.js","preview/app.js"];
+ const seen=new Set(),out=[];let used=0,limit=22000;
+ for(const p of preferred){
+  if(seen.has(p))continue;const f=files.find(x=>x.path===p);if(!f)continue;seen.add(p);
+  const full=focus.includes(p),room=Math.max(0,limit-used),max=full?Math.min(room,12000):Math.min(room,2200);
+  if(max<=0)break;const content=String(f.content||"").slice(0,max);out.push({path:p,content,truncated:String(f.content||"").length>content.length});used+=content.length;
+ }
+ return out;
+}
 async function auditRepairVerify(context){
  const cycleStarted=Date.now(),policy=currentPolicy();evolveMission("VERIFY","RUNNING");
  setPhase("STATIC TEST");for(const e of staticChecks(state.files,state.spec))addEv(e.name,e.status,e.detail);await serverValidate();await sandboxValidate();
  setPhase("ADVERSARY");let audit=parse(await rescueChat(state.cfg,state.cfg.adversary,prompts.adversary,"CONTEXT:\n"+context+"\nNEGATIVE KNOWLEDGE:\n"+JSON.stringify(state.negativeKnowledge.hints(8))+"\nSPEC:\n"+JSON.stringify(state.spec)+"\nFILES:\n"+JSON.stringify(state.files)+"\nCHECKS:\n"+JSON.stringify(state.evidence)));addEv("Adversarial audit #1",audit.risk==="HIGH"?"PARTIAL":"PASS",(audit.issues?.length||0)+" issue(s), risk "+audit.risk);evolveMission("ADVERSARY",audit.risk==="HIGH"?"PARTIAL":"PASS");
  if((audit.issues?.length||0)>0||state.evidence.some(x=>x.status==="FAIL")){
-  setPhase("REPAIR");const rep=parse(await rescueChat(state.cfg,state.cfg.frontend,prompts.repair,"CONTEXT:\n"+context+"\nNEGATIVE KNOWLEDGE:\n"+JSON.stringify(state.negativeKnowledge.hints(8))+"\nSPEC:\n"+JSON.stringify(state.spec)+"\nFILES:\n"+JSON.stringify(state.files)+"\nAUDIT:\n"+JSON.stringify(audit)+"\nCHECKS:\n"+JSON.stringify(state.evidence)));
+  setPhase("REPAIR");const focus=repairFocusPaths(audit),repairFiles=compactRepairFiles(state.files,focus);const rep=parse(await rescueChat(state.cfg,state.cfg.frontend,prompts.repair,"CONTEXT:\n"+context+"\nNEGATIVE KNOWLEDGE:\n"+JSON.stringify(state.negativeKnowledge.hints(8))+"\nSPEC:\n"+JSON.stringify(state.spec)+"\nFAILING PATHS:\n"+JSON.stringify(focus)+"\nFILES TO REPAIR / CONTEXT:\n"+JSON.stringify(repairFiles)+"\nAUDIT:\n"+JSON.stringify(audit)+"\nCHECKS:\n"+JSON.stringify(state.evidence)));
   const repaired=shield(safeFiles(rep),"repair");state.files=mergeFiles(state.files,repaired);renderFiles();renderPreview();for(const e of staticChecks(state.files,state.spec))addEv(e.name,e.status,e.detail);await serverValidate();await sandboxValidate()
  }
  if(policy.adversaryPasses>1){
