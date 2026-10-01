@@ -9,10 +9,18 @@ export function costStatus(cfg,kind="text"){
   if(cfg.attestedFree&&base)return"PARTIAL";
   return"FAIL";
 }
+function localTokenBudget(model,system){
+  const m=String(model||"").toLowerCase(),s=String(system||"").toLowerCase();
+  if(/gemma|deepseek|critic|adversary|verify|skeptic/.test(m+" "+s))return 1536;
+  if(/frontend|backend|repair|improve|devops|database|auth|full-stack|files/.test(s))return 3072;
+  if(/architect|spec/.test(s))return 2048;
+  return 2048;
+}
 export async function chat(cfg,model,system,user){
   const base=normalizeBase(cfg.baseUrl);if(!base)throw new Error("Endpoint texte manquant");
   if(base.startsWith("astra://local/")){
-    const res=await fetch("/api/local_text",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system,user,requestedModel:model,maxTokens:1536})});
+    const maxTokens=localTokenBudget(model,system);
+    const res=await fetch("/api/local_text",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system,user,requestedModel:model,maxTokens})});
     const raw=await res.text();if(!res.ok)throw new Error("Local model "+res.status+": "+raw.slice(0,240));
     const data=JSON.parse(raw);if(!data?.text)throw new Error("Local model response invalid");return String(data.text);
   }
