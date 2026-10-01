@@ -286,6 +286,27 @@ async function importGithubProject(input){
 
 async function api(req,res,url){
  if(req.method==="GET"&&url.pathname==="/health")return send(res,200,{ok:true,service:"astra-builder-omega-v3",version:"10.0.0",nativeDeployBroker:true,rescue:"ARMED"});
+ if(req.method==="GET"&&url.pathname==="/api/ui_self_test"){
+  let browser;
+  try{
+   const {chromium}=await import("playwright-core");
+   browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||"/usr/bin/chromium",headless:true,args:["--no-sandbox","--disable-dev-shm-usage"]});
+   const page=await browser.newPage({viewport:{width:1440,height:900}});
+   const pageErrors=[];page.on("pageerror",e=>pageErrors.push(String(e.message||e)));
+   await page.goto("http://127.0.0.1:"+port+"/",{waitUntil:"domcontentloaded",timeout:20000});
+   await page.waitForFunction(()=>window.__ASTRA_STATE__&&window.__ASTRA_ACTIONS__&&window.__ASTRA_LOVABLE_UX_READY__===true,null,{timeout:12000});
+   const handler=await page.$eval("#lovableSendBtn",el=>typeof el.onclick==="function");
+   await page.evaluate(()=>{window.__ASTRA_ACTIONS__.run=async()=>{window.__ASTRA_UI_CLICK_OK__=(window.__ASTRA_UI_CLICK_OK__||0)+1;window.__ASTRA_STATE__.status="PARTIAL";const s=document.querySelector("#globalStatus");if(s)s.textContent="UI_TEST"}}); 
+   await page.fill("#idea","ASTRA send-arrow click self test");
+   await page.click("#lovableSendBtn");
+   await page.waitForFunction(()=>window.__ASTRA_UI_CLICK_OK__===1,null,{timeout:5000});
+   const result=await page.evaluate(()=>({ready:window.__ASTRA_LOVABLE_UX_READY__===true,clicks:window.__ASTRA_UI_CLICK_OK__||0,statusText:document.querySelector("#globalStatus")?.textContent||"",buttonDisabled:document.querySelector("#lovableSendBtn")?.disabled||false}));
+   await browser.close();browser=null;
+   const ok=handler&&result.ready&&result.clicks===1;
+   console.log("ASTRA UI SELF TEST "+(ok?"PASS":"FAIL")+" · send arrow · "+JSON.stringify(result));
+   return send(res,ok?200:500,{status:ok?"PASS":"FAIL",handler,result,pageErrors:pageErrors.slice(0,5)});
+  }catch(e){if(browser)try{await browser.close()}catch{};console.error("ASTRA UI SELF TEST FAIL · "+String(e.message||e));return send(res,500,{status:"FAIL",reason:String(e.message||e)})}
+ }
  if(req.method==="GET"&&url.pathname==="/api/self_test"){
   const sample={spec:{acceptance:["UI renders","API health works","Auth and data contracts exist"]},files:[{path:"frontend/index.html",content:"<main>ASTRA test</main>"},{path:"backend/package.json",content:'{"name":"demo","version":"1.0.0"}'},{path:"backend/src/server.js",content:"app.get('/health',handler)"},{path:"backend/tests/server.test.js",content:"test health endpoint"},{path:"database/schema.sql",content:"create table users(id text primary key);"},{path:"auth/session.js",content:"export function sessionGuard(){}"},{path:"Dockerfile",content:"FROM node:22-alpine"},{path:"deploy.json",content:'{"provider":"railway","dockerfilePath":"Dockerfile","healthPath":"/health"}'},{path:"README.md",content:"demo"}]};
   const v=validate(sample),rescueOk=typeof fatal==="function"&&Array.isArray(rescueEvents),sandboxHealth=await sandboxStatus(),sandboxOk=sandboxHealth.status==="PASS",sealTest=serverSeal({selfTest:true},"GENESIS"),sealOk=/^[a-f0-9]{64}$/.test(sealTest.hash),pop=seedPopulation(4,1).map((x,i)=>({...x,fitness:10-i})),ranked=rankPopulation(pop),evoDecision=evolutionDecision(null,ranked[0]),evolutionOk=pop.length===4&&ranked[0]?.fitness===10&&evoDecision.action==="CONTINUE",metaPolicy=normalizePolicy({...defaultMetaPolicy(),trustThreshold:1,population:99,rescueAttempts:99,adversaryPasses:99}),mutants=mutatePolicies(defaultMetaPolicy(),4),metaRewardPass=rewardOutcome({quality:95,trustScore:90,tests:5,status:"PASS",fail:0,partial:0,latencyMs:1000,deployPass:true}),metaRewardFail=rewardOutcome({quality:30,trustScore:20,tests:0,status:"FAIL",fail:2,partial:3,latencyMs:20000,deployPass:false}),metaOk=metaPolicy.trustThreshold>=76&&metaPolicy.population<=5&&metaPolicy.rescueAttempts<=4&&metaPolicy.adversaryPasses<=2&&mutants.length===4&&metaRewardPass>metaRewardFail;const workspace7=workspace7SelfTest(),workspace7Ok=workspace7.ok,workspace8=workspace8SelfTest(),workspace8Ok=workspace8.ok,claw=clawSelfTest(),clawOk=claw.ok;const clawAction=clawActionSelfTest(),clawActionOk=clawAction.ok;return send(res,v.verdict==="PASS"&&rescueOk&&sandboxOk&&sealOk&&evolutionOk&&metaOk&&workspace7Ok&&workspace8Ok&&clawOk&&clawActionOk?200:500,{ok:v.verdict==="PASS"&&rescueOk&&sandboxOk&&sealOk&&evolutionOk&&metaOk&&workspace7Ok&&workspace8Ok&&clawOk&&clawActionOk,verdict:v.verdict,rescue:rescueOk?"ARMED":"FAIL",cloudSandbox:sandboxOk?"PASS":"FAIL",sandboxHealth,sovereignSeal:sealOk?"PASS":"FAIL",evolutionEngine:evolutionOk?"PASS":"FAIL",metaEvolution:metaOk?"PASS":"FAIL",workspace7:workspace7.status,workspace7Detail:workspace7,workspace8:workspace8.status,workspace8Detail:workspace8,claw:claw.status,clawDetail:claw,clawAction:clawAction.status,clawActionDetail:clawAction,metaSafetyRails:{trustThreshold:metaPolicy.trustThreshold,population:metaPolicy.population,rescueAttempts:metaPolicy.rescueAttempts,adversaryPasses:metaPolicy.adversaryPasses},sealHead:sealTest.hash,evidence:v.evidence});
