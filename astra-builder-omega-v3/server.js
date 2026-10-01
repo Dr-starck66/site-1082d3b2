@@ -164,16 +164,17 @@ async function goldenAgent(system,user,model="qwen-coder-local",tokens=3072){
 async function runMissionSmoke(mission){
  const started=Date.now(),trace=randomUUID(),evidence=[],filesByPath=new Map();
  const log=(phase,status,detail)=>{const row={phase,status,detail:String(detail||"").slice(0,800)};evidence.push(row);console.log("[ASTRA MISSION SMOKE]",trace,phase,status,row.detail)};
- const call=async(name,prompt,input,model="qwen-coder-local",tokens=2048)=>{
+ const call=async(name,prompt,input,model="qwen-standard-local",tokens=1200)=>{
   try{const r=await localText(prompt,input,model,tokens),data=parseProbeJson(r.text);log(name,"PASS",r.model+" · "+r.routeMode+" · "+r.tokenBudget);return data}
   catch(e){log(name,"FAIL",String(e?.message||e));throw e}
  };
  try{
-  const spec=await call("ARCHITECT",prompts.architect,mission,"qwen-coder-local",1800);
+  const spec=await call("ARCHITECT",prompts.architect,mission,"qwen-standard-local",900);
   const specText=JSON.stringify(spec);
-  for(const [name,prompt,tokens] of [["FRONTEND",prompts.frontend,2800],["BACKEND",prompts.backend,2800],["DATABASE",prompts.database,1400],["AUTH",prompts.auth,1800],["DEVOPS",prompts.ops,1600]]){
-   const out=await call(name,prompt,specText,"qwen-coder-local",tokens);
-   for(const file of filesFrom(out))filesByPath.set(file.path,file);
+  const jobs=[["FRONTEND",prompts.frontend,1800],["BACKEND",prompts.backend,1800],["DATABASE",prompts.database,900],["AUTH",prompts.auth,1100],["DEVOPS",prompts.ops,1000]];
+  for(let i=0;i<jobs.length;i+=2){
+   const outs=await Promise.all(jobs.slice(i,i+2).map(([name,prompt,tokens])=>call(name,prompt,specText,"qwen-standard-local",tokens)));
+   for(const out of outs)for(const file of filesFrom(out))filesByPath.set(file.path,file);
   }
   const files=[...filesByPath.values()];
   log("FILES",files.length>=8?"PASS":"FAIL",files.length+" generated files");
