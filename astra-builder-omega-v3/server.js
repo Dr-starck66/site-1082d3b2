@@ -10,6 +10,7 @@ import { compactBrain, normalizeSkill, saveRecord, loadRecord, listRecords, work
 import { runClaw, clawSelfTest } from "./src/claw.js";
 import { runMemoryVaultProbe } from "./src/memory-vault-probe.js";
 import { inspectActionSurface, normalizeActionPlan, executeApprovedActions, clawActionSelfTest } from "./src/claw-action.js";
+import { runOwnerActionProbe } from "./src/owner-action-probe.js";
 
 const root=process.cwd(),port=Number(process.env.PORT||3000),MAX=4*1024*1024;
 const rescueEvents=[];const pendingClawPlans=new Map();const rescueLog=(type,detail)=>{rescueEvents.push({at:new Date().toISOString(),type,detail:String(detail).slice(0,500)});if(rescueEvents.length>50)rescueEvents.shift();console.error("[ASTRA RESCUE Ω]",type,detail)};
@@ -426,6 +427,11 @@ srv.listen(port,"0.0.0.0",()=>{
   try{const r=await runMemoryVaultProbe(port);console.log("[ASTRA MEMORY VAULT PROBE]",r.status,r.storage,"reload="+r.reloadVerified,"file="+r.restored?.file)}
   catch(e){console.error("[ASTRA MEMORY VAULT PROBE] FAIL",String(e?.message||e).slice(0,500))}
  },1200);
+
+ if(process.env.ASTRA_OWNER_ACTION_PROBE_ON_BOOT==="1")setTimeout(async()=>{
+  try{const r=await runOwnerActionProbe();console.log("[ASTRA OWNER ACTION PROBE]",r.status,r.mode,r.trace?.length,r.final?.text)}
+  catch(e){console.error("[ASTRA OWNER ACTION PROBE] FAIL",String(e?.message||e).slice(0,700))}
+ },1600);
 
  if(process.env.ASTRA_CLAW_PROBE_ON_BOOT==="1")setTimeout(async()=>{
   try{const r=await runClaw({url:"https://example.com",goal:"ASTRA Claw smoke test",maxSteps:1});console.log("[ASTRA CLAW PROBE]",r.status,r.mode,r.visited?.[0]?.status,r.final?.title,Buffer.byteLength(r.screenshotB64||"","base64")+" bytes")}
