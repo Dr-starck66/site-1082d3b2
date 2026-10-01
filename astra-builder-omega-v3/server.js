@@ -73,7 +73,7 @@ async function sandboxRun(project){
  const raw=await r.text();let data;try{data=JSON.parse(raw)}catch{throw new Error("sandbox non-JSON response")}
  if(!r.ok)throw new Error("sandbox "+r.status+": "+String(data?.reason||raw).slice(0,300));return data;
 }
-const goldenState={status:"IDLE",startedAt:null,finishedAt:null,phase:"IDLE",summary:null,error:null,manifest:[],evidence:[],seal:null,repairs:0};
+const goldenState={status:"IDLE",startedAt:null,finishedAt:null,phase:"IDLE",summary:null,error:null,manifest:[],evidence:[],seal:null,repairs:0,spec:null,files:[]};
 function parseModelJson(text){return parseProbeJson(text)}
 function filesFrom(x){return Array.isArray(x?.files)?x.files.filter(f=>safePath(f?.path)&&typeof f?.content==="string").map(f=>({path:f.path,content:f.content})):[]}
 function mergeProjectFiles(...sets){const m=new Map();for(const set of sets)for(const f of set||[])if(safePath(f?.path)&&typeof f?.content==="string")m.set(f.path,f);return[...m.values()]}
@@ -98,7 +98,7 @@ async function goldenAgent(system,user,model="qwen-coder-local",tokens=3072){
 }
 async function runGoldenRun(){
  if(goldenState.status==="RUNNING")return goldenState;
- Object.assign(goldenState,{status:"RUNNING",startedAt:new Date().toISOString(),finishedAt:null,phase:"START",summary:null,error:null,manifest:[],evidence:[],seal:null,repairs:0});
+ Object.assign(goldenState,{status:"RUNNING",startedAt:new Date().toISOString(),finishedAt:null,phase:"START",summary:null,error:null,manifest:[],evidence:[],seal:null,repairs:0,spec:null,files:[]});
  const mission="Build ASTRA Ledger, a production-style single-service SaaS issue tracker. Requirements: static responsive frontend, Node.js backend API, email/password authentication using Node crypto only, session cookies, SQL schema artifact, issue CRUD scoped to signed-in user, input validation, /health, Node built-in test runner tests, Dockerfile and deploy.json. Use NO external runtime dependencies so the sandbox can prove the whole project deterministically. Root package.json must provide build, test and start scripts. Frontend files live under public/. Backend entry is server.js. Database schema lives at database/schema.sql.";
  let spec,files=[];
  try{
@@ -115,7 +115,7 @@ async function runGoldenRun(){
   ];
   const outs=[];for(const call of agentCalls)outs.push(await call());
   files=mergeProjectFiles(...outs.map(filesFrom));
-  goldenState.manifest=files.map(f=>f.path).sort();
+  goldenState.spec=spec;goldenState.files=files;goldenState.manifest=files.map(f=>f.path).sort();
   goldenLog("SANDBOX-1",files.length+" files");
   let sb=await sandboxRun({spec,files});goldenState.evidence.push({stage:"sandbox-1",status:sb.status,durationMs:sb.durationMs,evidence:sb.evidence});goldenLog("SANDBOX-1-RESULT",sb.status+" · "+sb.durationMs+"ms · "+(sb.evidence||[]).filter(x=>x.status!=="PASS").map(x=>x.name+":"+x.status).join(","));
   goldenLog("ADVERSARY","Gemma critic");
@@ -124,7 +124,7 @@ async function runGoldenRun(){
   if(sb.status!=="PASS"||(audit.issues||[]).length){
    goldenLog("REPAIR","Qwen repair");
    const issuePaths=(audit.issues||[]).map(x=>x.path).filter(Boolean);const repairContext=goldenCompactFiles(files,issuePaths,16000);const rep=await goldenAgent(prompts.repair,"GOLDEN MISSION:\n"+mission+"\nSPEC:\n"+JSON.stringify(spec)+"\nMANIFEST:\n"+JSON.stringify(goldenState.manifest)+"\nFILES TO REPAIR / CONTEXT:\n"+JSON.stringify(repairContext)+"\nSANDBOX:\n"+JSON.stringify(goldenCompactEvidence(sb.evidence))+"\nAUDIT:\n"+JSON.stringify(audit),"qwen-coder-local",3072);
-   const changed=filesFrom(rep);if(changed.length){files=mergeProjectFiles(files,changed);goldenState.repairs++;goldenState.manifest=files.map(f=>f.path).sort()}
+   const changed=filesFrom(rep);if(changed.length){files=mergeProjectFiles(files,changed);goldenState.files=files;goldenState.repairs++;goldenState.manifest=files.map(f=>f.path).sort()}
    goldenLog("SANDBOX-2","post-repair");
    sb=await sandboxRun({spec,files});goldenState.evidence.push({stage:"sandbox-2",status:sb.status,durationMs:sb.durationMs,evidence:sb.evidence});goldenLog("SANDBOX-2-RESULT",sb.status+" · "+sb.durationMs+"ms · "+(sb.evidence||[]).filter(x=>x.status!=="PASS").map(x=>x.name+":"+x.status).join(","));
   }
@@ -306,6 +306,7 @@ async function api(req,res,url){
  if(req.method==="POST"&&url.pathname==="/api/inference_self_test"){try{const builder=await localText("Return exactly ASTRA_QWEN_OK.","Return exactly ASTRA_QWEN_OK.",64);let critic;try{critic=await localText("Return exactly ASTRA_CRITIC_OK.","Return exactly ASTRA_CRITIC_OK.","gemma-critic-local",64)}catch(e){critic={error:String(e?.message||e)}};const bOk=/ASTRA_QWEN_OK/i.test(builder.text||""),cOk=/ASTRA_CRITIC_OK/i.test(critic.text||"");return send(res,bOk&&cOk?200:206,{status:bOk&&cOk?"PASS":"PARTIAL",builder:{ok:bOk,model:builder.model,text:String(builder.text||"").slice(0,120)},critic:{ok:cOk,model:critic.model||"gemma-critic-local",text:String(critic.text||"").slice(0,120),error:critic.error||null}})}catch(e){return send(res,503,{status:"FAIL",reason:String(e.message||e)})}}
  if(req.method==="POST"&&url.pathname==="/api/free_text"){const x=await body(req);try{return send(res,200,{status:"PASS",...(await zeroGpuText(x.system,x.user))})}catch(e){return send(res,503,{status:"PARTIAL",reason:String(e.message||e),provider:"Hugging Face ZeroGPU",model:"Qwen/Qwen3.8-27B"})}}
  if(req.method==="POST"&&url.pathname==="/api/free_image"){const x=await body(req);try{return send(res,200,{status:"PASS",...(await zeroGpuImage(x.prompt))})}catch(e){return send(res,503,{status:"PARTIAL",reason:String(e.message||e),provider:"Hugging Face ZeroGPU",model:"Qwen/Qwen-Image-2.1"})}}
+ if(req.method==="GET"&&url.pathname==="/api/golden_run_artifact"){const token=String(process.env.ASTRA_GOLDEN_TOKEN||"");if(!token||req.headers.authorization!=="Bearer "+token)return send(res,401,{status:"FAIL",reason:"unauthorized"});if(!["PASS","PARTIAL","FAIL"].includes(goldenState.status)||!goldenState.files?.length)return send(res,409,{status:"UNVERIFIED",reason:"golden artifact not ready"});return send(res,200,{status:goldenState.status,spec:goldenState.spec,files:goldenState.files,summary:goldenState.summary,seal:goldenState.seal,evidence:goldenState.evidence})}
  if(req.method==="GET"&&url.pathname==="/api/golden_run_status")return send(res,200,{...goldenState,error:goldenState.error?String(goldenState.error).slice(0,800):null});
  if(req.method==="POST"&&url.pathname==="/api/golden_run"){const result=await runGoldenRun();return send(res,result.status==="PASS"?200:result.status==="FAIL"?500:206,{...result,error:result.error?String(result.error).slice(0,800):null})}
  if(req.method==="GET"&&url.pathname==="/api/sandbox_status")return send(res,200,await sandboxStatus());
