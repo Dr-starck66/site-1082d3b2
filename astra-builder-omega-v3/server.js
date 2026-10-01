@@ -542,7 +542,7 @@ srv.listen(port,"0.0.0.0",()=>{
   }catch(e){console.error("[ASTRA MODEL PROBE] IMAGE ROUTE FAIL",String(e?.message||e).slice(0,300))}
  },750);
 
- if(process.env.ASTRA_CRM_SMOKE_ON_BOOT==="1")setTimeout(()=>{runMissionSmoke("Crée un CRM premium pour indépendants avec contacts, pipeline, tâches, recherche, authentification, API, tableau de bord responsive et tests. Production-style, no fake buttons, no fake auth, deployable as one Railway service.").catch(e=>console.error("[ASTRA MISSION SMOKE] UNCAUGHT",e))},1800);
+ if(process.env.ASTRA_CRM_SMOKE_ON_BOOT==="1")setTimeout(()=>{console.log("[ASTRA CRM SMOKE START] exact-user-mission");runMissionSmoke("Crée un CRM premium pour indépendants avec contacts, pipeline, tâches, recherche, authentification, API, tableau de bord responsive et tests. Production-style, no fake buttons, no fake auth, deployable as one Railway service.").catch(e=>console.error("[ASTRA MISSION SMOKE] UNCAUGHT",e))},1800);
  if(process.env.ASTRA_GOLDEN_RUN_ON_BOOT==="1")setTimeout(()=>{runGoldenRun().catch(e=>console.error("[ASTRA GOLDEN RUN] UNCAUGHT",e))},2500);
  if(process.env.ASTRA_SANDBOX_PROBE_ON_BOOT==="1")setTimeout(async()=>{
   try{
