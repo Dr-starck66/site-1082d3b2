@@ -56,7 +56,7 @@ function builderRouteProfile(system,user,requestedModel,maxTokens){
 async function localText(system,user,requestedModel,maxTokens=1536){
  const kind=localKind(requestedModel,system),base=localModelBase(kind);if(!base)throw new Error("local "+kind+" model endpoint not configured");
  const model=kind==="critic"?"gemma-critic-local":kind==="fast"?"qwen-fast-local":kind==="chat"?"qwen-chat-local":"qwen-coder-local";
- const profile=kind==="critic"?{mode:"CRITIC",score:0,maxTokens:Math.max(128,Math.min(768,Number(maxTokens)||512)),timeoutMs:90000,temperature:.15}:kind==="fast"?{mode:"FAST",score:0,maxTokens:Math.max(96,Math.min(384,Number(maxTokens)||256)),timeoutMs:60000,temperature:.1}:kind==="chat"?{mode:"CHAT",score:0,maxTokens:Math.max(96,Math.min(384,Number(maxTokens)||256)),timeoutMs:60000,temperature:.2}:builderRouteProfile(system,user,requestedModel,maxTokens);
+ const profile=kind==="critic"?{mode:"CRITIC",score:0,maxTokens:Math.max(128,Math.min(768,Number(maxTokens)||512)),timeoutMs:90000,temperature:.15}:kind==="fast"?{mode:"FAST",score:0,maxTokens:Math.max(96,Math.min(384,Number(maxTokens)||256)),timeoutMs:60000,temperature:.1}:kind==="chat"?{mode:"CHAT",score:0,maxTokens:Math.max(96,Math.min(384,Number(maxTokens)||256)),timeoutMs:60000,temperature:.05}:builderRouteProfile(system,user,requestedModel,maxTokens);
  const r=await timeoutFetch(base+"/chat/completions",{method:"POST",headers:{"content-type":"application/json","authorization":"Bearer astra-private"},body:JSON.stringify({model,temperature:profile.temperature,max_tokens:profile.maxTokens,response_format:{type:"json_object"},messages:[{role:"system",content:String(system||"")},{role:"user",content:String(user||"")} ]})},profile.timeoutMs);
  const raw=await r.text();if(!r.ok)throw new Error("local "+kind+" inference "+r.status+": "+raw.slice(0,280));
  let data;try{data=JSON.parse(raw)}catch{throw new Error("local "+kind+" inference non-JSON")}
@@ -95,7 +95,7 @@ function unwrapChatText(text){
  }catch{return raw}
 }
 async function routedChatText(system,user,requestedModel,maxTokens=768){
- const outputContract='\n\nASTRA CHAT OUTPUT CONTRACT: return valid JSON only with exactly one top-level string field "answer". Put the complete natural-language answer in that field. Do not expose chain-of-thought.';
+ const outputContract='\n\nASTRA CHAT GROUNDING GATE — OBLIGATOIRE: Toute information factuelle de la réponse doit être directement présente dans SYSTEM ou USER. N introduis JAMAIS de nom propre sportif, équipe, joueur, adversaire, score, cote, date, horaire, compétition, classement, blessure ou résultat absent des données fournies. Si une information demandée manque, dis explicitement qu elle n est pas disponible; ne la déduis pas et ne la complète pas de mémoire.\nASTRA CHAT OUTPUT CONTRACT: return valid JSON only with exactly one top-level string field "answer". Put the complete natural-language answer in that field. Do not expose chain-of-thought.';
  const out=await routedLocalText(String(system||"")+outputContract,String(user||""),requestedModel||"qwen-chat-local",Math.max(96,Math.min(384,Number(maxTokens)||256)));
  const text=unwrapChatText(out.text);if(!text)throw new Error("ASTRA router chat returned empty answer");
  return{...out,text,router:"ASTRA SUPER ROUTER Ω"};
