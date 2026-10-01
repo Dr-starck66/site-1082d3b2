@@ -28,7 +28,7 @@ function routerAuthorized(req){
  const auth=String(req.headers?.authorization||"");
  return auth===("Bearer "+token);
 }
-const localModelBase=kind=>String(kind==="chat"?(process.env.ASTRA_LOCAL_CHAT_BASE||""):kind==="critic"?(process.env.ASTRA_LOCAL_CRITIC_BASE||process.env.ASTRA_LOCAL_DEEPSEEK_BASE||""):kind==="fast"?(process.env.ASTRA_LOCAL_QWEN_FAST_BASE||""):(process.env.ASTRA_LOCAL_QWEN_BASE||"")).replace(/\\/+$/,"");
+const localModelBase=kind=>String(kind==="chat"?(process.env.ASTRA_LOCAL_CHAT_BASE||""):kind==="critic"?(process.env.ASTRA_LOCAL_CRITIC_BASE||process.env.ASTRA_LOCAL_DEEPSEEK_BASE||""):kind==="fast"?(process.env.ASTRA_LOCAL_QWEN_FAST_BASE||""):(process.env.ASTRA_LOCAL_QWEN_BASE||"")).replace(/\/+$/,"");
 async function localModelHealth(kind){
  const base=localModelBase(kind);if(!base)return{status:"UNVERIFIED",kind,reason:"private model base not configured"};
  const root=base.replace(/\/v1$/,"");
