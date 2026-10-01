@@ -22,6 +22,12 @@ async function body(req){let n=0,ch=[];for await(const c of req){n+=c.length;if(
 const safePath=p=>typeof p==="string"&&p.length>0&&!p.startsWith("/")&&!p.includes("..")&&!p.includes("\\");
 const slug=s=>String(s||"astra-app").toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,54)||"astra-app";
 const timeoutFetch=(url,opts={},ms=15000)=>fetch(url,{...opts,signal:AbortSignal.timeout(ms)});
+const routerToken=()=>String(process.env.ASTRA_ROUTER_TOKEN||"").trim();
+function routerAuthorized(req){
+ const token=routerToken();if(!token)return false;
+ const auth=String(req.headers?.authorization||"");
+ return auth===("Bearer "+token);
+}
 const localModelBase=kind=>String(kind==="critic"?process.env.ASTRA_LOCAL_CRITIC_BASE||process.env.ASTRA_LOCAL_DEEPSEEK_BASE:process.env.ASTRA_LOCAL_QWEN_BASE||"").replace(/\/+$/,"");
 async function localModelHealth(kind){
  const base=localModelBase(kind);if(!base)return{status:"UNVERIFIED",kind,reason:"private model base not configured"};
@@ -75,6 +81,20 @@ async function routedLocalText(system,user,requestedModel,maxTokens=1536){
    throw new Error("ASTRA local inference failed; primary="+String(localError?.message||localError).slice(0,220)+"; rescue="+String(rescueError?.message||rescueError).slice(0,220));
   }
  }
+}
+function unwrapChatText(text){
+ const raw=String(text||"").trim();if(!raw)return"";
+ try{
+  const parsed=parseProbeJson(raw);
+  const answer=String(parsed?.answer??parsed?.text??parsed?.response??"").trim();
+  return answer||raw;
+ }catch{return raw}
+}
+async function routedChatText(system,user,requestedModel,maxTokens=768){
+ const outputContract='\n\nASTRA CHAT OUTPUT CONTRACT: return valid JSON only with exactly one top-level string field "answer". Put the complete natural-language answer in that field. Do not expose chain-of-thought.';
+ const out=await routedLocalText(String(system||"")+outputContract,String(user||""),requestedModel||"qwen-coder-local",Math.max(256,Math.min(1024,Number(maxTokens)||768)));
+ const text=unwrapChatText(out.text);if(!text)throw new Error("ASTRA router chat returned empty answer");
+ return{...out,text,router:"ASTRA SUPER ROUTER Ω"};
 }
 const sandboxBase=()=>String(process.env.ASTRA_SANDBOX_BASE||"").replace(/\/+$/,"");
 async function sandboxStatus(){
@@ -420,6 +440,15 @@ async function api(req,res,url){
  if(req.method==="POST"&&url.pathname==="/api/import_github"){const x=await body(req);try{return send(res,200,await importGithubProject(x))}catch(e){return send(res,502,{status:"FAIL",reason:String(e.message||e)})}}
  if(req.method==="POST"&&url.pathname==="/api/seal"){const x=await body(req);return send(res,200,{status:"PASS",seal:serverSeal(x.payload,x.previousHash||"GENESIS")})}
  if(req.method==="GET"&&url.pathname==="/api/local_model_status"){const [builder,critic]=await Promise.all([localModelHealth("builder"),localModelHealth("critic")]);return send(res,200,{status:builder.status==="PASS"&&critic.status==="PASS"?"PASS":builder.status==="PASS"?"PARTIAL":"UNVERIFIED",builder,critic})}
+ if(req.method==="POST"&&url.pathname==="/api/router_chat"){
+  if(!routerAuthorized(req))return send(res,401,{status:"FAIL",reason:"unauthorized"});
+  const x=await body(req),system=String(x.system||""),user=String(x.user||"");
+  if(!user.trim()||user.length>24000||system.length>24000)return send(res,400,{status:"FAIL",reason:"invalid chat payload"});
+  try{
+   const out=await routedChatText(system,user,x.requestedModel,x.maxTokens);
+   return send(res,out.status==="PASS"?200:206,out);
+  }catch(e){return send(res,503,{status:"FAIL",router:"ASTRA SUPER ROUTER Ω",reason:String(e?.message||e).slice(0,500)})}
+ }
  if(req.method==="POST"&&url.pathname==="/api/router_profile"){const x=await body(req);const kind=localKind(x.requestedModel,x.system);return send(res,200,{status:"PASS",kind,profile:kind==="critic"?{mode:"CRITIC",score:0,maxTokens:Math.max(256,Math.min(1536,Number(x.maxTokens)||1536))}:builderRouteProfile(x.system,x.user,x.requestedModel,x.maxTokens)})}
  if(req.method==="POST"&&url.pathname==="/api/local_text"){const x=await body(req);try{const out=await routedLocalText(x.system,x.user,x.requestedModel,x.maxTokens);return send(res,200,out)}catch(e){return send(res,503,{status:"FAIL",reason:String(e.message||e)})}}
  if(req.method==="POST"&&url.pathname==="/api/inference_self_test"){try{const builder=await localText("Return exactly ASTRA_QWEN_OK.","Return exactly ASTRA_QWEN_OK.",64);let critic;try{critic=await localText("Return exactly ASTRA_CRITIC_OK.","Return exactly ASTRA_CRITIC_OK.","gemma-critic-local",64)}catch(e){critic={error:String(e?.message||e)}};const bOk=/ASTRA_QWEN_OK/i.test(builder.text||""),cOk=/ASTRA_CRITIC_OK/i.test(critic.text||"");return send(res,bOk&&cOk?200:206,{status:bOk&&cOk?"PASS":"PARTIAL",builder:{ok:bOk,model:builder.model,text:String(builder.text||"").slice(0,120)},critic:{ok:cOk,model:critic.model||"gemma-critic-local",text:String(critic.text||"").slice(0,120),error:critic.error||null}})}catch(e){return send(res,503,{status:"FAIL",reason:String(e.message||e)})}}
