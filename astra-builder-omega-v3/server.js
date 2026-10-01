@@ -185,11 +185,28 @@ async function runMissionSmoke(mission){
   }
   const files=[...filesByPath.values()];
   log("FILES",files.length>=8?"PASS":"FAIL",files.length+" generated files");
-  const validation=validate({spec,files});
+  let validation=validate({spec,files});
   log("SERVER_VALIDATE",validation.verdict,validation.summary);
+  for(const e of validation.evidence||[])if(e.status!=="PASS")log("VALIDATION_DETAIL",e.status,e.name+" · "+e.detail);
   let sandbox={status:"UNVERIFIED",reason:"not run"};
-  try{sandbox=await sandboxRun({spec,files});log("SANDBOX",sandbox.status,(sandbox.durationMs||0)+"ms · "+String(sandbox.projectDigest||"").slice(0,12))}
+  try{sandbox=await sandboxRun({spec,files});log("SANDBOX",sandbox.status,(sandbox.durationMs||0)+"ms · "+String(sandbox.projectDigest||"").slice(0,12));for(const e of sandbox.evidence||[])if(e.status!=="PASS")log("SANDBOX_DETAIL",e.status,e.name+" · "+String(e.detail||"").slice(0,500))}
   catch(e){sandbox={status:"FAIL",reason:String(e?.message||e)};log("SANDBOX","FAIL",sandbox.reason)}
+  if(validation.verdict==="FAIL"||sandbox.status==="FAIL"){
+   const repairInput=JSON.stringify({
+    mission,spec,
+    failures:{validation:(validation.evidence||[]).filter(e=>e.status!=="PASS"),sandbox:{status:sandbox.status,evidence:(sandbox.evidence||[]).filter(e=>e.status!=="PASS"),reason:sandbox.reason||null}},
+    files:files.slice(0,70).map(x=>({path:x.path,content:String(x.content||"").slice(0,1400)}))
+   });
+   try{
+    const repair=await call("REPAIR",prompts.repair,repairInput,"qwen-standard-local",2400);
+    const changed=filesFrom(repair);for(const file of changed)filesByPath.set(file.path,file);
+    files.splice(0,files.length,...filesByPath.values());log("REPAIR_FILES",changed.length?"PASS":"PARTIAL",changed.length+" file(s) replaced/added");
+    validation=validate({spec,files});log("SERVER_REVALIDATE",validation.verdict,validation.summary);
+    for(const e of validation.evidence||[])if(e.status!=="PASS")log("REVALIDATION_DETAIL",e.status,e.name+" · "+e.detail);
+    try{sandbox=await sandboxRun({spec,files});log("SANDBOX_RETEST",sandbox.status,(sandbox.durationMs||0)+"ms · "+String(sandbox.projectDigest||"").slice(0,12));for(const e of sandbox.evidence||[])if(e.status!=="PASS")log("SANDBOX_RETEST_DETAIL",e.status,e.name+" · "+String(e.detail||"").slice(0,500))}
+    catch(e){sandbox={status:"FAIL",reason:String(e?.message||e)};log("SANDBOX_RETEST","FAIL",sandbox.reason)}
+   }catch(e){log("REPAIR","FAIL",String(e?.message||e))}
+  }
   const compact=JSON.stringify({mission,spec,files:files.slice(0,80).map(x=>({path:x.path,excerpt:String(x.content||"").slice(0,900)})),validation,sandbox:{status:sandbox.status,evidence:sandbox.evidence||[],reason:sandbox.reason||null}});
   let adversary={risk:"UNVERIFIED",issues:[]},verify={verdict:"UNVERIFIED"};
   try{adversary=await call("ADVERSARY",prompts.adversary,compact,"gemma-critic-local",700)}catch{}
