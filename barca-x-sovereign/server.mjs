@@ -111,4 +111,18 @@ const server = http.createServer(async (req,res) => {
   }
 });
 
-server.listen(PORT,"0.0.0.0",()=>console.log("BARCAX_SOVEREIGN_READY port="+PORT));
+server.listen(PORT,"0.0.0.0",async()=>{
+  console.log("BARCAX_SOVEREIGN_READY port="+PORT);
+  try {
+    const [fastHealth, standardHealth] = await Promise.all([modelHealth(FAST_BASE), modelHealth(STANDARD_BASE)]);
+    const fastText = await chatOnce(profileConfig("FAST"), "Réponds uniquement PASS.", "Probe BARCA-X fast.");
+    const standardText = await chatOnce(profileConfig("STANDARD"), "Réponds uniquement PASS.", "Probe BARCA-X standard.");
+    console.log("BARCAX_MODEL_PROBE_PASS "+JSON.stringify({
+      fastHealth,standardHealth,
+      fastOutput:Boolean(fastText),standardOutput:Boolean(standardText),
+      fastBase:"private",standardBase:"private"
+    }));
+  } catch (error) {
+    console.error("BARCAX_MODEL_PROBE_FAIL "+String(error?.message||error));
+  }
+});
