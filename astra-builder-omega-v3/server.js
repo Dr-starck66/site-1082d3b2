@@ -394,6 +394,11 @@ srv.listen(port,"0.0.0.0",()=>{
    console.log("[ASTRA SANDBOX PROBE]",r.status,r.sandboxLevel,r.durationMs+"ms",String(r.projectDigest||"").slice(0,12));
   }catch(e){console.error("[ASTRA SANDBOX PROBE] FAIL",String(e?.message||e).slice(0,300))}
  },900);
+ if(process.env.ASTRA_CLAW_PROBE_ON_BOOT==="1")setTimeout(async()=>{
+  try{const r=await runClaw({url:"https://example.com",goal:"ASTRA Claw smoke test",maxSteps:1});console.log("[ASTRA CLAW PROBE]",r.status,r.mode,r.visited?.[0]?.status,r.final?.title,Buffer.byteLength(r.screenshotB64||"","base64")+" bytes")}
+  catch(e){console.error("[ASTRA CLAW PROBE] FAIL",String(e?.message||e).slice(0,500))}
+ },1100);
+
  if(process.env.ASTRA_LOCAL_MODEL_PROBE_ON_BOOT==="1")setTimeout(async()=>{
   try{const q=await localText("You are a JSON connectivity probe.","Return JSON only: {\"ok\":true,\"role\":\"builder\"}","qwen-coder-local",96),j=parseProbeJson(q.text);if(j.ok!==true||j.role!=="builder"||q.routeMode!=="FAST")throw new Error("unexpected Qwen FAST result");console.log("[ASTRA LOCAL MODEL PROBE] QWEN FAST JSON PASS",q.model,q.routeMode,q.tokenBudget,JSON.stringify(j))}catch(e){console.error("[ASTRA LOCAL MODEL PROBE] QWEN FAST JSON FAIL",String(e?.message||e).slice(0,300))}
   try{const q=await localText("You are the full-stack architect. Design authentication, PostgreSQL schema, backend API, security and Railway deployment.","Return JSON only: {\"ok\":true,\"route\":\"deep\"}","qwen-coder-local",3072),j=parseProbeJson(q.text);if(j.ok!==true||q.routeMode!=="DEEP")throw new Error("unexpected Qwen DEEP result: "+q.routeMode);console.log("[ASTRA LOCAL MODEL PROBE] QWEN DEEP JSON PASS",q.model,q.routeMode,q.tokenBudget,JSON.stringify(j))}catch(e){console.error("[ASTRA LOCAL MODEL PROBE] QWEN DEEP JSON FAIL",String(e?.message||e).slice(0,300))}
