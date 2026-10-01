@@ -55,8 +55,8 @@ function builderRouteProfile(system,user,requestedModel,maxTokens){
 }
 async function localText(system,user,requestedModel,maxTokens=1536){
  const kind=localKind(requestedModel,system),base=localModelBase(kind);if(!base)throw new Error("local "+kind+" model endpoint not configured");
- const model=kind==="critic"?"gemma-critic-local":kind==="fast"?"qwen-fast-local":"qwen-coder-local";
- const profile=kind==="critic"?{mode:"CRITIC",score:0,maxTokens:Math.max(256,Math.min(1536,Number(maxTokens)||1536)),timeoutMs:180000,temperature:.2}:kind==="fast"?{mode:"FAST",score:0,maxTokens:Math.max(128,Math.min(768,Number(maxTokens)||512)),timeoutMs:90000,temperature:.1}:builderRouteProfile(system,user,requestedModel,maxTokens);
+ const model=kind==="critic"?"gemma-critic-local":kind==="fast"?"qwen-fast-local":kind==="chat"?"qwen-chat-local":"qwen-coder-local";
+ const profile=kind==="critic"?{mode:"CRITIC",score:0,maxTokens:Math.max(128,Math.min(768,Number(maxTokens)||512)),timeoutMs:90000,temperature:.15}:kind==="fast"?{mode:"FAST",score:0,maxTokens:Math.max(96,Math.min(384,Number(maxTokens)||256)),timeoutMs:60000,temperature:.1}:kind==="chat"?{mode:"CHAT",score:0,maxTokens:Math.max(96,Math.min(384,Number(maxTokens)||256)),timeoutMs:60000,temperature:.2}:builderRouteProfile(system,user,requestedModel,maxTokens);
  const r=await timeoutFetch(base+"/chat/completions",{method:"POST",headers:{"content-type":"application/json","authorization":"Bearer astra-private"},body:JSON.stringify({model,temperature:profile.temperature,max_tokens:profile.maxTokens,response_format:{type:"json_object"},messages:[{role:"system",content:String(system||"")},{role:"user",content:String(user||"")} ]})},profile.timeoutMs);
  const raw=await r.text();if(!r.ok)throw new Error("local "+kind+" inference "+r.status+": "+raw.slice(0,280));
  let data;try{data=JSON.parse(raw)}catch{throw new Error("local "+kind+" inference non-JSON")}
@@ -75,7 +75,7 @@ async function routedLocalText(system,user,requestedModel,maxTokens=1536){
  try{return{status:"PASS",...(await localText(system,user,requestedModel,maxTokens)),fallback:false,fallbackScope:"NONE"}}
  catch(localError){
   const primaryKind=localKind(requestedModel,system);
-  const rescueModels=primaryKind==="critic"?["qwen-coder-local","qwen-fast-local"]:primaryKind==="fast"?["qwen-coder-local","gemma-critic-local"]:["qwen-fast-local","gemma-critic-local"];
+  const rescueModels=primaryKind==="chat"?["qwen-fast-local","gemma-critic-local"]:primaryKind==="critic"?["qwen-coder-local","qwen-fast-local"]:primaryKind==="fast"?["qwen-chat-local","gemma-critic-local"]:["qwen-fast-local","gemma-critic-local"];
   const failures=[String(localError?.message||localError).slice(0,220)];
   for(const rescueModel of rescueModels){
    try{
@@ -443,7 +443,7 @@ async function api(req,res,url){
 
  if(req.method==="POST"&&url.pathname==="/api/import_github"){const x=await body(req);try{return send(res,200,await importGithubProject(x))}catch(e){return send(res,502,{status:"FAIL",reason:String(e.message||e)})}}
  if(req.method==="POST"&&url.pathname==="/api/seal"){const x=await body(req);return send(res,200,{status:"PASS",seal:serverSeal(x.payload,x.previousHash||"GENESIS")})}
- if(req.method==="GET"&&url.pathname==="/api/local_model_status"){const [fast,builder,critic]=await Promise.all([localModelHealth("fast"),localModelHealth("builder"),localModelHealth("critic")]);const pass=[fast,builder,critic].filter(x=>x.status==="PASS").length;return send(res,200,{status:pass===3?"PASS":pass>=2?"PARTIAL":"UNVERIFIED",fast,builder,critic})}
+ if(req.method==="GET"&&url.pathname==="/api/local_model_status"){const [chat,fast,builder,critic]=await Promise.all([localModelHealth("chat"),localModelHealth("fast"),localModelHealth("builder"),localModelHealth("critic")]);const pass=[chat,fast,builder,critic].filter(x=>x.status==="PASS").length;return send(res,200,{status:chat.status==="PASS"&&pass>=3?"PASS":pass>=2?"PARTIAL":"UNVERIFIED",chat,fast,builder,critic})}
  if(req.method==="POST"&&url.pathname==="/api/router_chat"){
   if(!routerAuthorized(req))return send(res,401,{status:"FAIL",reason:"unauthorized"});
   const x=await body(req),system=String(x.system||""),user=String(x.user||"");
