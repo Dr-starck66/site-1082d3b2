@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BARÇA-X Sovereign</title><style>
+body{font-family:system-ui;background:#07101c;color:#e9f0ff;margin:0}.wrap{max-width:1100px;margin:auto;padding:28px}
+.card{background:#0d1929;border:1px solid #263a55;border-radius:14px;padding:20px;margin:14px 0}
+textarea{width:100%;min-height:130px;background:#07101c;color:#fff;border:1px solid #385070;border-radius:10px;padding:12px;box-sizing:border-box}
+button{background:#6d5dfc;color:white;border:0;border-radius:10px;padding:12px 18px;font-weight:700;cursor:pointer}
+pre{white-space:pre-wrap;overflow-wrap:anywhere}.ok{color:#66e3a4}.bad{color:#ff8b8b}
+</style></head><body><div class="wrap"><h1>BARÇA-X Sovereign</h1><p>XI agents · 3-2-5 · Railway private model fabric · evidence hashes</p>
+<div class="card"><textarea id="m" placeholder="Mission…"></textarea><br><br><button id="go">Lancer le XI</button> <button id="health">Model health</button><span id="s"></span></div>
+<div class="card"><pre id="out">Prêt.</pre></div></div>
+<script>
+const q=s=>document.querySelector(s),out=q("#out"),status=q("#s");
+q("#health").onclick=async()=>{status.textContent=" …";const r=await fetch("/model-health");const j=await r.json();status.className=r.ok?"ok":"bad";status.textContent=" "+(r.ok?"PASS":"FAIL");out.textContent=JSON.stringify(j,null,2)};
+q("#go").onclick=async()=>{const mission=q("#m").value.trim();if(!mission)return;out.textContent="XI en cours…";status.textContent="";const r=await fetch("/api/run",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({mission})});const j=await r.json();status.className=r.ok?"ok":"bad";status.textContent=r.ok?" PASS":" FAIL";out.textContent=r.ok?j.finalAnswer+"\n\n--- EVIDENCE ---\n"+JSON.stringify(j.evidence,null,2):JSON.stringify(j,null,2)};
+</script></body></html>
