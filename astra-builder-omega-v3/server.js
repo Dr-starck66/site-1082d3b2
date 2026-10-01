@@ -93,11 +93,24 @@ function filesFrom(x){return Array.isArray(x?.files)?x.files.filter(f=>safePath(
 function mergeProjectFiles(...sets){const m=new Map();for(const set of sets)for(const f of set||[])if(safePath(f?.path)&&typeof f?.content==="string")m.set(f.path,f);return[...m.values()]}
 function goldenLog(phase,detail){goldenState.phase=phase;console.log("[ASTRA GOLDEN RUN]",phase,detail||"")}
 function goldenCompactFiles(files,issuePaths=[],maxChars=11000){
- const preferred=["package.json","server.js","lib/auth.js","lib/repository.js","tests/server.test.js","tests/auth.test.js","deploy.json","Dockerfile","database/schema.sql"];
+ const preferred=["public/app.js","public/index.html","package.json","server.js","lib/auth.js","lib/repository.js","tests/server.test.js","tests/auth.test.js","deploy.json","Dockerfile","database/schema.sql"];
  const wanted=[...new Set([...issuePaths,...preferred])],out=[];let used=0;
  const ordered=[...wanted.map(p=>files.find(f=>f.path===p)).filter(Boolean),...files.filter(f=>!wanted.includes(f.path))];
- for(const f of ordered){if(used>=maxChars)break;const room=Math.min(1800,maxChars-used),content=String(f.content||"").slice(0,room);out.push({path:f.path,excerpt:content,truncated:String(f.content||"").length>content.length});used+=content.length}
+ for(const f of ordered){
+  if(used>=maxChars)break;
+  const cap=issuePaths.includes(f.path)?8000:1800,room=Math.min(cap,maxChars-used),content=String(f.content||"").slice(0,room);
+  out.push({path:f.path,excerpt:content,truncated:String(f.content||"").length>content.length});used+=content.length;
+ }
  return out;
+}
+function goldenFailPaths(evidence=[]){
+ const paths=new Set();
+ for(const e of evidence){
+  if(e.status==="PASS")continue;
+  const s=String(e.name||"")+" "+String(e.detail||"");
+  for(const m of s.matchAll(/(?:^|\s)((?:public|lib|tests|database|scripts|src)\/[A-Za-z0-9._\/-]+\.(?:js|mjs|cjs|json|sql|html|css))/g))paths.add(m[1]);
+ }
+ return [...paths];
 }
 function goldenCompactEvidence(evidence=[]){return evidence.map(e=>({name:e.name,status:e.status,detail:String(e.detail||"").slice(0,500)})).slice(0,40)}
 
@@ -136,11 +149,16 @@ async function runGoldenRun(){
   const auditContext=goldenCompactFiles(files,[],9000);const audit=await goldenAgent(prompts.adversary,"GOLDEN MISSION:\n"+mission+"\nSPEC:\n"+JSON.stringify(spec)+"\nMANIFEST:\n"+JSON.stringify(goldenState.manifest)+"\nCRITICAL FILE EXCERPTS:\n"+JSON.stringify(auditContext)+"\nSANDBOX EVIDENCE:\n"+JSON.stringify(goldenCompactEvidence(sb.evidence)),"gemma-critic-local",1536);
   goldenState.evidence.push({stage:"adversary",status:audit.risk==="HIGH"?"PARTIAL":"PASS",audit});
   if(sb.status!=="PASS"||(audit.issues||[]).length){
-   goldenLog("REPAIR","Qwen repair");
-   const issuePaths=(audit.issues||[]).map(x=>x.path).filter(Boolean);const repairContext=goldenCompactFiles(files,issuePaths,16000);const rep=await goldenAgent(prompts.repair,"GOLDEN MISSION:\n"+mission+"\nSPEC:\n"+JSON.stringify(spec)+"\nMANIFEST:\n"+JSON.stringify(goldenState.manifest)+"\nFILES TO REPAIR / CONTEXT:\n"+JSON.stringify(repairContext)+"\nSANDBOX:\n"+JSON.stringify(goldenCompactEvidence(sb.evidence))+"\nAUDIT:\n"+JSON.stringify(audit),"qwen-coder-local",3072);
-   const changed=filesFrom(rep);if(changed.length){files=mergeProjectFiles(files,changed);goldenState.repairs++;goldenState.manifest=files.map(f=>f.path).sort()}
-   goldenLog("SANDBOX-2","post-repair");
-   sb=await sandboxRun({spec,files});goldenState.evidence.push({stage:"sandbox-2",status:sb.status,durationMs:sb.durationMs,evidence:sb.evidence});goldenLog("SANDBOX-2-RESULT",sb.status+" · "+sb.durationMs+"ms · "+(sb.evidence||[]).filter(x=>x.status!=="PASS").map(x=>x.name+":"+x.status).join(","));
+   for(let repairRound=1;repairRound<=2;repairRound++){
+    const issuePaths=[...new Set([...(audit.issues||[]).map(x=>x.path).filter(Boolean),...goldenFailPaths(sb.evidence)])];
+    goldenLog("REPAIR-"+repairRound,"Qwen targeted repair · "+(issuePaths.join(",")||"general"));
+    const repairContext=goldenCompactFiles(files,issuePaths,20000);
+    const rep=await goldenAgent(prompts.repair,"GOLDEN MISSION:\n"+mission+"\nSPEC:\n"+JSON.stringify(spec)+"\nMANIFEST:\n"+JSON.stringify(goldenState.manifest)+"\nFAILING PATHS (highest priority):\n"+JSON.stringify(issuePaths)+"\nFILES TO REPAIR / CONTEXT:\n"+JSON.stringify(repairContext)+"\nSANDBOX EXACT EVIDENCE:\n"+JSON.stringify(goldenCompactEvidence(sb.evidence))+"\nAUDIT:\n"+JSON.stringify(audit)+"\nReturn COMPLETE replacement content for every failing path you modify. Fix syntax/runtime failures first. Keep unchanged files out.","qwen-coder-local",3072);
+    const changed=filesFrom(rep);if(changed.length){files=mergeProjectFiles(files,changed);goldenState.repairs++;goldenState.manifest=files.map(f=>f.path).sort()}
+    const stage="sandbox-"+(repairRound+1);goldenLog(stage.toUpperCase(),"post-repair "+repairRound);
+    sb=await sandboxRun({spec,files});goldenState.evidence.push({stage,status:sb.status,durationMs:sb.durationMs,evidence:sb.evidence});goldenLog(stage.toUpperCase()+"-RESULT",sb.status+" · "+sb.durationMs+"ms · "+(sb.evidence||[]).filter(x=>x.status!=="PASS").map(x=>x.name+":"+x.status).join(","));
+    if(sb.status==="PASS")break;
+   }
   }
   goldenLog("VERIFY²","Gemma independent verifier");
   const verify=await goldenAgent(prompts.verify,"GOLDEN MISSION:\n"+mission+"\nSPEC:\n"+JSON.stringify(spec)+"\nMANIFEST:\n"+JSON.stringify(goldenState.manifest)+"\nCRITICAL FILE EXCERPTS:\n"+JSON.stringify(goldenCompactFiles(files,[],7500))+"\nEVIDENCE SUMMARY:\n"+JSON.stringify(goldenState.evidence.map(x=>({stage:x.stage,status:x.status,durationMs:x.durationMs,evidence:goldenCompactEvidence(x.evidence||[])}))),"gemma-critic-local",1536);
