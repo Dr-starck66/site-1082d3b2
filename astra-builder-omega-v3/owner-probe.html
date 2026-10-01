@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ASTRA Owner Probe</title></head>
+<body>
+  <main>
+    <h1>ASTRA Owner Mode Probe</h1>
+    <form id="probeForm">
+      <label>Title <input id="probeTitle" name="title" type="text"></label>
+      <label>Mode
+        <select id="probeMode" name="mode">
+          <option value="draft">Draft</option>
+          <option value="review">Review</option>
+        </select>
+      </label>
+      <label><input id="probeCheck" name="check" type="checkbox"> Verified</label>
+      <button id="probeSubmit" type="submit">Publish draft</button>
+    </form>
+    <pre id="probeResult">WAITING</pre>
+  </main>
+  <script>
+    document.querySelector("#probeForm").addEventListener("submit",e=>{
+      e.preventDefault();
+      const title=document.querySelector("#probeTitle").value;
+      const mode=document.querySelector("#probeMode").value;
+      const checked=document.querySelector("#probeCheck").checked;
+      document.querySelector("#probeResult").textContent=JSON.stringify({title,mode,checked,status:"OWNER_ACTION_OK"});
+    });
+  </script>
+</body>
+</html>
