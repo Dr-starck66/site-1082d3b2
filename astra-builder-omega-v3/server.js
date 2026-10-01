@@ -28,7 +28,7 @@ function routerAuthorized(req){
  const auth=String(req.headers?.authorization||"");
  return auth===("Bearer "+token);
 }
-const localModelBase=kind=>String(kind==="critic"?process.env.ASTRA_LOCAL_CRITIC_BASE||process.env.ASTRA_LOCAL_DEEPSEEK_BASE:process.env.ASTRA_LOCAL_QWEN_BASE||"").replace(/\/+$/,"");
+const localModelBase=kind=>String(kind==="chat"?process.env.ASTRA_LOCAL_CHAT_BASE||"":kind==="critic"?process.env.ASTRA_LOCAL_CRITIC_BASE||process.env.ASTRA_LOCAL_DEEPSEEK_BASE:process.env.ASTRA_LOCAL_QWEN_BASE||"").replace(/\/+$/,"");
 async function localModelHealth(kind){
  const base=localModelBase(kind);if(!base)return{status:"UNVERIFIED",kind,reason:"private model base not configured"};
  const root=base.replace(/\/v1$/,"");
@@ -37,6 +37,7 @@ async function localModelHealth(kind){
 function localKind(requestedModel="",system=""){
  const m=String(requestedModel||"").toLowerCase();
  if(/qwen-fast|fast-local/.test(m))return"fast";
+ if(/qwen-chat|chat-local|sports-chat/.test(m))return"chat";
  if(/qwen|coder-local|builder/.test(m))return"builder";
  if(/gemma|deepseek|critic/.test(m))return"critic";
  const s=String(system||"").toLowerCase();
@@ -95,7 +96,7 @@ function unwrapChatText(text){
 }
 async function routedChatText(system,user,requestedModel,maxTokens=768){
  const outputContract='\n\nASTRA CHAT OUTPUT CONTRACT: return valid JSON only with exactly one top-level string field "answer". Put the complete natural-language answer in that field. Do not expose chain-of-thought.';
- const out=await routedLocalText(String(system||"")+outputContract,String(user||""),requestedModel||"qwen-coder-local",Math.max(256,Math.min(1024,Number(maxTokens)||768)));
+ const out=await routedLocalText(String(system||"")+outputContract,String(user||""),requestedModel||"qwen-chat-local",Math.max(96,Math.min(384,Number(maxTokens)||256)));
  const text=unwrapChatText(out.text);if(!text)throw new Error("ASTRA router chat returned empty answer");
  return{...out,text,router:"ASTRA SUPER ROUTER Ω"};
 }
