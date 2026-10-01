@@ -283,18 +283,20 @@ async function api(req,res,url){
  if(req.method==="POST"&&url.pathname==="/api/team_run"){
   const x=await body(req),memory=compileSecondBrain(x),team=createTeamPlan(x,memory),proof=buildProofGraph(x.evidence||[]);
   if(x.execute!==true)return send(res,200,{status:"PASS",memory,team,proof,cost:summarizeRouteCost([]),ai:{}});
-  const brief={request:String(x.request||"").slice(0,4000),memory:{project:memory.project,facts:memory.facts.slice(0,40),digest:memory.digest},team:team.tasks,proof:{status:proof.status,blockers:proof.blockers.slice(0,20),contradictions:proof.contradictions},files:(x.files||[]).slice(0,40).map(f=>({path:f.path,excerpt:String(f.content||"").slice(0,1200)}))};
-  const unpack=(role,r)=>{let data;try{data=parseProbeJson(r.text)}catch{data={raw:String(r.text||"").slice(0,5000)}}return{role,status:r.status||"UNVERIFIED",provider:r.provider||"",model:r.model||"",routeMode:r.routeMode||"",fallback:!!r.fallback,data}};
+  const brief={request:String(x.request||"").slice(0,700),memory:{project:memory.project,facts:memory.facts.slice(0,14).map(f=>({kind:f.kind,key:f.key,value:String(f.value||"").slice(0,180)})),digest:memory.digest},team:team.tasks.map(t=>({id:t.id,role:t.role,title:String(t.title||"").slice(0,120),deps:t.deps})),proof:{status:proof.status,blockers:proof.blockers.slice(0,6).map(b=>({name:b.name,status:b.status,detail:String(b.detail||"").slice(0,160)})),contradictions:proof.contradictions.slice(0,4)},files:(x.files||[]).slice(0,12).map(f=>({path:String(f.path||"").slice(0,180),excerpt:String(f.content||"").slice(0,120)}))};
+  const unpack=(role,r)=>{let data;try{data=parseProbeJson(r.text)}catch{data={raw:String(r.text||"").slice(0,2400)}}return{role,status:r.status||"UNVERIFIED",provider:r.provider||"",model:r.model||"",routeMode:r.routeMode||"",fallback:!!r.fallback,data}};
   try{
-   const ctx=JSON.stringify(brief);
+   const ctx=JSON.stringify(brief),contextChars=ctx.length;if(contextChars>12000)throw new Error("TEAM_CONTEXT_GATE: compact context exceeds 12000 chars");
    const [opRaw,skRaw]=await Promise.all([
-    routedLocalText("You are ASTRA Team Ω operator. Return JSON only with findings[], gaps[], actions[]. Use the supplied project memory and task board. Do not claim tests you did not run.",ctx,"qwen-coder-local",1536),
-    routedLocalText("You are ASTRA Team Ω skeptic. Return JSON only with falsePassRisks[], contradictions[], requiredProof[]. Be adversarial and evidence-first.",ctx,"gemma-critic-local",1024)
+    routedLocalText("You are ASTRA Team Ω operator. JSON only: {findings:[],gaps:[],actions:[]}. Use only supplied evidence. Do not claim tests you did not run.",ctx,"qwen-coder-local",640),
+    routedLocalText("You are ASTRA Team Ω skeptic. JSON only: {falsePassRisks:[],contradictions:[],requiredProof:[]}. Be adversarial and evidence-first.",ctx,"gemma-critic-local",512)
    ]);
    const operator=unpack("Operator",opRaw),skeptic=unpack("Skeptic",skRaw);
-   const intRaw=await routedLocalText("You are ASTRA Chief of Staff Ω. Return JSON only with priorityActions[], blockedBy[], readyNow[], decision. Synthesize the operator and skeptic without inventing evidence.",JSON.stringify({brief,operator:operator.data,skeptic:skeptic.data}),"qwen-coder-local",1536);
+   const integrationContext=JSON.stringify({project:memory.project,proofStatus:proof.status,taskRoles:team.roles,operator:operator.data,skeptic:skeptic.data});
+   if(integrationContext.length>12000)throw new Error("TEAM_INTEGRATION_GATE: synthesis context exceeds 12000 chars");
+   const intRaw=await routedLocalText("You are ASTRA Chief of Staff Ω. JSON only: {priorityActions:[],blockedBy:[],readyNow:[],decision:\"\"}. Synthesize without inventing evidence.",integrationContext,"qwen-coder-local",640);
    const integrator=unpack("Chief of Staff",intRaw),routes=[opRaw,skRaw,intRaw],cost=summarizeRouteCost(routes),status=routes.every(r=>r.status==="PASS")?"PASS":"PARTIAL";
-   return send(res,status==="PASS"?200:206,{status,memory,team,proof,cost,ai:{operator,skeptic,integrator},durationNote:"model execution completed in-request"});
+   return send(res,status==="PASS"?200:206,{status,memory,team,proof,cost,contextGate:{status:"PASS",operatorChars:contextChars,integratorChars:integrationContext.length,limitChars:12000},ai:{operator,skeptic,integrator},durationNote:"model execution completed in-request"});
   }catch(e){return send(res,206,{status:"PARTIAL",memory,team,proof,cost:summarizeRouteCost([]),ai:{},reason:String(e?.message||e)})}
  }
 
