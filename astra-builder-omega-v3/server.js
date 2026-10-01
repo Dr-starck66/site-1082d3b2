@@ -29,7 +29,10 @@ async function localModelHealth(kind){
  try{const r=await timeoutFetch(root+"/health",{},30000),raw=await r.text();return{status:r.ok?"PASS":"PARTIAL",kind,httpStatus:r.status,body:raw.slice(0,180),baseConfigured:true}}catch(e){return{status:"PARTIAL",kind,reason:String(e?.message||e),baseConfigured:true}}
 }
 function localKind(requestedModel="",system=""){
- const s=(String(requestedModel)+" "+String(system)).toLowerCase();
+ const m=String(requestedModel||"").toLowerCase();
+ if(/qwen|coder-local|builder/.test(m))return"builder";
+ if(/gemma|deepseek|critic/.test(m))return"critic";
+ const s=String(system||"").toLowerCase();
  return/(gemma|deepseek|adversary|critic|verify|skeptic)/.test(s)?"critic":"builder";
 }
 function builderRouteProfile(system,user,requestedModel,maxTokens){
@@ -61,10 +64,16 @@ function parseProbeJson(text){
  throw new Error("structured JSON missing");
 }
 async function routedLocalText(system,user,requestedModel,maxTokens=1536){
- try{return{status:"PASS",...(await localText(system,user,requestedModel,maxTokens)),fallback:false}}
+ try{return{status:"PASS",...(await localText(system,user,requestedModel,maxTokens)),fallback:false,fallbackScope:"NONE"}}
  catch(localError){
-  const fb=await zeroGpuText(system,user,maxTokens);
-  return{status:"PARTIAL",...fb,fallback:true,localError:String(localError?.message||localError).slice(0,260)};
+  const primaryKind=localKind(requestedModel,system);
+  const rescueModel=primaryKind==="critic"?"qwen-coder-local":"gemma-critic-local";
+  try{
+   const fb=await localText(system,user,rescueModel,Math.min(Number(maxTokens)||1536,primaryKind==="critic"?1536:768));
+   return{status:"PARTIAL",...fb,fallback:true,fallbackScope:"LOCAL_ONLY",primaryKind,localError:String(localError?.message||localError).slice(0,260)};
+  }catch(rescueError){
+   throw new Error("ASTRA local inference failed; primary="+String(localError?.message||localError).slice(0,220)+"; rescue="+String(rescueError?.message||rescueError).slice(0,220));
+  }
  }
 }
 const sandboxBase=()=>String(process.env.ASTRA_SANDBOX_BASE||"").replace(/\/+$/,"");
