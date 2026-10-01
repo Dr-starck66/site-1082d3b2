@@ -35,7 +35,7 @@ export function profileTask(system="",user="",requestedModel=""){
   const requiresJson=/json only|json_object|\{summary|files:\s*\[|structured json/i.test(text);
   const criticRole=/adversary|verifier|security/.test(role)||/gemma|deepseek|critic|skeptic|verify|adversary/i.test(String(requestedModel));
   const mode=complexity+risk>=7?"DEEP":complexity+risk>=3?"STANDARD":"FAST";
-  const tokenBudget=criticRole?(mode==="DEEP"?1536:mode==="STANDARD"?1024:640):(mode==="DEEP"?3072:mode==="STANDARD"?2048:1024);
+  const tokenBudget=criticRole?(mode==="DEEP"?1536:mode==="STANDARD"?1024:640):(mode==="DEEP"?3072:mode==="STANDARD"?2400:1024);
   return{role,complexity,risk,requiresJson,criticRole,mode,tokenBudget,contextChars:text.length};
 }
 
