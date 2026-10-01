@@ -176,7 +176,7 @@ async function runMissionSmoke(mission){
   log(name,"FAIL",String(last?.message||last));throw last;
  };
  try{
-  const spec=await call("ARCHITECT",prompts.architect,mission,"qwen-standard-local",1000);
+  const spec=await call("ARCHITECT",prompts.architect,mission,"qwen-standard-local",1800);
   const specText=JSON.stringify(spec);
   const jobs=[["FRONTEND",prompts.frontend,2400],["BACKEND",prompts.backend,2400],["DATABASE",prompts.database,1100],["AUTH",prompts.auth,1500],["DEVOPS",prompts.ops,1300]];
   for(let i=0;i<jobs.length;i+=2){
