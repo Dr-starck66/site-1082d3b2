@@ -78,8 +78,11 @@ function parseModelJson(text){return parseProbeJson(text)}
 function filesFrom(x){return Array.isArray(x?.files)?x.files.filter(f=>safePath(f?.path)&&typeof f?.content==="string").map(f=>({path:f.path,content:f.content})):[]}
 function mergeProjectFiles(...sets){const m=new Map();for(const set of sets)for(const f of set||[])if(safePath(f?.path)&&typeof f?.content==="string")m.set(f.path,f);return[...m.values()]}
 function goldenLog(phase,detail){goldenState.phase=phase;console.log("[ASTRA GOLDEN RUN]",phase,detail||"")}
+function goldenCompactSpec(spec){
+ return{appName:spec?.appName,goal:spec?.goal,stack:spec?.stack,routes:(spec?.routes||[]).slice(0,12),features:(spec?.features||[]).slice(0,12),acceptance:(spec?.acceptance||[]).slice(0,12),entities:(spec?.entities||[]).slice(0,10)};
+}
 function goldenCompactFiles(files,issuePaths=[],maxChars=11000){
- const preferred=["package.json","server.js","lib/auth.js","lib/repository.js","tests/server.test.js","tests/auth.test.js","deploy.json","Dockerfile","database/schema.sql"];
+ const preferred=["package.json","scripts/build.js","server.js","lib/auth.js","lib/repository.js","tests/server.test.js","tests/auth.test.js","public/index.html","public/app.js","deploy.json","Dockerfile","database/schema.sql"];
  const wanted=[...new Set([...issuePaths,...preferred])],out=[];let used=0;
  const ordered=[...wanted.map(p=>files.find(f=>f.path===p)).filter(Boolean),...files.filter(f=>!wanted.includes(f.path))];
  for(const f of ordered){if(used>=maxChars)break;const room=Math.min(1800,maxChars-used),content=String(f.content||"").slice(0,room);out.push({path:f.path,excerpt:content,truncated:String(f.content||"").length>content.length});used+=content.length}
@@ -119,17 +122,20 @@ async function runGoldenRun(){
   goldenLog("SANDBOX-1",files.length+" files");
   let sb=await sandboxRun({spec,files});goldenState.evidence.push({stage:"sandbox-1",status:sb.status,durationMs:sb.durationMs,evidence:sb.evidence});goldenLog("SANDBOX-1-RESULT",sb.status+" · "+sb.durationMs+"ms · "+(sb.evidence||[]).filter(x=>x.status!=="PASS").map(x=>x.name+":"+x.status).join(","));
   goldenLog("ADVERSARY","Gemma critic");
-  const auditContext=goldenCompactFiles(files,[],9000);const audit=await goldenAgent(prompts.adversary,"GOLDEN MISSION:\n"+mission+"\nSPEC:\n"+JSON.stringify(spec)+"\nMANIFEST:\n"+JSON.stringify(goldenState.manifest)+"\nCRITICAL FILE EXCERPTS:\n"+JSON.stringify(auditContext)+"\nSANDBOX EVIDENCE:\n"+JSON.stringify(goldenCompactEvidence(sb.evidence)),"gemma-critic-local",1536);
+  const auditContext=goldenCompactFiles(files,[],4200);let audit;
+  try{audit=await goldenAgent(prompts.adversary,"GOLDEN MISSION:\n"+mission+"\nSPEC:\n"+JSON.stringify(goldenCompactSpec(spec))+"\nMANIFEST:\n"+JSON.stringify(goldenState.manifest)+"\nCRITICAL FILE EXCERPTS:\n"+JSON.stringify(auditContext)+"\nSANDBOX EVIDENCE:\n"+JSON.stringify(goldenCompactEvidence(sb.evidence)),"gemma-critic-local",1024)}
+  catch(e){console.error("[ASTRA GOLDEN RUN] CRITIC FALLBACK",String(e?.message||e).slice(0,260));audit={risk:"HIGH",summary:"Critic unavailable; repair is driven directly by executable Sandbox evidence.",issues:(sb.evidence||[]).filter(x=>x.status!=="PASS").map(x=>({severity:"high",path:null,title:x.name,fix:String(x.detail||"").slice(0,500)})),falsePassRisks:["critic unavailable"]};goldenState.evidence.push({stage:"critic-fallback",status:"PARTIAL",detail:String(e?.message||e).slice(0,300)})}
   goldenState.evidence.push({stage:"adversary",status:audit.risk==="HIGH"?"PARTIAL":"PASS",audit});
   if(sb.status!=="PASS"||(audit.issues||[]).length){
    goldenLog("REPAIR","Qwen repair");
-   const issuePaths=(audit.issues||[]).map(x=>x.path).filter(Boolean);const repairContext=goldenCompactFiles(files,issuePaths,16000);const rep=await goldenAgent(prompts.repair,"GOLDEN MISSION:\n"+mission+"\nSPEC:\n"+JSON.stringify(spec)+"\nMANIFEST:\n"+JSON.stringify(goldenState.manifest)+"\nFILES TO REPAIR / CONTEXT:\n"+JSON.stringify(repairContext)+"\nSANDBOX:\n"+JSON.stringify(goldenCompactEvidence(sb.evidence))+"\nAUDIT:\n"+JSON.stringify(audit),"qwen-coder-local",3072);
+   const issuePaths=(audit.issues||[]).map(x=>x.path).filter(Boolean);const repairContext=goldenCompactFiles(files,issuePaths,12000);const rep=await goldenAgent(prompts.repair,"GOLDEN MISSION:\n"+mission+"\nSPEC:\n"+JSON.stringify(goldenCompactSpec(spec))+"\nMANIFEST:\n"+JSON.stringify(goldenState.manifest)+"\nFILES TO REPAIR / CONTEXT:\n"+JSON.stringify(repairContext)+"\nSANDBOX:\n"+JSON.stringify(goldenCompactEvidence(sb.evidence))+"\nAUDIT:\n"+JSON.stringify(audit),"qwen-coder-local",3072);
    const changed=filesFrom(rep);if(changed.length){files=mergeProjectFiles(files,changed);goldenState.files=files;goldenState.repairs++;goldenState.manifest=files.map(f=>f.path).sort()}
    goldenLog("SANDBOX-2","post-repair");
    sb=await sandboxRun({spec,files});goldenState.evidence.push({stage:"sandbox-2",status:sb.status,durationMs:sb.durationMs,evidence:sb.evidence});goldenLog("SANDBOX-2-RESULT",sb.status+" · "+sb.durationMs+"ms · "+(sb.evidence||[]).filter(x=>x.status!=="PASS").map(x=>x.name+":"+x.status).join(","));
   }
   goldenLog("VERIFY²","Gemma independent verifier");
-  const verify=await goldenAgent(prompts.verify,"GOLDEN MISSION:\n"+mission+"\nSPEC:\n"+JSON.stringify(spec)+"\nMANIFEST:\n"+JSON.stringify(goldenState.manifest)+"\nCRITICAL FILE EXCERPTS:\n"+JSON.stringify(goldenCompactFiles(files,[],7500))+"\nEVIDENCE SUMMARY:\n"+JSON.stringify(goldenState.evidence.map(x=>({stage:x.stage,status:x.status,durationMs:x.durationMs,evidence:goldenCompactEvidence(x.evidence||[])}))),"gemma-critic-local",1536);
+  let verify;try{verify=await goldenAgent(prompts.verify,"GOLDEN MISSION:\n"+mission+"\nSPEC:\n"+JSON.stringify(goldenCompactSpec(spec))+"\nMANIFEST:\n"+JSON.stringify(goldenState.manifest)+"\nCRITICAL FILE EXCERPTS:\n"+JSON.stringify(goldenCompactFiles(files,[],3800))+"\nEVIDENCE SUMMARY:\n"+JSON.stringify(goldenState.evidence.map(x=>({stage:x.stage,status:x.status,durationMs:x.durationMs,evidence:goldenCompactEvidence(x.evidence||[])}))),"gemma-critic-local",1024)}
+  catch(e){console.error("[ASTRA GOLDEN RUN] VERIFY FALLBACK",String(e?.message||e).slice(0,260));verify={verdict:"PARTIAL",summary:"Verify² critic unavailable; executable Sandbox evidence remains authoritative.",blockingIssues:[],verificationWeaknesses:[String(e?.message||e).slice(0,220)]}};
   goldenState.evidence.push({stage:"verify2",status:verify.verdict||"PARTIAL",verify});
   const finalSandbox=[...goldenState.evidence].reverse().find(x=>x.stage.startsWith("sandbox-"));
   const final=finalSandbox?.status==="PASS"&&verify.verdict==="PASS"?"PASS":finalSandbox?.status==="FAIL"||verify.verdict==="FAIL"?"FAIL":"PARTIAL";
