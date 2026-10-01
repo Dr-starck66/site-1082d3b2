@@ -1,40 +1,45 @@
+import{superRoute,routerTelemetry}from"./super-router.js";
+
 export function normalizeBase(url){return (url||"").trim().replace(/\/+$/,"")}
-export function effectiveModel(cfg,target){const base=normalizeBase(cfg.baseUrl);if(base.startsWith("astra://local/"))return /gemma|deepseek|adversary|verify|critic/i.test(String(target||""))?"gemma-critic-local":"qwen-coder-local";if(cfg.zeroCost&&base.includes("openrouter.ai"))return String(target||"").endsWith(":free")?target:"openrouter/free";return target}
+export function effectiveModel(cfg,target){
+  const base=normalizeBase(cfg.baseUrl);
+  if(base.startsWith("astra://local/"))return /gemma|deepseek|adversary|verify|critic/i.test(String(target||""))?"gemma-critic-local":"qwen-coder-local";
+  if(cfg.zeroCost&&base.includes("openrouter.ai"))return String(target||"").endsWith(":free")?target:"openrouter/free";
+  return target;
+}
 export function costStatus(cfg,kind="text"){
   const base=normalizeBase(kind==="image"?cfg.imageBaseUrl:cfg.baseUrl);
   if(!cfg.zeroCost)return"UNVERIFIED";
-  if(kind==="text"&&base.startsWith("astra://local/"))return"PASS";
+  if(kind==="text"&&(base.startsWith("astra://local/")||(!cfg.apiKey&&base.includes("openrouter.ai"))))return"PASS";
   if(kind==="text"&&base.includes("openrouter.ai"))return"PASS";
   if(kind==="image"&&base.startsWith("astra://zerogpu/"))return"PASS";
   if(cfg.attestedFree&&base)return"PARTIAL";
   return"FAIL";
 }
-function localTokenBudget(model,system){
-  const m=String(model||"").toLowerCase(),s=String(system||"").toLowerCase();
-  if(/gemma|deepseek|critic|adversary|verify|skeptic/.test(m+" "+s))return 1536;
-  if(/frontend|backend|repair|improve|devops|database|auth|full-stack|files/.test(s))return 3072;
-  if(/architect|spec/.test(s))return 2048;
-  return 2048;
+function useInternalFabric(cfg,base){
+  if(base.startsWith("astra://local/"))return true;
+  if(cfg.zeroCost&&!cfg.apiKey&&base.includes("openrouter.ai"))return true;
+  if(cfg.zeroCost&&!cfg.apiKey&&!base)return true;
+  return false;
 }
 export async function chat(cfg,model,system,user){
-  const base=normalizeBase(cfg.baseUrl);if(!base)throw new Error("Endpoint texte manquant");
-  if(base.startsWith("astra://local/")){
-    const maxTokens=localTokenBudget(model,system);
-    const res=await fetch("/api/local_text",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system,user,requestedModel:model,maxTokens})});
-    const raw=await res.text();if(!res.ok)throw new Error("Local model "+res.status+": "+raw.slice(0,240));
-    const data=JSON.parse(raw);if(!data?.text)throw new Error("Local model response invalid");return String(data.text);
+  const base=normalizeBase(cfg.baseUrl);
+  if(useInternalFabric(cfg,base)){
+    const out=await superRoute({system,user,requestedModel:model});
+    if(!out?.text)throw new Error("ASTRA SUPER ROUTER Ω returned no text");
+    return String(out.text);
   }
-  if(cfg.zeroCost&&base.includes("openrouter.ai")&&!cfg.apiKey){
-    const res=await fetch("/api/free_text",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system,user,requestedModel:model})});
-    const raw=await res.text();if(!res.ok)throw new Error("ZeroGPU text "+res.status+": "+raw.slice(0,240));
-    const data=JSON.parse(raw);if(!data?.text)throw new Error("ZeroGPU text response invalid");return String(data.text);
-  }
+  if(!base)throw new Error("Endpoint texte manquant");
   if(cfg.zeroCost&&!base.includes("openrouter.ai")&&!cfg.attestedFree)throw new Error("ZERO-COST GATE: endpoint cloud personnalisé non attesté gratuit");
+  if(cfg.zeroCost&&base.includes("openrouter.ai")&&!cfg.apiKey){
+    throw new Error("ASTRA SUPER ROUTER Ω policy violation: anonymous text cloud fallback disabled; local fabric required");
+  }
   const headers={"Content-Type":"application/json"};if(cfg.apiKey)headers.Authorization="Bearer "+cfg.apiKey;
   const res=await fetch(base+"/chat/completions",{method:"POST",headers,body:JSON.stringify({model:effectiveModel(cfg,model),temperature:.15,messages:[{role:"system",content:system},{role:"user",content:user}]})});
   const raw=await res.text();if(!res.ok)throw new Error("Inference "+res.status+": "+raw.slice(0,240));
-  const data=JSON.parse(raw);return String(data?.choices?.[0]?.message?.content||"");
+  const data=JSON.parse(raw);const text=String(data?.choices?.[0]?.message?.content||"");if(!text)throw new Error("Inference response empty");return text;
 }
+export function routeTelemetry(){return routerTelemetry()}
 export async function generateImage(cfg,prompt){
   const base=normalizeBase(cfg.imageBaseUrl);if(!base)throw new Error("Endpoint image gratuit non configuré");
   if(base.startsWith("astra://zerogpu/")){
