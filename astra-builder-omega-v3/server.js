@@ -166,21 +166,30 @@ async function runMissionSmoke(mission){
  const log=(phase,status,detail)=>{const row={phase,status,detail:String(detail||"").slice(0,800)};evidence.push(row);console.log("[ASTRA MISSION SMOKE]",trace,phase,status,row.detail)};
  const call=async(name,prompt,input,model="qwen-standard-local",tokens=1600)=>{
   let last;
-  for(let attempt=1;attempt<=2;attempt++){
+  for(let attempt=1;attempt<=3;attempt++){
    try{
-    const suffix=attempt===1?"":"\nRECOVERY RETRY: previous output was malformed or truncated. Return ONE complete compact JSON object only. Reduce commentary and duplicated code. Close every string, array and object.";
-    const r=await localText(prompt,input+suffix,model,tokens),data=parseProbeJson(r.text);
-    log(name,attempt===1?"PASS":"PARTIAL",r.model+" · "+r.routeMode+" · "+r.tokenBudget+(attempt>1?" · recovered JSON":""));return data;
-   }catch(e){last=e;if(attempt===1)log(name,"PARTIAL","structured retry: "+String(e?.message||e))}
+    const suffix=attempt===1?"":attempt===2
+      ?"\nRECOVERY RETRY: previous output was malformed or truncated. Return ONE complete compact JSON object only. Reduce commentary and duplicated code. Close every string, array and object."
+      :"\nFINAL FAIL-CLOSED RETRY: return ONE minimal valid JSON object only. Include only essential deployable files for this role; shorten code aggressively; no markdown; no commentary; close every string, array and object.";
+    const budget=attempt===3?Math.max(tokens,2600):tokens;
+    const r=await localText(prompt,input+suffix,model,budget),data=parseProbeJson(r.text);
+    log(name,attempt===1?"PASS":"PARTIAL",r.model+" · "+r.routeMode+" · "+r.tokenBudget+(attempt>1?" · recovered JSON retry "+attempt:""));return data;
+   }catch(e){last=e;if(attempt<3)log(name,"PARTIAL","structured retry "+attempt+": "+String(e?.message||e))}
   }
   log(name,"FAIL",String(last?.message||last));throw last;
  };
  try{
   const spec=await call("ARCHITECT",prompts.architect,mission,"qwen-standard-local",1800);
   const specText=JSON.stringify(spec);
-  const jobs=[["FRONTEND",prompts.frontend,2400],["BACKEND",prompts.backend,2400],["DATABASE",prompts.database,1100],["AUTH",prompts.auth,1500],["DEVOPS",prompts.ops,1300]];
+  const jobs=[
+   ["FRONTEND",prompts.frontend,2400,"qwen-standard-local"],
+   ["BACKEND",prompts.backend,2400,"qwen-standard-local"],
+   ["DATABASE",prompts.database,1600,"qwen-standard-local"],
+   ["AUTH",prompts.auth,2600,"qwen-coder-local"],
+   ["DEVOPS",prompts.ops,1600,"qwen-standard-local"]
+  ];
   for(let i=0;i<jobs.length;i+=2){
-   const outs=await Promise.all(jobs.slice(i,i+2).map(([name,prompt,tokens])=>call(name,prompt,specText,"qwen-standard-local",tokens)));
+   const outs=await Promise.all(jobs.slice(i,i+2).map(([name,prompt,tokens,model])=>call(name,prompt,specText,model,tokens)));
    for(const out of outs)for(const file of filesFrom(out))filesByPath.set(file.path,file);
   }
   const files=[...filesByPath.values()];
