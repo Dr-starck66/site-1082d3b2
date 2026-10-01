@@ -1,6 +1,6 @@
 import{chat,effectiveModel}from"./router.js";
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-const state=window.__ASTRA_STATE__,actions=window.__ASTRA_ACTIONS__;
+let state=null,actions=null;
 const ux={mode:"build",queue:[],attachments:[],selected:null,busy:false,activeDraft:localStorage.getItem("astra-active-draft")||""};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
@@ -104,4 +104,12 @@ function setup(){
  const observer=new MutationObserver(()=>{renderChat();renderAllPanels();const running=state.status==="RUNNING";$("#lovableSendBtn").disabled=ux.busy||running;if(!running&&!ux.busy)drainQueue()});observer.observe($("#globalStatus"),{subtree:true,childList:true,characterData:true,attributes:true});
  setInterval(()=>{renderProjectPanels();renderIntegrations()},3500)
 }
-setup();
+function boot(){
+ state=window.__ASTRA_STATE__||null;
+ actions=window.__ASTRA_ACTIONS__||null;
+ if(!state||!actions){setTimeout(boot,80);return}
+ if(window.__ASTRA_LOVABLE_UX_READY__)return;
+ window.__ASTRA_LOVABLE_UX_READY__=true;
+ setup();
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot,{once:true});else boot();
