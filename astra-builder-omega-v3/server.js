@@ -418,7 +418,7 @@ async function api(req,res,url){
 
 const srv=http.createServer(async(req,res)=>{try{
  const url=new URL(req.url||"/","http://localhost");if(url.pathname.startsWith("/api/")||url.pathname==="/health"){const done=await api(req,res,url);if(done!==false)return}
- let p=decodeURIComponent(url.pathname);if(p==="/")p="/index.html";const rel=normalize(p).replace(/^[/\\]+/,"");if(!safePath(rel)){res.writeHead(403);return res.end("Forbidden")}const f=join(root,rel);if(!f.startsWith(root)){res.writeHead(403);return res.end("Forbidden")}const st=await stat(f);if(!st.isFile())throw new Error("not file");const data=await readFile(f);res.writeHead(200,{"content-type":mime[extname(f)]||"application/octet-stream","cache-control":"public,max-age=300"});res.end(data)
+ let p=decodeURIComponent(url.pathname);if(p==="/")p="/index.html";const rel=normalize(p).replace(/^[/\\]+/,"");if(!safePath(rel)){res.writeHead(403);return res.end("Forbidden")}const f=join(root,rel);if(!f.startsWith(root)){res.writeHead(403);return res.end("Forbidden")}const st=await stat(f);if(!st.isFile())throw new Error("not file");const data=await readFile(f);res.writeHead(200,{"content-type":mime[extname(f)]||"application/octet-stream","cache-control":"no-store, max-age=0"});res.end(data)
 }catch(e){if(e?.status)return send(res,e.status,{error:e.message});res.writeHead(404,{"content-type":"text/plain; charset=utf-8"});res.end("Not found")}});
 srv.listen(port,"0.0.0.0",()=>{
  console.log("ASTRA BUILDER Ω V10.0 OWNER MODE WORKSPACE listening",port);
