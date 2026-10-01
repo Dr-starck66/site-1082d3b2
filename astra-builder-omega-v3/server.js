@@ -8,6 +8,7 @@ import { prompts } from "./src/prompts.js";
 import { compileSecondBrain, createTeamPlan, buildProofGraph, summarizeRouteCost, workspace7SelfTest } from "./src/workspace7-server.js";
 import { compactBrain, normalizeSkill, saveRecord, loadRecord, listRecords, workspace8SelfTest } from "./src/workspace8-server.js";
 import { runClaw, clawSelfTest } from "./src/claw.js";
+import { runMemoryVaultProbe } from "./src/memory-vault-probe.js";
 
 const root=process.cwd(),port=Number(process.env.PORT||3000),MAX=4*1024*1024;
 const rescueEvents=[];const rescueLog=(type,detail)=>{rescueEvents.push({at:new Date().toISOString(),type,detail:String(detail).slice(0,500)});if(rescueEvents.length>50)rescueEvents.shift();console.error("[ASTRA RESCUE Ω]",type,detail)};
@@ -394,6 +395,11 @@ srv.listen(port,"0.0.0.0",()=>{
    console.log("[ASTRA SANDBOX PROBE]",r.status,r.sandboxLevel,r.durationMs+"ms",String(r.projectDigest||"").slice(0,12));
   }catch(e){console.error("[ASTRA SANDBOX PROBE] FAIL",String(e?.message||e).slice(0,300))}
  },900);
+ if(process.env.ASTRA_MEMORY_VAULT_PROBE_ON_BOOT==="1")setTimeout(async()=>{
+  try{const r=await runMemoryVaultProbe(port);console.log("[ASTRA MEMORY VAULT PROBE]",r.status,r.storage,"reload="+r.reloadVerified,"file="+r.restored?.file)}
+  catch(e){console.error("[ASTRA MEMORY VAULT PROBE] FAIL",String(e?.message||e).slice(0,500))}
+ },1200);
+
  if(process.env.ASTRA_CLAW_PROBE_ON_BOOT==="1")setTimeout(async()=>{
   try{const r=await runClaw({url:"https://example.com",goal:"ASTRA Claw smoke test",maxSteps:1});console.log("[ASTRA CLAW PROBE]",r.status,r.mode,r.visited?.[0]?.status,r.final?.title,Buffer.byteLength(r.screenshotB64||"","base64")+" bytes")}
   catch(e){console.error("[ASTRA CLAW PROBE] FAIL",String(e?.message||e).slice(0,500))}
