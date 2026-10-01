@@ -147,6 +147,45 @@ async function goldenAgent(system,user,model="qwen-coder-local",tokens=3072){
  }
  throw last;
 }
+
+async function runMissionSmoke(mission){
+ const started=Date.now(),trace=randomUUID(),evidence=[],filesByPath=new Map();
+ const log=(phase,status,detail)=>{const row={phase,status,detail:String(detail||"").slice(0,800)};evidence.push(row);console.log("[ASTRA MISSION SMOKE]",trace,phase,status,row.detail)};
+ const call=async(name,prompt,input,model="qwen-coder-local",tokens=2048)=>{
+  try{const r=await localText(prompt,input,model,tokens),data=parseProbeJson(r.text);log(name,"PASS",r.model+" · "+r.routeMode+" · "+r.tokenBudget);return data}
+  catch(e){log(name,"FAIL",String(e?.message||e));throw e}
+ };
+ try{
+  const spec=await call("ARCHITECT",prompts.architect,mission,"qwen-coder-local",1800);
+  const specText=JSON.stringify(spec);
+  for(const [name,prompt,tokens] of [["FRONTEND",prompts.frontend,2800],["BACKEND",prompts.backend,2800],["DATABASE",prompts.database,1400],["AUTH",prompts.auth,1800],["DEVOPS",prompts.ops,1600]]){
+   const out=await call(name,prompt,specText,"qwen-coder-local",tokens);
+   for(const file of filesFrom(out))filesByPath.set(file.path,file);
+  }
+  const files=[...filesByPath.values()];
+  log("FILES",files.length>=8?"PASS":"FAIL",files.length+" generated files");
+  const validation=validate({spec,files});
+  log("SERVER_VALIDATE",validation.verdict,validation.summary);
+  let sandbox={status:"UNVERIFIED",reason:"not run"};
+  try{sandbox=await sandboxRun({spec,files});log("SANDBOX",sandbox.status,(sandbox.durationMs||0)+"ms · "+String(sandbox.projectDigest||"").slice(0,12))}
+  catch(e){sandbox={status:"FAIL",reason:String(e?.message||e)};log("SANDBOX","FAIL",sandbox.reason)}
+  const compact=JSON.stringify({mission,spec,files:files.slice(0,80).map(x=>({path:x.path,excerpt:String(x.content||"").slice(0,900)})),validation,sandbox:{status:sandbox.status,evidence:sandbox.evidence||[],reason:sandbox.reason||null}});
+  let adversary={risk:"UNVERIFIED",issues:[]},verify={verdict:"UNVERIFIED"};
+  try{adversary=await call("ADVERSARY",prompts.adversary,compact,"gemma-critic-local",700)}catch{}
+  try{verify=await call("VERIFY2",prompts.verify,JSON.stringify({validation,sandbox,adversary,files:files.map(x=>x.path),spec}),"gemma-critic-local",700)}catch{}
+  const hardFail=validation.verdict==="FAIL"||sandbox.status==="FAIL"||String(verify.verdict||"").toUpperCase()==="FAIL";
+  const partial=validation.verdict!=="PASS"||sandbox.status!=="PASS"||String(verify.verdict||"").toUpperCase()!=="PASS";
+  const status=hardFail?"FAIL":partial?"PARTIAL":"PASS";
+  const result={status,trace,mission,files:files.length,validation:validation.verdict,sandbox:sandbox.status,adversaryRisk:adversary.risk||"UNVERIFIED",verify:String(verify.verdict||"UNVERIFIED").toUpperCase(),durationMs:Date.now()-started,evidence};
+  console.log("[ASTRA MISSION SMOKE RESULT]",JSON.stringify(result));
+  return result;
+ }catch(e){
+  const result={status:"FAIL",trace,mission,durationMs:Date.now()-started,reason:String(e?.message||e),evidence};
+  console.error("[ASTRA MISSION SMOKE RESULT]",JSON.stringify(result));
+  return result;
+ }
+}
+
 async function runGoldenRun(){
  if(goldenState.status==="RUNNING")return goldenState;
  Object.assign(goldenState,{status:"RUNNING",startedAt:new Date().toISOString(),finishedAt:null,phase:"START",summary:null,error:null,manifest:[],evidence:[],seal:null,repairs:0});
@@ -493,6 +532,7 @@ srv.listen(port,"0.0.0.0",()=>{
   }catch(e){console.error("[ASTRA MODEL PROBE] IMAGE ROUTE FAIL",String(e?.message||e).slice(0,300))}
  },750);
 
+ if(process.env.ASTRA_CRM_SMOKE_ON_BOOT==="1")setTimeout(()=>{runMissionSmoke("Crée un CRM premium pour indépendants avec contacts, pipeline, tâches, recherche, authentification, API, tableau de bord responsive et tests. Production-style, no fake buttons, no fake auth, deployable as one Railway service.").catch(e=>console.error("[ASTRA MISSION SMOKE] UNCAUGHT",e))},1800);
  if(process.env.ASTRA_GOLDEN_RUN_ON_BOOT==="1")setTimeout(()=>{runGoldenRun().catch(e=>console.error("[ASTRA GOLDEN RUN] UNCAUGHT",e))},2500);
  if(process.env.ASTRA_SANDBOX_PROBE_ON_BOOT==="1")setTimeout(async()=>{
   try{
