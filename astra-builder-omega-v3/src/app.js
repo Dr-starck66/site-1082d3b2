@@ -39,6 +39,11 @@ function beginMetaOperation(label){const b=beginMetaRun(state.meta);state.meta=s
 function finishMetaOperation(status=state.status,deployPass=false){if(!state.metaRun)return null;const m=metricSnapshot({files:state.files,evidence:state.evidence,startedAt:state.metaRun.startedAt,status}),outcome={label:state.metaRun.label,quality:m.quality,fail:m.fail,partial:m.partial,latencyMs:m.latencyMs,tests:m.tests,trustScore:state.trust?.score||0,status,deployPass};const r=finishMetaRun(state.meta,state.metaRun,outcome);state.meta=r.meta;addEv("META‑EVOLUTION Ω",r.decision.action==="PROMOTE"?"PASS":r.decision.action==="REJECT"?"PARTIAL":"PASS",r.decision.action+" · "+r.decision.reason+" · reward "+r.entry.reward);state.metaRun=null;renderMeta();return r}
 async function executeBuildPolicy(specText,nk){
  const p=currentPolicy(),front=()=>rescueChat(state.cfg,state.cfg.frontend,prompts.frontend,"SPEC:\n"+specText+"\nKNOWN FAILURES:\n"+nk),back=()=>rescueChat(state.cfg,state.cfg.backend,prompts.backend,"SPEC:\n"+specText+"\nKNOWN FAILURES:\n"+nk),db=()=>rescueChat(state.cfg,state.cfg.backend,prompts.database,"SPEC:\n"+specText+"\nKNOWN FAILURES:\n"+nk),auth=()=>rescueChat(state.cfg,state.cfg.backend,prompts.auth,"SPEC:\n"+specText+"\nKNOWN FAILURES:\n"+nk),ops=()=>rescueChat(state.cfg,state.cfg.ops,prompts.ops,"SPEC:\n"+specText+"\nKNOWN FAILURES:\n"+nk);
+ const localFabric=normalizeBase(state.cfg.baseUrl).startsWith("astra://local/");
+ if(localFabric){
+  addEv("META build policy","PASS","capacity-aware serial · local Qwen builder lane");
+  const out=[];for(const task of [front,back,db,auth,ops])out.push(await task());return out;
+ }
  addEv("META build policy","PASS",p.buildMode+" · policy "+p.name);
  if(p.buildMode==="staged"){const [frontRaw,backRaw]=await Promise.all([front(),back()]);const [dbRaw,authRaw,opsRaw]=await Promise.all([db(),auth(),ops()]);return[frontRaw,backRaw,dbRaw,authRaw,opsRaw]}
  return Promise.all([front(),back(),db(),auth(),ops()]);
