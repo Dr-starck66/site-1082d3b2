@@ -67,7 +67,7 @@ function withModelLane(kind,fn){
 async function localText(system,user,requestedModel,maxTokens=1536){
  const kind=localKind(requestedModel,system),base=localModelBase(kind);if(!base)throw new Error("local "+kind+" model endpoint not configured");
  const model=kind==="critic"?"gemma-critic-local":kind==="fast"?"qwen-fast-local":kind==="standard"?"qwen-standard-local":kind==="chat"?"qwen-chat-local":"qwen-coder-local";
- const profile=kind==="critic"?{mode:"CRITIC",score:0,maxTokens:Math.max(128,Math.min(768,Number(maxTokens)||512)),timeoutMs:90000,temperature:.15}:kind==="fast"?{mode:"FAST",score:0,maxTokens:Math.max(96,Math.min(384,Number(maxTokens)||256)),timeoutMs:60000,temperature:.1}:kind==="standard"?{mode:"STANDARD",score:2,maxTokens:Math.max(512,Math.min(1536,Number(maxTokens)||1024)),timeoutMs:120000,temperature:.12}:kind==="chat"?{mode:"CHAT",score:0,maxTokens:Math.max(96,Math.min(384,Number(maxTokens)||256)),timeoutMs:60000,temperature:.05}:builderRouteProfile(system,user,requestedModel,maxTokens);
+ const profile=kind==="critic"?{mode:"CRITIC",score:0,maxTokens:Math.max(128,Math.min(768,Number(maxTokens)||512)),timeoutMs:90000,temperature:.15}:kind==="fast"?{mode:"FAST",score:0,maxTokens:Math.max(96,Math.min(384,Number(maxTokens)||256)),timeoutMs:60000,temperature:.1}:kind==="standard"?{mode:"STANDARD",score:2,maxTokens:Math.max(512,Math.min(2600,Number(maxTokens)||1800)),timeoutMs:150000,temperature:.12}:kind==="chat"?{mode:"CHAT",score:0,maxTokens:Math.max(96,Math.min(384,Number(maxTokens)||256)),timeoutMs:60000,temperature:.05}:builderRouteProfile(system,user,requestedModel,maxTokens);
  return withModelLane(kind,async()=>{
   const r=await timeoutFetch(base+"/chat/completions",{method:"POST",headers:{"content-type":"application/json","authorization":"Bearer astra-private"},body:JSON.stringify({model,temperature:profile.temperature,max_tokens:profile.maxTokens,response_format:{type:"json_object"},messages:[{role:"system",content:String(system||"")},{role:"user",content:String(user||"")} ]})},profile.timeoutMs);
   const raw=await r.text();if(!r.ok)throw new Error("local "+kind+" inference "+r.status+": "+raw.slice(0,280));
@@ -164,14 +164,21 @@ async function goldenAgent(system,user,model="qwen-coder-local",tokens=3072){
 async function runMissionSmoke(mission){
  const started=Date.now(),trace=randomUUID(),evidence=[],filesByPath=new Map();
  const log=(phase,status,detail)=>{const row={phase,status,detail:String(detail||"").slice(0,800)};evidence.push(row);console.log("[ASTRA MISSION SMOKE]",trace,phase,status,row.detail)};
- const call=async(name,prompt,input,model="qwen-standard-local",tokens=1200)=>{
-  try{const r=await localText(prompt,input,model,tokens),data=parseProbeJson(r.text);log(name,"PASS",r.model+" · "+r.routeMode+" · "+r.tokenBudget);return data}
-  catch(e){log(name,"FAIL",String(e?.message||e));throw e}
+ const call=async(name,prompt,input,model="qwen-standard-local",tokens=1600)=>{
+  let last;
+  for(let attempt=1;attempt<=2;attempt++){
+   try{
+    const suffix=attempt===1?"":"\nRECOVERY RETRY: previous output was malformed or truncated. Return ONE complete compact JSON object only. Reduce commentary and duplicated code. Close every string, array and object.";
+    const r=await localText(prompt,input+suffix,model,tokens),data=parseProbeJson(r.text);
+    log(name,attempt===1?"PASS":"PARTIAL",r.model+" · "+r.routeMode+" · "+r.tokenBudget+(attempt>1?" · recovered JSON":""));return data;
+   }catch(e){last=e;if(attempt===1)log(name,"PARTIAL","structured retry: "+String(e?.message||e))}
+  }
+  log(name,"FAIL",String(last?.message||last));throw last;
  };
  try{
-  const spec=await call("ARCHITECT",prompts.architect,mission,"qwen-standard-local",900);
+  const spec=await call("ARCHITECT",prompts.architect,mission,"qwen-standard-local",1000);
   const specText=JSON.stringify(spec);
-  const jobs=[["FRONTEND",prompts.frontend,1800],["BACKEND",prompts.backend,1800],["DATABASE",prompts.database,900],["AUTH",prompts.auth,1100],["DEVOPS",prompts.ops,1000]];
+  const jobs=[["FRONTEND",prompts.frontend,2400],["BACKEND",prompts.backend,2400],["DATABASE",prompts.database,1100],["AUTH",prompts.auth,1500],["DEVOPS",prompts.ops,1300]];
   for(let i=0;i<jobs.length;i+=2){
    const outs=await Promise.all(jobs.slice(i,i+2).map(([name,prompt,tokens])=>call(name,prompt,specText,"qwen-standard-local",tokens)));
    for(const out of outs)for(const file of filesFrom(out))filesByPath.set(file.path,file);
@@ -506,7 +513,7 @@ async function api(req,res,url){
    return send(res,out.status==="PASS"?200:206,out);
   }catch(e){return send(res,503,{status:"FAIL",router:"ASTRA SUPER ROUTER Ω",reason:String(e?.message||e).slice(0,500)})}
  }
- if(req.method==="POST"&&url.pathname==="/api/router_profile"){const x=await body(req);const kind=localKind(x.requestedModel,x.system);return send(res,200,{status:"PASS",kind,profile:kind==="critic"?{mode:"CRITIC",score:0,maxTokens:Math.max(128,Math.min(768,Number(x.maxTokens)||512))}:kind==="fast"?{mode:"FAST",score:0,maxTokens:Math.max(96,Math.min(384,Number(x.maxTokens)||256))}:kind==="standard"?{mode:"STANDARD",score:2,maxTokens:Math.max(512,Math.min(1536,Number(x.maxTokens)||1024))}:builderRouteProfile(x.system,x.user,x.requestedModel,x.maxTokens)})}
+ if(req.method==="POST"&&url.pathname==="/api/router_profile"){const x=await body(req);const kind=localKind(x.requestedModel,x.system);return send(res,200,{status:"PASS",kind,profile:kind==="critic"?{mode:"CRITIC",score:0,maxTokens:Math.max(128,Math.min(768,Number(x.maxTokens)||512))}:kind==="fast"?{mode:"FAST",score:0,maxTokens:Math.max(96,Math.min(384,Number(x.maxTokens)||256))}:kind==="standard"?{mode:"STANDARD",score:2,maxTokens:Math.max(512,Math.min(2600,Number(x.maxTokens)||1800))}:builderRouteProfile(x.system,x.user,x.requestedModel,x.maxTokens)})}
  if(req.method==="POST"&&url.pathname==="/api/local_text"){const x=await body(req);try{const out=await routedLocalText(x.system,x.user,x.requestedModel,x.maxTokens);return send(res,200,out)}catch(e){return send(res,503,{status:"FAIL",reason:String(e.message||e)})}}
  if(req.method==="POST"&&url.pathname==="/api/inference_self_test"){try{let fast,standard,critic;try{fast=await localText("Return exactly ASTRA_FAST_OK.","Return exactly ASTRA_FAST_OK.","qwen-fast-local",64)}catch(e){fast={error:String(e?.message||e)}};try{standard=await localText("Return exactly ASTRA_STANDARD_OK.","Return exactly ASTRA_STANDARD_OK.","qwen-standard-local",64)}catch(e){standard={error:String(e?.message||e)}};const builder=await localText("Return exactly ASTRA_QWEN_OK.","Return exactly ASTRA_QWEN_OK.","qwen-coder-local",64);try{critic=await localText("Return exactly ASTRA_CRITIC_OK.","Return exactly ASTRA_CRITIC_OK.","gemma-critic-local",64)}catch(e){critic={error:String(e?.message||e)}};const fOk=/ASTRA_FAST_OK/i.test(fast.text||""),sOk=/ASTRA_STANDARD_OK/i.test(standard.text||""),bOk=/ASTRA_QWEN_OK/i.test(builder.text||""),cOk=/ASTRA_CRITIC_OK/i.test(critic.text||"");return send(res,fOk&&sOk&&bOk&&cOk?200:206,{status:fOk&&sOk&&bOk&&cOk?"PASS":"PARTIAL",fast:{ok:fOk,model:fast.model||"qwen-fast-local",error:fast.error||null},standard:{ok:sOk,model:standard.model||"qwen-standard-local",error:standard.error||null},builder:{ok:bOk,model:builder.model},critic:{ok:cOk,model:critic.model||"gemma-critic-local",error:critic.error||null}})}catch(e){return send(res,503,{status:"FAIL",reason:String(e.message||e)})}}
  if(req.method==="POST"&&url.pathname==="/api/free_text"){const x=await body(req);try{return send(res,200,{status:"PASS",...(await zeroGpuText(x.system,x.user))})}catch(e){return send(res,503,{status:"PARTIAL",reason:String(e.message||e),provider:"Hugging Face ZeroGPU",model:"Qwen/Qwen3.8-27B"})}}
