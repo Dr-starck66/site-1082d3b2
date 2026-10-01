@@ -6,6 +6,8 @@ import { seedPopulation, rankPopulation, evolutionDecision } from "./src/evoluti
 import { defaultMetaPolicy, normalizePolicy, mutatePolicies, rewardOutcome } from "./src/meta-evolution.js";
 import { prompts } from "./src/prompts.js";
 import { compileSecondBrain, createTeamPlan, buildProofGraph, summarizeRouteCost, workspace7SelfTest } from "./src/workspace7-server.js";
+import { compactBrain, normalizeSkill, saveRecord, loadRecord, listRecords, workspace8SelfTest } from "./src/workspace8-server.js";
+import { runClaw, clawSelfTest } from "./src/claw.js";
 
 const root=process.cwd(),port=Number(process.env.PORT||3000),MAX=4*1024*1024;
 const rescueEvents=[];const rescueLog=(type,detail)=>{rescueEvents.push({at:new Date().toISOString(),type,detail:String(detail).slice(0,500)});if(rescueEvents.length>50)rescueEvents.shift();console.error("[ASTRA RESCUE Ω]",type,detail)};
@@ -205,6 +207,14 @@ async function gh(token,path,opts={}){
  if(!r.ok)throw new Error("GitHub "+r.status+": "+(data?.message||raw.slice(0,180)));
  return data;
 }
+async function persistGithubArtifact(token,path,value){
+ if(!token)return{status:"PARTIAL",storage:"server-ephemeral",reason:"GitHub session token unavailable"};
+ const full=process.env.ASTRA_MEMORY_REPO||"Dr-starck66/site-1082d3b2",api="/repos/"+full+"/contents/"+path;let sha=null;
+ try{const cur=await gh(token,api);sha=cur?.sha||null}catch(e){if(!String(e).includes("GitHub 404"))throw e}
+ const payload={message:"chore(astra-memory): persist "+path,content:Buffer.from(JSON.stringify(value,null,2)).toString("base64"),branch:"main"};if(sha)payload.sha=sha;
+ await gh(token,api,{method:"PUT",body:JSON.stringify(payload)});
+ return{status:"PASS",storage:"github-durable",repo:full,path};
+}
 async function createGithubProject(project,deploy){
  if(!deploy.githubToken)throw new Error("GitHub token missing");
  const me=await gh(deploy.githubToken,"/user");
@@ -272,13 +282,43 @@ async function importGithubProject(input){
 }
 
 async function api(req,res,url){
- if(req.method==="GET"&&url.pathname==="/health")return send(res,200,{ok:true,service:"astra-builder-omega-v3",version:"7.0.0",nativeDeployBroker:true,rescue:"ARMED"});
+ if(req.method==="GET"&&url.pathname==="/health")return send(res,200,{ok:true,service:"astra-builder-omega-v3",version:"8.0.0",nativeDeployBroker:true,rescue:"ARMED"});
  if(req.method==="GET"&&url.pathname==="/api/self_test"){
   const sample={spec:{acceptance:["UI renders","API health works","Auth and data contracts exist"]},files:[{path:"frontend/index.html",content:"<main>ASTRA test</main>"},{path:"backend/package.json",content:'{"name":"demo","version":"1.0.0"}'},{path:"backend/src/server.js",content:"app.get('/health',handler)"},{path:"backend/tests/server.test.js",content:"test health endpoint"},{path:"database/schema.sql",content:"create table users(id text primary key);"},{path:"auth/session.js",content:"export function sessionGuard(){}"},{path:"Dockerfile",content:"FROM node:22-alpine"},{path:"deploy.json",content:'{"provider":"railway","dockerfilePath":"Dockerfile","healthPath":"/health"}'},{path:"README.md",content:"demo"}]};
-  const v=validate(sample),rescueOk=typeof fatal==="function"&&Array.isArray(rescueEvents),sandboxHealth=await sandboxStatus(),sandboxOk=sandboxHealth.status==="PASS",sealTest=serverSeal({selfTest:true},"GENESIS"),sealOk=/^[a-f0-9]{64}$/.test(sealTest.hash),pop=seedPopulation(4,1).map((x,i)=>({...x,fitness:10-i})),ranked=rankPopulation(pop),evoDecision=evolutionDecision(null,ranked[0]),evolutionOk=pop.length===4&&ranked[0]?.fitness===10&&evoDecision.action==="CONTINUE",metaPolicy=normalizePolicy({...defaultMetaPolicy(),trustThreshold:1,population:99,rescueAttempts:99,adversaryPasses:99}),mutants=mutatePolicies(defaultMetaPolicy(),4),metaRewardPass=rewardOutcome({quality:95,trustScore:90,tests:5,status:"PASS",fail:0,partial:0,latencyMs:1000,deployPass:true}),metaRewardFail=rewardOutcome({quality:30,trustScore:20,tests:0,status:"FAIL",fail:2,partial:3,latencyMs:20000,deployPass:false}),metaOk=metaPolicy.trustThreshold>=76&&metaPolicy.population<=5&&metaPolicy.rescueAttempts<=4&&metaPolicy.adversaryPasses<=2&&mutants.length===4&&metaRewardPass>metaRewardFail;const workspace7=workspace7SelfTest(),workspace7Ok=workspace7.ok;return send(res,v.verdict==="PASS"&&rescueOk&&sandboxOk&&sealOk&&evolutionOk&&metaOk&&workspace7Ok?200:500,{ok:v.verdict==="PASS"&&rescueOk&&sandboxOk&&sealOk&&evolutionOk&&metaOk&&workspace7Ok,verdict:v.verdict,rescue:rescueOk?"ARMED":"FAIL",cloudSandbox:sandboxOk?"PASS":"FAIL",sandboxHealth,sovereignSeal:sealOk?"PASS":"FAIL",evolutionEngine:evolutionOk?"PASS":"FAIL",metaEvolution:metaOk?"PASS":"FAIL",workspace7:workspace7.status,workspace7Detail:workspace7,metaSafetyRails:{trustThreshold:metaPolicy.trustThreshold,population:metaPolicy.population,rescueAttempts:metaPolicy.rescueAttempts,adversaryPasses:metaPolicy.adversaryPasses},sealHead:sealTest.hash,evidence:v.evidence});
+  const v=validate(sample),rescueOk=typeof fatal==="function"&&Array.isArray(rescueEvents),sandboxHealth=await sandboxStatus(),sandboxOk=sandboxHealth.status==="PASS",sealTest=serverSeal({selfTest:true},"GENESIS"),sealOk=/^[a-f0-9]{64}$/.test(sealTest.hash),pop=seedPopulation(4,1).map((x,i)=>({...x,fitness:10-i})),ranked=rankPopulation(pop),evoDecision=evolutionDecision(null,ranked[0]),evolutionOk=pop.length===4&&ranked[0]?.fitness===10&&evoDecision.action==="CONTINUE",metaPolicy=normalizePolicy({...defaultMetaPolicy(),trustThreshold:1,population:99,rescueAttempts:99,adversaryPasses:99}),mutants=mutatePolicies(defaultMetaPolicy(),4),metaRewardPass=rewardOutcome({quality:95,trustScore:90,tests:5,status:"PASS",fail:0,partial:0,latencyMs:1000,deployPass:true}),metaRewardFail=rewardOutcome({quality:30,trustScore:20,tests:0,status:"FAIL",fail:2,partial:3,latencyMs:20000,deployPass:false}),metaOk=metaPolicy.trustThreshold>=76&&metaPolicy.population<=5&&metaPolicy.rescueAttempts<=4&&metaPolicy.adversaryPasses<=2&&mutants.length===4&&metaRewardPass>metaRewardFail;const workspace7=workspace7SelfTest(),workspace7Ok=workspace7.ok,workspace8=workspace8SelfTest(),workspace8Ok=workspace8.ok,claw=clawSelfTest(),clawOk=claw.ok;return send(res,v.verdict==="PASS"&&rescueOk&&sandboxOk&&sealOk&&evolutionOk&&metaOk&&workspace7Ok&&workspace8Ok&&clawOk?200:500,{ok:v.verdict==="PASS"&&rescueOk&&sandboxOk&&sealOk&&evolutionOk&&metaOk&&workspace7Ok&&workspace8Ok&&clawOk,verdict:v.verdict,rescue:rescueOk?"ARMED":"FAIL",cloudSandbox:sandboxOk?"PASS":"FAIL",sandboxHealth,sovereignSeal:sealOk?"PASS":"FAIL",evolutionEngine:evolutionOk?"PASS":"FAIL",metaEvolution:metaOk?"PASS":"FAIL",workspace7:workspace7.status,workspace7Detail:workspace7,workspace8:workspace8.status,workspace8Detail:workspace8,claw:claw.status,clawDetail:claw,metaSafetyRails:{trustThreshold:metaPolicy.trustThreshold,population:metaPolicy.population,rescueAttempts:metaPolicy.rescueAttempts,adversaryPasses:metaPolicy.adversaryPasses},sealHead:sealTest.hash,evidence:v.evidence});
  }
- if(req.method==="GET"&&url.pathname==="/api/capabilities")return send(res,200,{version:"7.0.0",serverValidation:true,deployBroker:true,nativeDeployBroker:true,rescue:true,sovereignCore:true,evidenceSeal:"SHA-256",missionGraph:"AION",duality:"DUALITY-X",agentShield:true,negativeKnowledge:true,experimentGenome:true,benchmark:"BENCHMARK-X10",adaptiveRouter:"JEV-X",localAdaptiveBuilder:{enabled:true,modes:["FAST","STANDARD","DEEP"],builder:"Qwen2.5-Coder-3B-Instruct-Q4_K_M",critic:"Gemma-3-1B-it-Q4_K_M"},cloudSandbox:{enabled:true,service:"astra-cloud-sandbox",level:"PROCESS_ISOLATED",failClosed:true},evolutionEngine:"EVOLUTION-Ω",metaEvolution:"META-EVOLUTION-Ω",workspace7:{secondBrain:"SECOND-BRAIN-Ω-1",team:"TEAM-Ω-1",proofGraph:"PROOF-GRAPH-Ω-1",costLedger:"MODEL_API_CREDITS"},immutableMetaRails:true,rescuePolicy:{operationAttempts:"meta-policy 2-4",pipelineRestarts:2,serverRestart:"ON_FAILURE"},providers:["github","railway","astra-local-qwen-3b","astra-local-gemma","huggingface-zerogpu","openrouter-free"],zeroCostGate:true,maxPayloadBytes:MAX});
+ if(req.method==="GET"&&url.pathname==="/api/capabilities")return send(res,200,{version:"8.0.0",serverValidation:true,deployBroker:true,nativeDeployBroker:true,rescue:true,sovereignCore:true,evidenceSeal:"SHA-256",missionGraph:"AION",duality:"DUALITY-X",agentShield:true,negativeKnowledge:true,experimentGenome:true,benchmark:"BENCHMARK-X10",adaptiveRouter:"JEV-X",localAdaptiveBuilder:{enabled:true,modes:["FAST","STANDARD","DEEP"],builder:"Qwen2.5-Coder-3B-Instruct-Q4_K_M",critic:"Gemma-3-1B-it-Q4_K_M"},cloudSandbox:{enabled:true,service:"astra-cloud-sandbox",level:"PROCESS_ISOLATED",failClosed:true},evolutionEngine:"EVOLUTION-Ω",metaEvolution:"META-EVOLUTION-Ω",workspace7:{secondBrain:"SECOND-BRAIN-Ω-1",team:"TEAM-Ω-1",proofGraph:"PROOF-GRAPH-Ω-1",costLedger:"MODEL_API_CREDITS"},workspace8:{secondBrain:"SECOND-BRAIN-Ω-2",agentStudio:"SKILL-Ω-1",claw:"READ_ONLY_BROWSER"},immutableMetaRails:true,rescuePolicy:{operationAttempts:"meta-policy 2-4",pipelineRestarts:2,serverRestart:"ON_FAILURE"},providers:["github","railway","astra-local-qwen-3b","astra-local-gemma","huggingface-zerogpu","openrouter-free"],zeroCostGate:true,maxPayloadBytes:MAX});
  if(req.method==="GET"&&url.pathname==="/api/rescue_status")return send(res,200,{status:"ARMED",events:rescueEvents.slice(-20),restartPolicy:"Railway ON_FAILURE",circuitBreaker:true});
+ if(req.method==="POST"&&url.pathname==="/api/brain/save"){
+  const x=await body(req),brain=compactBrain(x),id=brain.workspaceId;const local=await saveRecord("brains",id,brain);let durable={status:"PARTIAL",storage:"server-ephemeral"};
+  try{durable=await persistGithubArtifact(String(x.githubToken||""),".astra/brains/"+id+".json",brain)}catch(e){durable={status:"PARTIAL",storage:"server-ephemeral",reason:String(e.message||e)}}
+  return send(res,200,{status:durable.status==="PASS"?"PASS":"PARTIAL",storage:durable.storage,brain,durable,local:{digest:local.digest,updatedAt:local.updatedAt}});
+ }
+ if(req.method==="POST"&&url.pathname==="/api/brain/load"){const x=await body(req),r=await loadRecord("brains",x.id);return send(res,r?200:404,{status:r?"PASS":"UNVERIFIED",record:r})}
+ if(req.method==="GET"&&url.pathname==="/api/skills"){const rows=await listRecords("skills",60);return send(res,200,{status:"PASS",skills:rows})}
+ if(req.method==="POST"&&url.pathname==="/api/skill/create"){
+  const x=await body(req),description=String(x.description||"").trim();if(!description)return send(res,422,{status:"FAIL",reason:"description required"});
+  try{
+   const r=await routedLocalText("You are ASTRA Agent/Skill Studio. Return JSON only with name,purpose,instructions,tools[],outputSchema,safety. Design a reusable evidence-first agent. readOnlyDefault=true unless the description explicitly requires controlled writes. Never include secrets.",description,"qwen-coder-local",900);
+   const skill=normalizeSkill(parseProbeJson(r.text),description),local=await saveRecord("skills",skill.id,skill);let durable={status:"PARTIAL",storage:"server-ephemeral"};
+   try{durable=await persistGithubArtifact(String(x.githubToken||""),".astra/skills/"+skill.id+".json",skill)}catch(e){durable={status:"PARTIAL",storage:"server-ephemeral",reason:String(e.message||e)}}
+   return send(res,200,{status:r.status==="PASS"?"PASS":"PARTIAL",storage:durable.storage,skill,route:{provider:r.provider,model:r.model,mode:r.routeMode},local:{digest:local.digest}});
+  }catch(e){return send(res,502,{status:"FAIL",reason:String(e.message||e)})}
+ }
+ if(req.method==="POST"&&url.pathname==="/api/skill/run"){
+  const x=await body(req),row=await loadRecord("skills",x.id);if(!row)return send(res,404,{status:"FAIL",reason:"skill not found"});const skill=row.value,brain=compactBrain(x);
+  const ctx=JSON.stringify({skill,brain:{appName:brain.appName,goal:brain.goal,stack:brain.stack,features:brain.features,evidence:brain.evidence.slice(-30),manifest:brain.manifest.slice(0,80)}});
+  if(ctx.length>18000)return send(res,413,{status:"FAIL",reason:"SKILL_CONTEXT_GATE"});
+  try{const r=await routedLocalText("Execute this saved ASTRA skill. JSON only. Use only provided evidence and mark unknown facts UNVERIFIED.",ctx,"qwen-coder-local",1000);let output;try{output=parseProbeJson(r.text)}catch{output={raw:String(r.text).slice(0,6000)}};return send(res,r.status==="PASS"?200:206,{status:r.status,output,route:{provider:r.provider,model:r.model,routeMode:r.routeMode,fallback:r.fallback}})}catch(e){return send(res,502,{status:"FAIL",reason:String(e.message||e)})}
+ }
+ if(req.method==="GET"&&url.pathname==="/api/claw_status"){return send(res,200,{status:"PASS",...clawSelfTest()})}
+ if(req.method==="POST"&&url.pathname==="/api/claw/run"){
+  const x=await body(req);try{
+   const result=await runClaw({url:x.url,goal:x.goal,maxSteps:x.maxSteps,agent:async input=>{const r=await routedLocalText("You are ASTRA Claw Ω navigator. READ ONLY. JSON only: {decision:\\"FOLLOW\\"|\\"STOP\\",href:\\"\\",rationale:\\"\\",findings:[]}. If the goal is already satisfied, STOP. Follow only a href exactly present in the supplied same-origin list.",JSON.stringify(input),"qwen-coder-local",420);return parseProbeJson(r.text)}});
+   return send(res,200,result);
+  }catch(e){return send(res,502,{status:"FAIL",reason:String(e.message||e)})}
+ }
+
  if(req.method==="GET"&&url.pathname==="/api/workspace7_self_test"){const t=workspace7SelfTest();return send(res,t.ok?200:500,t)}
  if(req.method==="POST"&&url.pathname==="/api/team_run"){
   const x=await body(req),memory=compileSecondBrain(x),team=createTeamPlan(x,memory),proof=buildProofGraph(x.evidence||[]);
@@ -331,7 +371,7 @@ const srv=http.createServer(async(req,res)=>{try{
  let p=decodeURIComponent(url.pathname);if(p==="/")p="/index.html";const rel=normalize(p).replace(/^[/\\]+/,"");if(!safePath(rel)){res.writeHead(403);return res.end("Forbidden")}const f=join(root,rel);if(!f.startsWith(root)){res.writeHead(403);return res.end("Forbidden")}const st=await stat(f);if(!st.isFile())throw new Error("not file");const data=await readFile(f);res.writeHead(200,{"content-type":mime[extname(f)]||"application/octet-stream","cache-control":"public,max-age=300"});res.end(data)
 }catch(e){if(e?.status)return send(res,e.status,{error:e.message});res.writeHead(404,{"content-type":"text/plain; charset=utf-8"});res.end("Not found")}});
 srv.listen(port,"0.0.0.0",()=>{
- console.log("ASTRA BUILDER Ω V7.0 AGENTIC WORKSPACE listening",port);
+ console.log("ASTRA BUILDER Ω V8.0 CLAW WORKSPACE listening",port);
  if(process.env.ASTRA_MODEL_PROBE_ON_BOOT==="1")setTimeout(async()=>{
   try{
    const t=await zeroGpuText("You are an inference connectivity probe.","Return exactly ASTRA_MODEL_OK and nothing else.",64);

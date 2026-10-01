@@ -1,1 +1,16 @@
-{"name":"astra-builder-omega-v6-3","version":"6.3.0","private":true,"type":"module","scripts":{"start":"node server.js"},"engines":{"node":">=20"}}
+{
+  "name": "astra-builder-omega-v8",
+  "version": "8.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check src/workspace7-server.js && node --check src/workspace8-server.js && node --check src/claw.js && node --check src/workspace7.js && node --check src/workspace8.js && node --check src/app.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "playwright-core": "^1.55.0"
+  }
+}
