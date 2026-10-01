@@ -52,7 +52,8 @@ function classify(e,{ownerMode=false,owners=[]}={}){
   if(SECRET.test(words)||e.type==="password")return "secret";
   if(FINANCIAL.test(words))return "financial";
   if(ACCOUNT_DELETE.test(words))return "account-delete";
-  if((e.tag==="input"||e.tag==="textarea")&&!SAFE_INPUTS.has(e.type||""))return "input-type";
+  if(e.tag==="textarea"&&!SAFE_INPUTS.has(e.type||""))return "input-type";
+  if(e.tag==="input"&&!SAFE_INPUTS.has(e.type||"")&&!["checkbox","radio"].includes(e.type))return "input-type";
   if(e.href){
     try{
       const h=new URL(e.href).hostname;
