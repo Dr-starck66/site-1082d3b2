@@ -4,6 +4,23 @@ let state=null,actions=null;
 const ux={mode:"build",queue:[],attachments:[],selected:null,busy:false,activeDraft:localStorage.getItem("astra-active-draft")||""};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+function refreshCore(){state=window.__ASTRA_STATE__||state;actions=window.__ASTRA_ACTIONS__||actions;return !!(state&&actions)}
+function showCoreError(detail){
+ const message=String(detail||"ASTRA core is unavailable");
+ const root=document.querySelector("#chatTimeline");
+ if(root)root.innerHTML='<div class="chat-message assistant"><div class="bubble"><b>ASTRA initialization error</b><br>'+esc(message)+'<div class="meta">FAIL · the send button is alive, but the builder core did not initialize.</div></div></div>';
+ const box=document.querySelector("#errorBox");if(box){box.textContent=message;box.classList.remove("hidden")}
+ const b=document.querySelector("#lovableSendBtn");if(b){b.disabled=false;b.title=message}
+}
+async function criticalSend(){
+ if(!refreshCore()){showCoreError("ASTRA core actions are not ready. The page loaded, but the builder runtime failed before initialization.");return}
+ try{await sendPrompt()}catch(e){showCoreError("Send failed: "+String(e?.message||e))}
+}
+function bindCriticalSend(){
+ const b=document.querySelector("#lovableSendBtn"),ta=document.querySelector("#idea");
+ if(b)b.onclick=criticalSend;
+ if(ta&&!ta.dataset.astraCriticalBound){ta.dataset.astraCriticalBound="1";ta.addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)){e.preventDefault();criticalSend()}})}
+}
 function msg(role,content,meta=""){state.conversation=Array.isArray(state.conversation)?state.conversation:[];state.conversation.push({at:new Date().toISOString(),role,content,meta});renderChat()}
 function renderChat(){
  const root=$("#chatTimeline");if(!root)return;const items=(state.conversation||[]).slice(-60);
@@ -104,10 +121,16 @@ function setup(){
  const observer=new MutationObserver(()=>{renderChat();renderAllPanels();const running=state.status==="RUNNING";$("#lovableSendBtn").disabled=ux.busy||running;if(!running&&!ux.busy)drainQueue()});observer.observe($("#globalStatus"),{subtree:true,childList:true,characterData:true,attributes:true});
  setInterval(()=>{renderProjectPanels();renderIntegrations()},3500)
 }
+let bootStartedAt=0;
 function boot(){
+ bindCriticalSend();
  state=window.__ASTRA_STATE__||null;
  actions=window.__ASTRA_ACTIONS__||null;
- if(!state||!actions){setTimeout(boot,80);return}
+ if(!state||!actions){
+  if(!bootStartedAt)bootStartedAt=Date.now();
+  if(Date.now()-bootStartedAt>5000){showCoreError("ASTRA core failed to initialize within 5 seconds. This is now visible instead of silently looping.");return}
+  setTimeout(boot,80);return
+ }
  if(window.__ASTRA_LOVABLE_UX_READY__)return;
  window.__ASTRA_LOVABLE_UX_READY__=true;
  setup();
