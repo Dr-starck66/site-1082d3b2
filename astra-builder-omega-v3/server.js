@@ -5,6 +5,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { seedPopulation, rankPopulation, evolutionDecision } from "./src/evolution-engine.js";
 import { defaultMetaPolicy, normalizePolicy, mutatePolicies, rewardOutcome } from "./src/meta-evolution.js";
 import { prompts } from "./src/prompts.js";
+import { enforceRuntimeBaseline, runtimeBaselineSelfTest } from "./src/runtime-baseline.js";
 import { compileSecondBrain, createTeamPlan, buildProofGraph, summarizeRouteCost, workspace7SelfTest } from "./src/workspace7-server.js";
 import { compactBrain, normalizeSkill, saveRecord, loadRecord, listRecords, workspace8SelfTest } from "./src/workspace8-server.js";
 import { runClaw, clawSelfTest } from "./src/claw.js";
@@ -193,7 +194,9 @@ async function runMissionSmoke(mission){
    const outs=await Promise.all(jobs.slice(i,i+2).map(([name,prompt,tokens,model])=>call(name,prompt,specText,model,tokens)));
    for(const out of outs)for(const file of filesFrom(out))filesByPath.set(file.path,file);
   }
+  const baseline=enforceRuntimeBaseline([...filesByPath.values()],spec);filesByPath.clear();for(const file of baseline.files)filesByPath.set(file.path,file);
   const files=[...filesByPath.values()];
+  log("RUNTIME_BASELINE",baseline.evidence.status,baseline.evidence.detail);
   log("FILES",files.length>=8?"PASS":"FAIL",files.length+" generated files");
   let validation=validate({spec,files});
   log("SERVER_VALIDATE",validation.verdict,validation.summary);
@@ -219,7 +222,8 @@ async function runMissionSmoke(mission){
      const changed=filesFrom(repair);
      if(!changed.length){log("REPAIR_"+repairCycle,"FAIL","repair returned no files");continue}
      for(const file of changed)filesByPath.set(file.path,file);
-     files.splice(0,files.length,...filesByPath.values());
+     const normalized=enforceRuntimeBaseline([...filesByPath.values()],spec);filesByPath.clear();for(const file of normalized.files)filesByPath.set(file.path,file);
+     files.splice(0,files.length,...filesByPath.values());log("RUNTIME_BASELINE_REPAIR_"+repairCycle,normalized.evidence.status,normalized.evidence.detail);
      log("REPAIR_FILES_"+repairCycle,"PASS",changed.length+" file(s) replaced/added");
      validation=validate({spec,files});log("SERVER_REVALIDATE_"+repairCycle,validation.verdict,validation.summary);
      for(const e of validation.evidence||[])if(e.status!=="PASS")log("REVALIDATION_DETAIL_"+repairCycle,e.status,e.name+" · "+e.detail);
