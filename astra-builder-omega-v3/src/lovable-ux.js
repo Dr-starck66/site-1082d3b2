@@ -41,11 +41,13 @@ async function saveActiveVersion(label="Autosave"){
 }
 async function doBuild(text){
  ux.busy=true;$("#lovableSendBtn").disabled=true;
+ msg("user",text,"Build mode");
+ msg("assistant",state.files?.length?"J’applique la modification, puis je vérifie le projet…":"Je lance la construction, les tests et la vérification…","RUNNING");
  $("#idea").value=text;
  try{
   if(state.files?.length){$("#improveInput").value=text;await actions.improveCurrent()}
   else await actions.run();
-  if(!(state.conversation||[]).some((x,i,a)=>i>a.length-3&&x.role==="assistant"))msg("assistant",(state.status==="FAIL"?"I hit a blocking issue. Open Evidence for the exact failure.":"Build cycle complete. Preview, code and evidence are updated."),"Build · "+state.status);
+  msg("assistant",(state.status==="FAIL"?"J’ai rencontré un blocage. Ouvre Evidence pour voir la cause exacte.":"Cycle terminé. Preview, code et preuves ont été mis à jour."),"Build · "+state.status);
   await saveActiveVersion(state.files?.length?"Build update":"Build");
  }catch(e){msg("assistant","Build failed: "+String(e?.message||e),"FAIL")}
  finally{ux.busy=false;$("#lovableSendBtn").disabled=false;renderAllPanels();await drainQueue()}
