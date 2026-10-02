@@ -2,6 +2,7 @@ import{chat,generateImage,effectiveModel,costStatus,normalizeBase}from"./router.
 import{staticChecks,benchmark}from"./quality.js";
 import{makeZip}from"./zip.js";
 import{prompts}from"./prompts.js";
+import{enforceRuntimeBaseline}from"./runtime-baseline.js";
 import{RescueSupervisor,classifyError,sleep}from"./rescue.js";
 import{saveWorkspace,getWorkspace,listWorkspaces,deleteWorkspace,snapshotOf}from"./workspace.js";
 import{compileMission,missionProgress,updateMission,guardFiles,NegativeKnowledge,createGenome,scoreVariant,dualityVerdict,sha256,trustGate}from"./sovereign.js";
@@ -167,7 +168,7 @@ async function auditRepairVerify(context){
  setPhase("ADVERSARY");let audit=parse(await rescueStructuredChat(state.cfg,state.cfg.adversary,prompts.adversary,"CONTEXT:\n"+context+"\nNEGATIVE KNOWLEDGE:\n"+JSON.stringify(state.negativeKnowledge.hints(8))+"\nSPEC:\n"+JSON.stringify(state.spec)+"\nFILES:\n"+JSON.stringify(state.files)+"\nCHECKS:\n"+JSON.stringify(state.evidence)));addEv("Adversarial audit #1",audit.risk==="HIGH"?"PARTIAL":"PASS",(audit.issues?.length||0)+" issue(s), risk "+audit.risk);evolveMission("ADVERSARY",audit.risk==="HIGH"?"PARTIAL":"PASS");
  if((audit.issues?.length||0)>0||state.evidence.some(x=>x.status==="FAIL")){
   setPhase("REPAIR");const focus=repairFocusPaths(audit),repairFiles=compactRepairFiles(state.files,focus);const rep=parse(await rescueStructuredChat(state.cfg,state.cfg.frontend,prompts.repair,"CONTEXT:\n"+context+"\nNEGATIVE KNOWLEDGE:\n"+JSON.stringify(state.negativeKnowledge.hints(8))+"\nSPEC:\n"+JSON.stringify(state.spec)+"\nFAILING PATHS:\n"+JSON.stringify(focus)+"\nFILES TO REPAIR / CONTEXT:\n"+JSON.stringify(repairFiles)+"\nAUDIT:\n"+JSON.stringify(audit)+"\nCHECKS:\n"+JSON.stringify(state.evidence)));
-  const repaired=shield(safeFiles(rep),"repair");state.files=mergeFiles(state.files,repaired);renderFiles();renderPreview();for(const e of staticChecks(state.files,state.spec))addEv(e.name,e.status,e.detail);await serverValidate();await sandboxValidate()
+  const repaired=shield(safeFiles(rep),"repair");const normalized=enforceRuntimeBaseline(mergeFiles(state.files,repaired),state.spec);state.files=normalized.files;addEv(normalized.evidence.name,normalized.evidence.status,normalized.evidence.detail);renderFiles();renderPreview();for(const e of staticChecks(state.files,state.spec))addEv(e.name,e.status,e.detail);await serverValidate();await sandboxValidate()
  }
  if(policy.adversaryPasses>1){
   setPhase("ADVERSARY");const audit2=parse(await rescueStructuredChat(state.cfg,state.cfg.adversary,prompts.adversary,"SECOND PASS AFTER REPAIR/VALIDATION. Be stricter and focus on false PASS.\nCONTEXT:\n"+context+"\nSPEC:\n"+JSON.stringify(state.spec)+"\nFILES:\n"+JSON.stringify(state.files)+"\nCHECKS:\n"+JSON.stringify(state.evidence)+"\nFIRST AUDIT:\n"+JSON.stringify(audit)));addEv("Adversarial audit #2",audit2.risk==="HIGH"?"PARTIAL":"PASS",(audit2.issues?.length||0)+" issue(s), risk "+audit2.risk);audit=audit2;
@@ -305,7 +306,7 @@ async function run(rescueCycle=0){
   const [frontRaw,backRaw,dbRaw,authRaw,opsRaw]=await executeBuildPolicy(specText,nk);
   const front=shield(safeFiles(parse(frontRaw)),"frontend"),back=shield(safeFiles(parse(backRaw)),"backend"),db=shield(safeFiles(parse(dbRaw)),"database"),auth=shield(safeFiles(parse(authRaw)),"auth"),ops=shield(safeFiles(parse(opsRaw)),"devops");
   agent("Frontend+UX",effectiveModel(state.cfg,state.cfg.frontend),front.length?"PASS":"FAIL");agent("Backend",effectiveModel(state.cfg,state.cfg.backend),back.length?"PASS":"FAIL");agent("Database",effectiveModel(state.cfg,state.cfg.backend),db.length?"PASS":"FAIL");agent("Auth+Security",effectiveModel(state.cfg,state.cfg.backend),auth.length?"PASS":"FAIL");agent("DevOps-X",effectiveModel(state.cfg,state.cfg.ops),ops.length?"PASS":"FAIL");
-  state.files=mergeFiles(front,back,db,auth,ops);state.selected=state.files[0]?.path||null;for(const n of state.mission.nodes.filter(x=>x.type==="FEATURE"))n.status="PASS";renderFiles();selectFile(state.selected);renderPreview();renderSovereign();
+  const baseline=enforceRuntimeBaseline(mergeFiles(front,back,db,auth,ops),state.spec);state.files=baseline.files;addEv(baseline.evidence.name,baseline.evidence.status,baseline.evidence.detail);state.selected=state.files[0]?.path||null;for(const n of state.mission.nodes.filter(x=>x.type==="FEATURE"))n.status="PASS";renderFiles();selectFile(state.selected);renderPreview();renderSovereign();
   setPhase("IMAGES");await generateAssets();renderPreview();renderEvidence();
   await auditRepairVerify("Initial generation");
   state.bench=benchmark(state.files,state.evidence,state.spec);renderBenchmark();captureBenchmark("initial",state.runStartedAt);captureGenome("Initial generation");await sealSovereign("initial-generation");finishMetaOperation(state.status);await persistWorkspace("Initial generation");rescue.checkpoint("pipeline-complete");rescue.clearRestartCounter();
