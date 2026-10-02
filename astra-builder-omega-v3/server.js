@@ -204,34 +204,46 @@ async function runMissionSmoke(mission){
   try{sandbox=await sandboxRun({spec,files});log("SANDBOX",sandbox.status,(sandbox.durationMs||0)+"ms · "+String(sandbox.projectDigest||"").slice(0,12));for(const e of sandbox.evidence||[])if(e.status!=="PASS")log("SANDBOX_DETAIL",e.status,e.name+" · "+String(e.detail||"").slice(0,500))}
   catch(e){sandbox={status:"FAIL",reason:String(e?.message||e)};log("SANDBOX","FAIL",sandbox.reason)}
   if(validation.verdict==="FAIL"||sandbox.status==="FAIL"){
-   const criticalPaths=["backend/src/app.ts","backend/src/auth.ts","backend/src/server.ts","backend/src/index.ts","backend/src/repository.ts","backend/tests/server.test.ts","backend/tests/auth.test.ts","backend/package.json","backend/tsconfig.json","frontend/src/App.tsx","frontend/src/main.tsx","frontend/tests/app.test.tsx","frontend/package.json","preview/app.js","Dockerfile","deploy.json"];
-   for(let repairCycle=1;repairCycle<=4&&(validation.verdict==="FAIL"||sandbox.status==="FAIL");repairCycle++){
+   const clean=s=>String(s||"").replace(/\x1b\[[0-9;]*m/g," ").replace(/\s+/g," ").trim();
+   const targetOrder=["backend/src/app.ts","backend/src/auth.ts","backend/src/repository.ts","backend/tests/server.test.ts","backend/tests/auth.test.ts","frontend/src/App.tsx","frontend/tests/app.test.tsx","preview/app.js"];
+   for(let repairCycle=1;repairCycle<=3&&(validation.verdict==="FAIL"||sandbox.status==="FAIL");repairCycle++){
     const failingValidation=(validation.evidence||[]).filter(e=>e.status!=="PASS");
     const failingSandbox=(sandbox.evidence||[]).filter(e=>e.status!=="PASS");
-    const criticalFiles=criticalPaths.map(p=>filesByPath.get(p)).filter(Boolean).map(x=>({path:x.path,content:String(x.content||"").slice(0,9000)}));
-    const repairInput=JSON.stringify({
-     mission,spec,repairCycle,
-     objective:"Repair ALL failing artifacts in this cycle. Return complete replacement files, not fragments. Final project must have valid root package.json with start/test scripts, server bound to 0.0.0.0 and process.env.PORT with direct GET /health 200, root Dockerfile, deploy.json, automated tests, and syntactically complete frontend JavaScript.",
-     failures:{validation:failingValidation,sandbox:{status:sandbox.status,evidence:failingSandbox,reason:sandbox.reason||null}},
-     criticalFiles,
-     files:files.slice(0,80).map(x=>({path:x.path,content:String(x.content||"").slice(0,1400)}))
+    const failureText=[...failingValidation,...failingSandbox].map(e=>clean((e.name||"")+" · "+(e.detail||""))).join("\n");
+    const mentioned=[];
+    for(const m of failureText.matchAll(/((?:backend|frontend|preview)\/(?:src|tests)?\/?[A-Za-z0-9._\/-]+\.(?:ts|tsx|js|jsx))/g))if(!mentioned.includes(m[1]))mentioned.push(m[1]);
+    const targets=[...mentioned,...targetOrder].filter((p,i,a)=>a.indexOf(p)===i&&filesByPath.has(p)).slice(0,4);
+    if(!targets.length){log("REPAIR_"+repairCycle,"FAIL","no concrete failing source file target");break}
+    const repairModel=repairCycle<=2?"qwen-standard-local":"qwen-coder-local",repairBudget=repairCycle<=2?1800:2200;
+    log("REPAIR_ROUTE_"+repairCycle,"PASS",repairModel+" · targeted "+targets.join(", "));
+    const jobs=targets.map(async targetPath=>{
+     const targetFile=filesByPath.get(targetPath),content=String(targetFile?.content||"");
+     const input=JSON.stringify({
+      app:spec?.appName||"app",
+      goal:String(spec?.goal||mission||"").slice(0,700),
+      acceptance:(spec?.acceptance||[]).slice(0,5),
+      failures:[...failingValidation,...failingSandbox].slice(0,7).map(e=>({name:e.name,status:e.status,detail:clean(e.detail).slice(0,900)})),
+      target:{path:targetPath,content:content.slice(0,7200),truncated:content.length>7200}
+     });
+     const system=prompts.repair+"\nTARGETED REPAIR CONTRACT: repair exactly "+targetPath+". Return JSON {files:[{path:\""+targetPath+"\",content:\"COMPLETE replacement\"}],summary}. Do not touch deterministic server.ts, package.json, tsconfig, Dockerfile or deploy.json. Preserve public API contracts. Fix the compiler/test/runtime error evidenced in the input. Keep the replacement compact.";
+     try{return await call("REPAIR_"+repairCycle+"_"+targetPath.replace(/[^a-z0-9]+/gi,"_"),system,input,repairModel,repairBudget)}
+     catch(e){log("REPAIR_TARGET_"+repairCycle,"FAIL",targetPath+" · "+String(e?.message||e).slice(0,500));return null}
     });
+    const repairedResults=repairModel==="qwen-standard-local"?await Promise.all(jobs):await Promise.all(jobs);
+    let changedCount=0;
+    for(const repair of repairedResults){for(const file of filesFrom(repair)){if(!targets.includes(file.path))continue;filesByPath.set(file.path,file);changedCount++}}
+    if(!changedCount){log("REPAIR_"+repairCycle,"FAIL","targeted repair returned no usable files");continue}
+    const normalized=enforceRuntimeBaseline([...filesByPath.values()],spec);filesByPath.clear();for(const file of normalized.files)filesByPath.set(file.path,file);
+    files.splice(0,files.length,...filesByPath.values());
+    log("RUNTIME_BASELINE_REPAIR_"+repairCycle,normalized.evidence.status,normalized.evidence.detail);
+    log("REPAIR_FILES_"+repairCycle,"PASS",changedCount+" targeted file(s) replaced");
+    validation=validate({spec,files});log("SERVER_REVALIDATE_"+repairCycle,validation.verdict,validation.summary);
+    for(const e of validation.evidence||[])if(e.status!=="PASS")log("REVALIDATION_DETAIL_"+repairCycle,e.status,e.name+" · "+e.detail);
     try{
-     const repairModel=repairCycle<=2?"qwen-standard-local":"qwen-coder-local",repairBudget=repairCycle<=2?2200:2800;log("REPAIR_ROUTE_"+repairCycle,"PASS",repairModel+" · "+repairBudget+" tokens");const repair=await call("REPAIR_"+repairCycle,prompts.repair+"\nREPAIR CONTRACT: fix the actual failing source/test files reported by sandbox. Return JSON {files:[{path,content}]} with COMPLETE replacement contents only for files you change. Do NOT rewrite deterministic package.json, Dockerfile or deploy.json; ASTRA Runtime Baseline owns those. Prioritize backend compile errors, test errors, auth wiring and direct /health behavior.",repairInput,repairModel,repairBudget);
-     const changed=filesFrom(repair);
-     if(!changed.length){log("REPAIR_"+repairCycle,"FAIL","repair returned no files");continue}
-     for(const file of changed)filesByPath.set(file.path,file);
-     const normalized=enforceRuntimeBaseline([...filesByPath.values()],spec);filesByPath.clear();for(const file of normalized.files)filesByPath.set(file.path,file);
-     files.splice(0,files.length,...filesByPath.values());log("RUNTIME_BASELINE_REPAIR_"+repairCycle,normalized.evidence.status,normalized.evidence.detail);
-     log("REPAIR_FILES_"+repairCycle,"PASS",changed.length+" file(s) replaced/added");
-     validation=validate({spec,files});log("SERVER_REVALIDATE_"+repairCycle,validation.verdict,validation.summary);
-     for(const e of validation.evidence||[])if(e.status!=="PASS")log("REVALIDATION_DETAIL_"+repairCycle,e.status,e.name+" · "+e.detail);
-     try{
-      sandbox=await sandboxRun({spec,files});
-      log("SANDBOX_RETEST_"+repairCycle,sandbox.status,(sandbox.durationMs||0)+"ms · "+String(sandbox.projectDigest||"").slice(0,12));
-      for(const e of sandbox.evidence||[])if(e.status!=="PASS")log("SANDBOX_RETEST_DETAIL_"+repairCycle,e.status,e.name+" · "+String(e.detail||"").slice(0,500));
-     }catch(e){sandbox={status:"FAIL",reason:String(e?.message||e)};log("SANDBOX_RETEST_"+repairCycle,"FAIL",sandbox.reason)}
-    }catch(e){log("REPAIR_"+repairCycle,"FAIL",String(e?.message||e))}
+     sandbox=await sandboxRun({spec,files});
+     log("SANDBOX_RETEST_"+repairCycle,sandbox.status,(sandbox.durationMs||0)+"ms · "+String(sandbox.projectDigest||"").slice(0,12));
+     for(const e of sandbox.evidence||[])if(e.status!=="PASS")log("SANDBOX_RETEST_DETAIL_"+repairCycle,e.status,e.name+" · "+clean(e.detail).slice(0,900));
+    }catch(e){sandbox={status:"FAIL",reason:String(e?.message||e)};log("SANDBOX_RETEST_"+repairCycle,"FAIL",sandbox.reason)}
    }
   }
   const compact=JSON.stringify({mission,spec,files:files.slice(0,60).map(x=>({path:x.path,excerpt:String(x.content||"").slice(0,350)})),validation,sandbox:{status:sandbox.status,evidence:sandbox.evidence||[],reason:sandbox.reason||null}});
