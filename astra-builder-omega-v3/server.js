@@ -201,25 +201,39 @@ async function runMissionSmoke(mission){
   try{sandbox=await sandboxRun({spec,files});log("SANDBOX",sandbox.status,(sandbox.durationMs||0)+"ms · "+String(sandbox.projectDigest||"").slice(0,12));for(const e of sandbox.evidence||[])if(e.status!=="PASS")log("SANDBOX_DETAIL",e.status,e.name+" · "+String(e.detail||"").slice(0,500))}
   catch(e){sandbox={status:"FAIL",reason:String(e?.message||e)};log("SANDBOX","FAIL",sandbox.reason)}
   if(validation.verdict==="FAIL"||sandbox.status==="FAIL"){
-   const repairInput=JSON.stringify({
-    mission,spec,
-    failures:{validation:(validation.evidence||[]).filter(e=>e.status!=="PASS"),sandbox:{status:sandbox.status,evidence:(sandbox.evidence||[]).filter(e=>e.status!=="PASS"),reason:sandbox.reason||null}},
-    files:files.slice(0,70).map(x=>({path:x.path,content:String(x.content||"").slice(0,1400)}))
-   });
-   try{
-    const repair=await call("REPAIR",prompts.repair,repairInput,"qwen-standard-local",2400);
-    const changed=filesFrom(repair);for(const file of changed)filesByPath.set(file.path,file);
-    files.splice(0,files.length,...filesByPath.values());log("REPAIR_FILES",changed.length?"PASS":"PARTIAL",changed.length+" file(s) replaced/added");
-    validation=validate({spec,files});log("SERVER_REVALIDATE",validation.verdict,validation.summary);
-    for(const e of validation.evidence||[])if(e.status!=="PASS")log("REVALIDATION_DETAIL",e.status,e.name+" · "+e.detail);
-    try{sandbox=await sandboxRun({spec,files});log("SANDBOX_RETEST",sandbox.status,(sandbox.durationMs||0)+"ms · "+String(sandbox.projectDigest||"").slice(0,12));for(const e of sandbox.evidence||[])if(e.status!=="PASS")log("SANDBOX_RETEST_DETAIL",e.status,e.name+" · "+String(e.detail||"").slice(0,500))}
-    catch(e){sandbox={status:"FAIL",reason:String(e?.message||e)};log("SANDBOX_RETEST","FAIL",sandbox.reason)}
-   }catch(e){log("REPAIR","FAIL",String(e?.message||e))}
+   const criticalPaths=["preview/app.js","package.json","server.js","Dockerfile","deploy.json","tests/server.test.js","tests/auth.test.js"];
+   for(let repairCycle=1;repairCycle<=4&&(validation.verdict==="FAIL"||sandbox.status==="FAIL");repairCycle++){
+    const failingValidation=(validation.evidence||[]).filter(e=>e.status!=="PASS");
+    const failingSandbox=(sandbox.evidence||[]).filter(e=>e.status!=="PASS");
+    const criticalFiles=criticalPaths.map(p=>filesByPath.get(p)).filter(Boolean).map(x=>({path:x.path,content:String(x.content||"").slice(0,9000)}));
+    const repairInput=JSON.stringify({
+     mission,spec,repairCycle,
+     objective:"Repair ALL failing artifacts in this cycle. Return complete replacement files, not fragments. Final project must have valid root package.json with start/test scripts, server bound to 0.0.0.0 and process.env.PORT with direct GET /health 200, root Dockerfile, deploy.json, automated tests, and syntactically complete frontend JavaScript.",
+     failures:{validation:failingValidation,sandbox:{status:sandbox.status,evidence:failingSandbox,reason:sandbox.reason||null}},
+     criticalFiles,
+     files:files.slice(0,80).map(x=>({path:x.path,content:String(x.content||"").slice(0,1400)}))
+    });
+    try{
+     const repair=await call("REPAIR_"+repairCycle,prompts.repair+"\nREPAIR CONTRACT: fix every reported FAIL/PARTIAL required for a production single-service app. Return JSON {files:[{path,content}]} with COMPLETE file contents for every file you change. Prioritize syntax validity, root package.json, /health, Dockerfile, deploy.json and executable tests.",repairInput,"qwen-coder-local",3072);
+     const changed=filesFrom(repair);
+     if(!changed.length){log("REPAIR_"+repairCycle,"FAIL","repair returned no files");continue}
+     for(const file of changed)filesByPath.set(file.path,file);
+     files.splice(0,files.length,...filesByPath.values());
+     log("REPAIR_FILES_"+repairCycle,"PASS",changed.length+" file(s) replaced/added");
+     validation=validate({spec,files});log("SERVER_REVALIDATE_"+repairCycle,validation.verdict,validation.summary);
+     for(const e of validation.evidence||[])if(e.status!=="PASS")log("REVALIDATION_DETAIL_"+repairCycle,e.status,e.name+" · "+e.detail);
+     try{
+      sandbox=await sandboxRun({spec,files});
+      log("SANDBOX_RETEST_"+repairCycle,sandbox.status,(sandbox.durationMs||0)+"ms · "+String(sandbox.projectDigest||"").slice(0,12));
+      for(const e of sandbox.evidence||[])if(e.status!=="PASS")log("SANDBOX_RETEST_DETAIL_"+repairCycle,e.status,e.name+" · "+String(e.detail||"").slice(0,500));
+     }catch(e){sandbox={status:"FAIL",reason:String(e?.message||e)};log("SANDBOX_RETEST_"+repairCycle,"FAIL",sandbox.reason)}
+    }catch(e){log("REPAIR_"+repairCycle,"FAIL",String(e?.message||e))}
+   }
   }
-  const compact=JSON.stringify({mission,spec,files:files.slice(0,80).map(x=>({path:x.path,excerpt:String(x.content||"").slice(0,900)})),validation,sandbox:{status:sandbox.status,evidence:sandbox.evidence||[],reason:sandbox.reason||null}});
+  const compact=JSON.stringify({mission,spec,files:files.slice(0,60).map(x=>({path:x.path,excerpt:String(x.content||"").slice(0,350)})),validation,sandbox:{status:sandbox.status,evidence:sandbox.evidence||[],reason:sandbox.reason||null}});
   let adversary={risk:"UNVERIFIED",issues:[]},verify={verdict:"UNVERIFIED"};
-  try{adversary=await call("ADVERSARY",prompts.adversary,compact,"gemma-critic-local",700)}catch{}
-  try{verify=await call("VERIFY2",prompts.verify,JSON.stringify({validation,sandbox,adversary,files:files.map(x=>x.path),spec}),"gemma-critic-local",700)}catch{}
+  try{adversary=await call("ADVERSARY",prompts.adversary+"\nReturn compact valid JSON only. No code blocks, no long excerpts.",compact,"qwen-standard-local",1600)}catch{}
+  try{verify=await call("VERIFY2",prompts.verify+"\nReturn compact valid JSON only with a clear verdict. Do not include chain-of-thought.",JSON.stringify({validation,sandbox,adversary,files:files.map(x=>x.path),spec}),"qwen-standard-local",1600)}catch{}
   const hardFail=validation.verdict==="FAIL"||sandbox.status==="FAIL"||String(verify.verdict||"").toUpperCase()==="FAIL";
   const partial=validation.verdict!=="PASS"||sandbox.status!=="PASS"||String(verify.verdict||"").toUpperCase()!=="PASS";
   const status=hardFail?"FAIL":partial?"PARTIAL":"PASS";
