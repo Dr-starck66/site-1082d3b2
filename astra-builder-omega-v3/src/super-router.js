@@ -7,7 +7,7 @@ const state={
   health:{at:0,data:null},
   lastRoute:null
 };
-const HEALTH_TTL=20000,CIRCUIT_MS=60000,FAIL_THRESHOLD=2,MAX_EVIDENCE=120;
+const HEALTH_TTL=10000,CIRCUIT_MS=15000,FAIL_THRESHOLD=2,MAX_EVIDENCE=120;
 
 const roleRules=[
   ["adversary",/adversary|skeptic|red.?team|false.?pass|attack/i],
@@ -61,8 +61,8 @@ function classifyError(msg=""){
   return"PROVIDER";
 }
 function markFailure(kind,error,profile){
-  const id=providerId(kind),c=circuit(kind);c.failures++;c.lastError=String(error).slice(0,240);
-  if(c.failures>=FAIL_THRESHOLD)c.openUntil=now()+CIRCUIT_MS;
+  const id=providerId(kind),c=circuit(kind),errorKind=classifyError(error);c.failures++;c.lastError=String(error).slice(0,240);
+  if(c.failures>=FAIL_THRESHOLD&&["TRANSIENT","RATE_LIMIT","PROVIDER","AUTH"].includes(errorKind))c.openUntil=now()+CIRCUIT_MS;
   const m=state.metrics.get(id)||{calls:0,success:0,fail:0,ewmaLatency:0};m.calls++;m.fail++;state.metrics.set(id,m);
   const sig=id+":"+profile.role+":"+classifyError(error),n=state.negative.get(sig)||{count:0,lastAt:0};n.count++;n.lastAt=now();state.negative.set(sig,n);
 }
@@ -83,6 +83,11 @@ async function health(){
   }
 }
 function healthRank(x){return x==="PASS"?3:x==="PARTIAL"?2:x==="UNVERIFIED"?1:0}
+function reconcileHealthyCircuits(h){
+  for(const kind of ["fast","standard","builder","critic"]){
+    if(h?.[kind]?.status==="PASS"){const c=circuit(kind);c.failures=0;c.openUntil=0;c.lastError=""}
+  }
+}
 function negativePenalty(kind,profile){
   let p=0;for(const [sig,v] of state.negative){if(sig.startsWith(providerId(kind)+":"+profile.role+":")&&now()-v.lastAt<300000)p+=Math.min(30,v.count*8)}return p;
 }
@@ -103,7 +108,7 @@ function score(kind,profile,h){
   return s;
 }
 export async function routePlan(system,user,requestedModel){
-  const profile=profileTask(system,user,requestedModel),h=await health();
+  const profile=profileTask(system,user,requestedModel),h=await health();reconcileHealthyCircuits(h);
   const pool=profile.criticRole?["critic","standard","builder","fast"]:profile.mode==="FAST"?["fast","standard","builder","critic"]:profile.mode==="STANDARD"?["standard","builder","fast","critic"]:["builder","standard","critic","fast"];
   const choices=pool.map(kind=>({kind,model:modelFor(kind),score:score(kind,profile,h),health:h?.[providerId(kind)]?.status||"UNVERIFIED",circuitOpen:circuitOpen(kind)})).sort((a,b)=>b.score-a.score);
   return{profile,healthStatus:h?.status||"UNVERIFIED",choices,policy:{zeroCostFirst:true,localFirst:true,failClosed:true,expressLane:true,standardLane:true,circuitMs:CIRCUIT_MS,failThreshold:FAIL_THRESHOLD}};
@@ -141,6 +146,11 @@ async function compactCriticCheck(system,user,candidate,profile){
 }
 export async function superRoute({system="",user="",requestedModel=""}={}){
   const plan=await routePlan(system,user,requestedModel),traceId=crypto.randomUUID?.()||String(now()),failures=[];
+  if(plan.choices.length&&plan.choices.every(x=>x.circuitOpen)){
+    const probe=plan.choices.find(x=>x.health==="PASS")||plan.choices[0],c=circuit(probe.kind);
+    c.openUntil=0;c.failures=Math.min(c.failures,1);probe.circuitOpen=false;
+    evidence({traceId,type:"CIRCUIT_HALF_OPEN",status:"PARTIAL",provider:probe.kind,detail:"all routes were open; forced one recovery probe"});
+  }
   evidence({traceId,type:"ROUTE_PLAN",status:"PASS",role:plan.profile.role,mode:plan.profile.mode,choices:plan.choices.map(x=>({kind:x.kind,score:Math.round(x.score),health:x.health,circuitOpen:x.circuitOpen}))});
   for(const choice of plan.choices){
     if(choice.circuitOpen){failures.push(choice.kind+": circuit open");continue}
