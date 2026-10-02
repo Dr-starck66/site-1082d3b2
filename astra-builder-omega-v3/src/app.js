@@ -40,13 +40,16 @@ function beginMetaOperation(label){const b=beginMetaRun(state.meta);state.meta=s
 function finishMetaOperation(status=state.status,deployPass=false){if(!state.metaRun)return null;const m=metricSnapshot({files:state.files,evidence:state.evidence,startedAt:state.metaRun.startedAt,status}),outcome={label:state.metaRun.label,quality:m.quality,fail:m.fail,partial:m.partial,latencyMs:m.latencyMs,tests:m.tests,trustScore:state.trust?.score||0,status,deployPass};const r=finishMetaRun(state.meta,state.metaRun,outcome);state.meta=r.meta;addEv("META‑EVOLUTION Ω",r.decision.action==="PROMOTE"?"PASS":r.decision.action==="REJECT"?"PARTIAL":"PASS",r.decision.action+" · "+r.decision.reason+" · reward "+r.entry.reward);state.metaRun=null;renderMeta();return r}
 async function executeBuildPolicy(specText,nk){
  const p=currentPolicy(),localFabric=normalizeBase(state.cfg.baseUrl).startsWith("astra://local/"),standardModel=localFabric?"qwen-standard-local":null;
- const front=()=>rescueStructuredChat(state.cfg,standardModel||state.cfg.frontend,prompts.frontend,"SPEC:\n"+specText+"\nKNOWN FAILURES:\n"+nk),back=()=>rescueStructuredChat(state.cfg,standardModel||state.cfg.backend,prompts.backend,"SPEC:\n"+specText+"\nKNOWN FAILURES:\n"+nk),db=()=>rescueStructuredChat(state.cfg,standardModel||state.cfg.backend,prompts.database,"SPEC:\n"+specText+"\nKNOWN FAILURES:\n"+nk),auth=()=>rescueStructuredChat(state.cfg,standardModel||state.cfg.backend,prompts.auth,"SPEC:\n"+specText+"\nKNOWN FAILURES:\n"+nk),ops=()=>rescueStructuredChat(state.cfg,standardModel||state.cfg.ops,prompts.ops,"SPEC:\n"+specText+"\nKNOWN FAILURES:\n"+nk);
+ const preview=()=>rescueStructuredChat(state.cfg,standardModel||state.cfg.frontend,prompts.preview,"SPEC:\n"+specText+"\nKNOWN FAILURES:\n"+nk),front=()=>rescueStructuredChat(state.cfg,standardModel||state.cfg.frontend,prompts.frontend,"SPEC:\n"+specText+"\nKNOWN FAILURES:\n"+nk),back=()=>rescueStructuredChat(state.cfg,standardModel||state.cfg.backend,prompts.backend,"SPEC:\n"+specText+"\nKNOWN FAILURES:\n"+nk),db=()=>rescueStructuredChat(state.cfg,standardModel||state.cfg.backend,prompts.database,"SPEC:\n"+specText+"\nKNOWN FAILURES:\n"+nk),auth=()=>rescueStructuredChat(state.cfg,standardModel||state.cfg.backend,prompts.auth,"SPEC:\n"+specText+"\nKNOWN FAILURES:\n"+nk),ops=()=>rescueStructuredChat(state.cfg,standardModel||state.cfg.ops,prompts.ops,"SPEC:\n"+specText+"\nKNOWN FAILURES:\n"+nk);
  if(localFabric){
-  addEv("META build policy","PASS","capacity-aware pairs · STANDARD 2-slot lane");
+  addEv("META build policy","PASS","preview-first · STANDARD 2-slot lane · coder reserved for escalation");
+  const previewRaw=await preview(),previewObj=parse(previewRaw),previewFiles=safeFiles(previewObj);
+  if(previewFiles.length){state.files=mergeFiles(state.files,previewFiles);state.selected=previewFiles[0]?.path||state.selected;addEv("Instant preview","PASS",previewFiles.length+" preview files generated");renderFiles();renderPreview()}
   const [frontRaw,backRaw]=await Promise.all([front(),back()]);
   const [dbRaw,authRaw]=await Promise.all([db(),auth()]);
   const opsRaw=await ops();
-  return[frontRaw,backRaw,dbRaw,authRaw,opsRaw];
+  const frontObj=parse(frontRaw);frontObj.files=mergeFiles(safeFiles(frontObj),previewFiles);
+  return[JSON.stringify(frontObj),backRaw,dbRaw,authRaw,opsRaw];
  }
  addEv("META build policy","PASS",p.buildMode+" · policy "+p.name);
  if(p.buildMode==="staged"){const [frontRaw,backRaw]=await Promise.all([front(),back()]);const [dbRaw,authRaw,opsRaw]=await Promise.all([db(),auth(),ops()]);return[frontRaw,backRaw,dbRaw,authRaw,opsRaw]}
