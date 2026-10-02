@@ -185,7 +185,7 @@ async function runMissionSmoke(mission){
    ["FRONTEND",prompts.frontend,2400,"qwen-standard-local"],
    ["BACKEND",prompts.backend,2400,"qwen-standard-local"],
    ["DATABASE",prompts.database,1600,"qwen-standard-local"],
-   ["AUTH",prompts.auth,2600,"qwen-coder-local"],
+   ["AUTH",prompts.auth,1800,"qwen-standard-local"],
    ["DEVOPS",prompts.ops,1600,"qwen-standard-local"]
   ];
   for(let i=0;i<jobs.length;i+=2){
