@@ -1,0 +1,15 @@
+{
+  "name": "cercle-libertin",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test-seo-recovery.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "sharp": "^0.34.4"
+  }
+}
