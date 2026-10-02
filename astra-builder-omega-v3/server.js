@@ -447,13 +447,14 @@ async function api(req,res,url){
    await page.goto("http://127.0.0.1:"+port+"/",{waitUntil:"domcontentloaded",timeout:20000});
    await page.waitForFunction(()=>window.__ASTRA_STATE__&&window.__ASTRA_ACTIONS__&&window.__ASTRA_LOVABLE_UX_READY__===true,null,{timeout:12000});
    const handler=await page.$eval("#lovableSendBtn",el=>typeof el.onclick==="function");
-   await page.evaluate(()=>{window.__ASTRA_ACTIONS__.run=async()=>{window.__ASTRA_UI_CLICK_OK__=(window.__ASTRA_UI_CLICK_OK__||0)+1;window.__ASTRA_STATE__.status="PARTIAL";const s=document.querySelector("#globalStatus");if(s)s.textContent="UI_TEST"}}); 
-   await page.fill("#idea","ASTRA send-arrow click self test");
+   await page.evaluate(()=>{window.__ASTRA_ACTIONS__.run=async()=>{window.__ASTRA_UI_CLICK_OK__=(window.__ASTRA_UI_CLICK_OK__||0)+1};window.__ASTRA_STATE__.status="RUNNING";const s=document.querySelector("#globalStatus");if(s)s.textContent="RUNNING"}); 
+   await page.waitForTimeout(100);
+   await page.fill("#idea","ASTRA send-arrow stale-RUNNING regression test");
    await page.click("#lovableSendBtn");
    await page.waitForFunction(()=>window.__ASTRA_UI_CLICK_OK__===1,null,{timeout:5000});
    const result=await page.evaluate(()=>({ready:window.__ASTRA_LOVABLE_UX_READY__===true,clicks:window.__ASTRA_UI_CLICK_OK__||0,statusText:document.querySelector("#globalStatus")?.textContent||"",buttonDisabled:document.querySelector("#lovableSendBtn")?.disabled||false}));
    await browser.close();browser=null;
-   const ok=handler&&result.ready&&result.clicks===1;
+   const ok=handler&&result.ready&&result.clicks===1&&!result.buttonDisabled;
    console.log("ASTRA UI SELF TEST "+(ok?"PASS":"FAIL")+" · send arrow · "+JSON.stringify(result));
    return send(res,ok?200:500,{status:ok?"PASS":"FAIL",handler,result,pageErrors:pageErrors.slice(0,5)});
   }catch(e){if(browser)try{await browser.close()}catch{};console.error("ASTRA UI SELF TEST FAIL · "+String(e.message||e));return send(res,500,{status:"FAIL",reason:String(e.message||e)})}
