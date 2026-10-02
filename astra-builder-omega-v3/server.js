@@ -204,7 +204,7 @@ async function runMissionSmoke(mission){
   try{sandbox=await sandboxRun({spec,files});log("SANDBOX",sandbox.status,(sandbox.durationMs||0)+"ms · "+String(sandbox.projectDigest||"").slice(0,12));for(const e of sandbox.evidence||[])if(e.status!=="PASS")log("SANDBOX_DETAIL",e.status,e.name+" · "+String(e.detail||"").slice(0,500))}
   catch(e){sandbox={status:"FAIL",reason:String(e?.message||e)};log("SANDBOX","FAIL",sandbox.reason)}
   if(validation.verdict==="FAIL"||sandbox.status==="FAIL"){
-   const criticalPaths=["backend/src/server.ts","backend/src/index.ts","backend/src/repository.ts","backend/tests/server.test.ts","backend/tests/auth.test.ts","backend/package.json","backend/tsconfig.json","frontend/src/App.tsx","frontend/src/main.tsx","frontend/tests/app.test.tsx","frontend/package.json","preview/app.js","Dockerfile","deploy.json"];
+   const criticalPaths=["backend/src/app.ts","backend/src/auth.ts","backend/src/server.ts","backend/src/index.ts","backend/src/repository.ts","backend/tests/server.test.ts","backend/tests/auth.test.ts","backend/package.json","backend/tsconfig.json","frontend/src/App.tsx","frontend/src/main.tsx","frontend/tests/app.test.tsx","frontend/package.json","preview/app.js","Dockerfile","deploy.json"];
    for(let repairCycle=1;repairCycle<=4&&(validation.verdict==="FAIL"||sandbox.status==="FAIL");repairCycle++){
     const failingValidation=(validation.evidence||[]).filter(e=>e.status!=="PASS");
     const failingSandbox=(sandbox.evidence||[]).filter(e=>e.status!=="PASS");
