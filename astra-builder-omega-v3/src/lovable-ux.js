@@ -53,7 +53,7 @@ async function doBuild(text){
 async function sendPrompt(){
  const ta=$("#idea"),text=ta.value.trim();if(!text)return;
  const withAttachments=text+await attachmentContext();
- if(ux.busy||state.status==="RUNNING"){ux.queue.push({text:withAttachments,mode:ux.mode});ta.value="";renderQueue();return}
+ if(ux.busy){ux.queue.push({text:withAttachments,mode:ux.mode});ta.value="";renderQueue();return}
  ta.value="";
  if(ux.mode==="plan")await doPlan(withAttachments);else await doBuild(withAttachments)
 }
@@ -118,7 +118,7 @@ function setup(){
  $("#modePlan").onclick=()=>setMode("plan");$("#modeBuild").onclick=()=>setMode("build");$("#lovableSendBtn").onclick=sendPrompt;$("#idea").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)){e.preventDefault();sendPrompt()}});
  $("#quickPromptBtn").onclick=()=>$("#quickPrompts").classList.toggle("hidden");$$("[data-preset]").forEach(b=>b.addEventListener("click",()=>{$("#quickPrompts").classList.add("hidden");$("#idea").focus()}));$$("[data-go-tab]").forEach(b=>b.onclick=()=>switchTab(b.dataset.goTab));$("#refreshPreviewBtn").onclick=()=>actions.renderPreview();$("#newDraftBtn").onclick=newDraft;
  setupDevices();setupInspector();installPreviewBridge();setupVisual();setupShare();setupAttachments();
- const observer=new MutationObserver(()=>{renderChat();renderAllPanels();const running=state.status==="RUNNING";$("#lovableSendBtn").disabled=ux.busy||running;if(!running&&!ux.busy)drainQueue()});observer.observe($("#globalStatus"),{subtree:true,childList:true,characterData:true,attributes:true});
+ const observer=new MutationObserver(()=>{renderChat();renderAllPanels();const running=ux.busy;$("#lovableSendBtn").disabled=running;if(!running)drainQueue()});observer.observe($("#globalStatus"),{subtree:true,childList:true,characterData:true,attributes:true});
  setInterval(()=>{renderProjectPanels();renderIntegrations()},3500)
 }
 let bootStartedAt=0;
