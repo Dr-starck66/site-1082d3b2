@@ -452,9 +452,10 @@ async function api(req,res,url){
    await page.fill("#idea","ASTRA send-arrow stale-RUNNING regression test");
    await page.click("#lovableSendBtn");
    await page.waitForFunction(()=>window.__ASTRA_UI_CLICK_OK__===1,null,{timeout:5000});
-   const result=await page.evaluate(()=>({ready:window.__ASTRA_LOVABLE_UX_READY__===true,clicks:window.__ASTRA_UI_CLICK_OK__||0,statusText:document.querySelector("#globalStatus")?.textContent||"",buttonDisabled:document.querySelector("#lovableSendBtn")?.disabled||false}));
+   await page.waitForFunction(()=>document.querySelector("#lovableSendBtn")?.disabled===false,null,{timeout:5000});
+   const result=await page.evaluate(()=>({ready:window.__ASTRA_LOVABLE_UX_READY__===true,clicks:window.__ASTRA_UI_CLICK_OK__||0,statusText:document.querySelector("#globalStatus")?.textContent||"",buttonDisabled:document.querySelector("#lovableSendBtn")?.disabled||false,chatText:document.querySelector("#chatTimeline")?.textContent?.slice(0,500)||""}));
    await browser.close();browser=null;
-   const ok=handler&&result.ready&&result.clicks===1&&!result.buttonDisabled;
+   const ok=handler&&result.ready&&result.clicks===1&&!result.buttonDisabled&&/Je lance la construction|J.applique la modification/.test(result.chatText);
    console.log("ASTRA UI SELF TEST "+(ok?"PASS":"FAIL")+" · send arrow · "+JSON.stringify(result));
    return send(res,ok?200:500,{status:ok?"PASS":"FAIL",handler,result,pageErrors:pageErrors.slice(0,5)});
   }catch(e){if(browser)try{await browser.close()}catch{};console.error("ASTRA UI SELF TEST FAIL · "+String(e.message||e));return send(res,500,{status:"FAIL",reason:String(e.message||e)})}
