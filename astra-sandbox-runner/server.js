@@ -45,8 +45,17 @@ async function runSandbox(project={}){
    else evidence.push({name:"Tests "+(rel||"."),status:"PARTIAL",detail:"no executable test script"});
   }
   const js=files.filter(f=>/\.(?:js|mjs|cjs)$/.test(f.path)).slice(0,50);for(const f of js){const r=await run("node",["--check",join(root,f.path)],{cwd:root,timeout:8000,label:"syntax "+f.path});runs.push(r);if(r.status!=="PASS"){evidence.push(evidenceFromRun("JS syntax "+f.path,r,true));break}}if(js.length&&!evidence.some(e=>e.name.startsWith("JS syntax")&&e.status==="FAIL"))evidence.push({name:"JS syntax",status:"PASS",detail:js.length+" file(s) checked"});
-  let primary=packageRoots[0]??"";try{const d=JSON.parse((files.find(f=>f.path==="deploy.json")||{}).content||"{}");if(typeof d.rootDirectory==="string"&&packageRoots.includes(d.rootDirectory.replace(/^\.\/?/,"").replace(/\/$/,"")))primary=d.rootDirectory.replace(/^\.\/?/,"").replace(/\/$/,"")}catch{}
-  const pkg=packageRoots.length?await pkgAt(root,primary):null,healthPath=(()=>{try{const d=JSON.parse((files.find(f=>f.path==="deploy.json")||{}).content||"{}");return typeof d.healthPath==="string"&&d.healthPath.startsWith("/")?d.healthPath:"/health"}catch{return"/health"}})();
+  let deployCfg={};try{deployCfg=JSON.parse((files.find(f=>f.path==="deploy.json")||{}).content||"{}")}catch{}
+  let primary="";
+  const runtimeRoot=typeof deployCfg.runtimeRoot==="string"?deployCfg.runtimeRoot.replace(/^\.\/?/,"").replace(/\/$/,""):"";
+  const deployRoot=typeof deployCfg.rootDirectory==="string"?deployCfg.rootDirectory.replace(/^\.\/?/,"").replace(/\/$/,""):"";
+  if(runtimeRoot&&packageRoots.includes(runtimeRoot))primary=runtimeRoot;
+  else if(deployRoot&&packageRoots.includes(deployRoot))primary=deployRoot;
+  else if(packageRoots.includes("backend"))primary="backend";
+  else{for(const rel of packageRoots){const p=await pkgAt(root,rel);if(p?.scripts?.start){primary=rel;break}}}
+  if(!primary)primary=packageRoots[0]??"";
+  const pkg=packageRoots.length?await pkgAt(root,primary):null,healthPath=typeof deployCfg.healthPath==="string"&&deployCfg.healthPath.startsWith("/")?deployCfg.healthPath:"/health";
+  evidence.push({name:"Runtime target",status:pkg?.scripts?.start?"PASS":"PARTIAL",detail:(primary||".")+" · "+(pkg?.scripts?.start||"no start script")});
   if(pkg?.scripts?.start){
    const port=4387,p=spawn("npm",["start"],{cwd:join(root,primary),env:guardedEnv({PORT:String(port),HOST:"127.0.0.1"}),detached:true,stdio:["ignore","pipe","pipe"]});let so="",se="";p.stdout.on("data",b=>so=(so+b).slice(-MAX_OUTPUT));p.stderr.on("data",b=>se=(se+b).slice(-MAX_OUTPUT));
    const hp=await healthProbe(port,healthPath,15000);killTree(p);runs.push({label:"runtime",status:hp.status,durationMs:hp.durationMs,stdout:so,stderr:se});evidence.push({name:"Runtime health",status:hp.status,detail:hp.status==="PASS"?"HTTP "+hp.httpStatus+" "+healthPath:(se||so||hp.detail||"health failed").slice(-800)});
