@@ -187,8 +187,7 @@ async function runMissionSmoke(mission){
    ["BACKEND",prompts.backend,1800,"qwen-standard-local"],
    ["FRONTEND",prompts.frontend,1600,"qwen-standard-local"],
    ["DATABASE",prompts.database,1000,"qwen-standard-local"],
-   ["AUTH",prompts.auth,1400,"qwen-standard-local"],
-   ["DEVOPS",prompts.ops,1000,"qwen-standard-local"]
+   ["AUTH",prompts.auth,1400,"qwen-standard-local"]
   ];
   for(let i=0;i<jobs.length;i+=2){
    const outs=await Promise.all(jobs.slice(i,i+2).map(([name,prompt,tokens,model])=>call(name,prompt,specText,model,tokens)));
