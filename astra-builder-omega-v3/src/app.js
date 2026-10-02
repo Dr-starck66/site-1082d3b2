@@ -175,7 +175,7 @@ async function auditRepairVerify(context){
  captureBenchmark("cycle",cycleStarted);captureGenome(context.slice(0,80));await sealSovereign("verified-cycle");return ver;
 }
 async function improveCurrent(){
- const request=$("#improveInput").value.trim();if(!request||!state.files.length)return;$("#improveDialog").close();beginMetaOperation("Improve Ω");setStatus("RUNNING");setPhase("IMPROVE");rescue.checkpoint("before-improve");state.conversation.push({at:new Date().toISOString(),role:"user",content:request});
+ const request=$("#improveInput").value.trim();if(!request||!state.files.length)return;$("#improveDialog").close();beginMetaOperation("Improve Ω");setStatus("RUNNING");setPhase("IMPROVE");rescue.checkpoint("before-improve");if(!state.conversation.slice(-4).some(x=>x.role==="user"&&x.content===request))state.conversation.push({at:new Date().toISOString(),role:"user",content:request});
  const started=Date.now(),baseFiles=state.files.map(x=>({...x})),baseSpec=structuredClone(state.spec),baseEvidence=state.evidence.map(x=>({...x})),baseMetric=metricSnapshot({files:baseFiles,evidence:baseEvidence,status:state.status});
  try{
   state.spec=parse(await rescueChat(state.cfg,state.cfg.architect,prompts.evolveSpec,"REQUEST:\n"+request+"\nCURRENT SPEC:\n"+JSON.stringify(state.spec)));state.mission=compileMission(state.spec,request);renderSpec();renderSovereign();
@@ -292,7 +292,7 @@ async function deployGenerated(){
 async function loadCapabilities(){try{const r=await fetch("/api/capabilities");state.capabilities=await r.json();addEv("Control plane","PASS","server v"+state.capabilities.version+", validation active");addEv("Deploy broker",state.capabilities.deployBroker?"PASS":"UNVERIFIED",state.capabilities.nativeDeployBroker?"GitHub + Railway native broker ready":"broker unavailable");renderFiles()}catch{addEv("Control plane","FAIL","/api/capabilities inaccessible")}}
 async function run(rescueCycle=0){
  const idea=$("#idea").value.trim();if(!idea)return;
- if(rescueCycle===0){state.workspaceId=null;state.history=[];state.conversation=[{at:new Date().toISOString(),role:"user",content:idea}];state.evidenceChain=[];state.genomes=[];state.benchmarkRuns=[];state.mission=null}
+ if(rescueCycle===0){state.workspaceId=null;state.history=[];state.conversation=Array.isArray(state.conversation)?state.conversation:[];if(!state.conversation.slice(-4).some(x=>x.role==="user"&&x.content===idea))state.conversation.push({at:new Date().toISOString(),role:"user",content:idea});state.evidenceChain=[];state.genomes=[];state.benchmarkRuns=[];state.mission=null}
  state.runStartedAt=Date.now();setStatus("RUNNING");$("#runBtn").disabled=true;$("#errorBox").classList.add("hidden");state.files=[];state.assets=[];state.evidence=[];state.spec=null;state.bench=null;if(rescueCycle===0)beginMetaOperation("Initial generation");seedAgents();renderFiles();renderSovereign();
  try{
   addEv("Zero-cost text gate",costStatus(state.cfg,"text"),costStatus(state.cfg,"text")==="PASS"?"OpenRouter free router forcé":"endpoint personnalisé: coût non prouvé par ASTRA");
