@@ -1,0 +1,62 @@
+{
+  "domain": "echangismerencontre.com",
+  "generated_at": "2026-10-02",
+  "status": "PARTIAL",
+  "methodology": "Evidence-first historical URL recovery. Only directly evidenced legacy URLs are marked EVIDENCED. Conventional aliases are kept separate and are not presented as recovered history.",
+  "evidence": [
+    {
+      "url": "http://echangismerencontre.com/",
+      "normalized_url": "https://echangismerencontre.com/",
+      "classification": "EVIDENCED",
+      "action": "RESTORE",
+      "target": "/",
+      "source": "NEToo directory listing",
+      "evidence_note": "Domain listed as 'Echangisme Rencontre - site de rencontres échangistes & libertines', first indexed 2011-07-19."
+    },
+    {
+      "url": "https://echangismerencontre.com/",
+      "normalized_url": "https://echangismerencontre.com/",
+      "classification": "EVIDENCED",
+      "action": "RESTORE",
+      "target": "/",
+      "source": "BuiltWith relationship history",
+      "evidence_note": "Historical technology/company relationship detected in 2020."
+    }
+  ],
+  "defensive_aliases": [
+    {
+      "path": "/index.php",
+      "action": "301",
+      "target": "/",
+      "classification": "DEFENSIVE"
+    },
+    {
+      "path": "/index.html",
+      "action": "301",
+      "target": "/",
+      "classification": "DEFENSIVE"
+    },
+    {
+      "path": "/index.htm",
+      "action": "301",
+      "target": "/",
+      "classification": "DEFENSIVE"
+    },
+    {
+      "path": "/default.html",
+      "action": "301",
+      "target": "/",
+      "classification": "DEFENSIVE"
+    },
+    {
+      "path": "/default.htm",
+      "action": "301",
+      "target": "/",
+      "classification": "DEFENSIVE"
+    }
+  ],
+  "unverified_deep_urls": {
+    "status": "UNVERIFIED",
+    "note": "No trustworthy public-search evidence for specific historical deep paths was found in the current audit. No invented bulk 301s are created."
+  }
+}
