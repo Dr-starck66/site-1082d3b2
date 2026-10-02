@@ -584,6 +584,10 @@ const srv=http.createServer(async(req,res)=>{try{
 }catch(e){if(e?.status)return send(res,e.status,{error:e.message});res.writeHead(404,{"content-type":"text/plain; charset=utf-8"});res.end("Not found")}});
 srv.listen(port,"0.0.0.0",()=>{
  console.log("ASTRA BUILDER Ω V10.0 OWNER MODE WORKSPACE listening",port);
+ if(process.env.ASTRA_UI_SELF_TEST_ON_BOOT==="1")setTimeout(async()=>{
+  try{const r=await timeoutFetch("http://127.0.0.1:"+port+"/api/ui_self_test",{},30000),raw=await r.text();console.log("[ASTRA UI SELF TEST BOOT]",r.status,raw.slice(0,900))}
+  catch(e){console.error("[ASTRA UI SELF TEST BOOT] FAIL",String(e?.message||e).slice(0,500))}
+ },1200);
  if(process.env.ASTRA_MODEL_PROBE_ON_BOOT==="1")setTimeout(async()=>{
   try{
    const t=await zeroGpuText("You are an inference connectivity probe.","Return exactly ASTRA_MODEL_OK and nothing else.",64);
