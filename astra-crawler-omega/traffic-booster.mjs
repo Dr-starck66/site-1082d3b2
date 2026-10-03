@@ -30,7 +30,7 @@ export function analyzeTrafficBoost(crawl){
    if(!r.canonical)actions.push("ADD_SELF_CANONICAL");
    if(inLinks===0)actions.push("ADD_INTERNAL_LINKS_3_PLUS");
    else if(inLinks<3)actions.push("ADD_INTERNAL_LINKS");
-   if(outLinks<3)actions.push("ADD_CONTEXTUAL_OUTLINKS");
+   if(outLinks<3)actions.push("ADD_CONTEXTUAL_INTERNAL_LINKS");
    if(!(r.schemaTypes||[]).length)actions.push("ADD_RELEVANT_SCHEMA");
    if(!(r.images||[]).some(x=>x.width>=1200))actions.push("ADD_1200PX_IMAGE");
    if(warnings.has("DUPLICATE_TITLE")||(r.title&&titleCounts.get(r.title)>1))actions.push("RESOLVE_DUPLICATE_TITLE");
@@ -46,6 +46,7 @@ export function analyzeTrafficBoost(crawl){
    schema:"astra-semrush-traffic-booster/v1",
    generatedAt:new Date().toISOString(),
    truth:"This is an internal ranking-opportunity model, not a claimed Semrush traffic measurement.",
+   semantics:{outLinks:"Count of contextual internal links to other crawled pages; external authority links are not inferred from this metric."},
    summary:{pages:opportunities.length,fastWins:fastWins.length,blocked:blocked.length,healthy:healthy.length,averageReadiness:avg},
    topActions:fastWins.slice(0,25),
    blocked:blocked.slice(0,25),
@@ -54,14 +55,15 @@ export function analyzeTrafficBoost(crawl){
 }
 
 export function rankPortfolio(reports){
- return reports.map(r=>({
-   url:r.url,
-   status:r.error?"FAIL":"PASS",
-   error:r.error||null,
-   pages:r.report?.summary?.pages||0,
-   fastWins:r.report?.summary?.fastWins||0,
-   blocked:r.report?.summary?.blocked||0,
-   averageReadiness:r.report?.summary?.averageReadiness||0,
-   opportunityScore:r.report?Math.max(0,Math.round((r.report.summary.fastWins*12)+(100-r.report.summary.averageReadiness)-(r.report.summary.blocked*5))):0
- })).sort((a,b)=>b.opportunityScore-a.opportunityScore);
+ return reports.map(r=>{
+   const summary=r.report?.summary||{};
+   const pages=summary.pages||0,fastWins=summary.fastWins||0,blocked=summary.blocked||0,healthy=summary.healthy||0,averageReadiness=summary.averageReadiness||0;
+   const usablePages=fastWins+healthy;
+   const status=r.error?"FAIL":pages===0?"FAIL":blocked>=pages?"FAIL":blocked>0?"PARTIAL":"PASS";
+   return{
+     url:r.url,status,error:r.error||null,pages,fastWins,blocked,averageReadiness,
+     opportunityScore:r.report?Math.max(0,Math.round((fastWins*12)+(100-averageReadiness)-(blocked*5))):0,
+     evidence:{usablePages,allPagesBlocked:pages>0&&blocked>=pages}
+   };
+ }).sort((a,b)=>b.opportunityScore-a.opportunityScore);
 }
