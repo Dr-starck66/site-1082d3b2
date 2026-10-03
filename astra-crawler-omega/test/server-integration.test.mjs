@@ -16,11 +16,16 @@ test("traffic booster HTTP endpoint works end-to-end",async()=>{
  });
  const mockPort=await listen(mock);
  const appPort=19191;
- const app=spawn(process.execPath,["server.mjs"],{cwd:new URL("..",import.meta.url),env:{...process.env,PORT:String(appPort)},stdio:"ignore"});
+ const app=spawn(process.execPath,["server.mjs"],{cwd:new URL("..",import.meta.url),env:{...process.env,PORT:String(appPort),ASTRA_ALLOW_PRIVATE_TEST:"1"},stdio:"ignore"});
  try{
    const health=await waitHealth("http://127.0.0.1:"+appPort+"/health");
    assert.equal(health.status,"PASS");
    assert.ok(health.bricks.includes("SEMRUSH_TRAFFIC_BOOSTER"));
+   assert.equal(health.portfolioSites>=10,true);
+   const p=await fetch("http://127.0.0.1:"+appPort+"/api/portfolio");
+   assert.equal(p.status,200);
+   const pj=await p.json();
+   assert.equal(Array.isArray(pj.sites),true);
    const r=await fetch("http://127.0.0.1:"+appPort+"/api/traffic-boost",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({url:"http://127.0.0.1:"+mockPort+"/",maxPages:3,maxDepth:1})});
    assert.equal(r.status,200);
    const j=await r.json();
@@ -31,4 +36,14 @@ test("traffic booster HTTP endpoint works end-to-end",async()=>{
    app.kill("SIGTERM");
    await close(mock);
  }
+},{timeout:10000});
+
+test("rejects private targets in production mode",async()=>{
+ const appPort=19192;
+ const app=spawn(process.execPath,["server.mjs"],{cwd:new URL("..",import.meta.url),env:{...process.env,PORT:String(appPort),ASTRA_ALLOW_PRIVATE_TEST:"0"},stdio:"ignore"});
+ try{
+   await waitHealth("http://127.0.0.1:"+appPort+"/health");
+   const r=await fetch("http://127.0.0.1:"+appPort+"/api/traffic-boost",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({url:"http://127.0.0.1:1/"})});
+   assert.equal(r.status,400);
+ } finally {app.kill("SIGTERM")}
 },{timeout:10000});
