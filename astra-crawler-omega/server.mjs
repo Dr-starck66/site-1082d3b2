@@ -104,6 +104,16 @@ http.createServer(async(req,res)=>{
       try{
         const report=await portfolioRun({maxPages:Number(process.env.ASTRA_PORTFOLIO_MAX_PAGES||8),maxDepth:Number(process.env.ASTRA_PORTFOLIO_MAX_DEPTH||2)});
         latestPortfolioReport={status:"PASS",startedAt:latestPortfolioReport.startedAt,completedAt:new Date().toISOString(),ranking:report.ranking,errors:report.ranking.filter(x=>x.status!=="PASS")};
+        for(const item of report.reports){
+          const compact={
+            url:item.url,
+            error:item.error||null,
+            summary:item.report?.summary||null,
+            topActions:(item.report?.topActions||[]).slice(0,5).map(x=>({url:x.url,status:x.status,depth:x.depth,inLinks:x.inLinks,outLinks:x.outLinks,readinessScore:x.readinessScore,priorityScore:x.priorityScore,actions:x.actions,querySeeds:x.querySeeds})),
+            blocked:(item.report?.blocked||[]).slice(0,3).map(x=>({url:x.url,status:x.status,actions:x.actions,querySeeds:x.querySeeds}))
+          };
+          console.log("ASTRA_PORTFOLIO_SITE "+JSON.stringify(compact));
+        }
         console.log("ASTRA_PORTFOLIO_AUDIT_RESULT "+JSON.stringify(latestPortfolioReport));
       }catch(e){
         latestPortfolioReport={status:"FAIL",startedAt:latestPortfolioReport.startedAt,completedAt:new Date().toISOString(),ranking:[],errors:[String(e?.message||e)]};
