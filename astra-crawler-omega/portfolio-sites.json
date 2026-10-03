@@ -1,0 +1,15 @@
+{
+  "schema": "astra-portfolio/v1",
+  "sites": [
+    {"url":"https://betgpt.live","label":"BetGPT","language":"fr","priority":"core"},
+    {"url":"https://freehotels.info","label":"FreeHotels","language":"en","priority":"core"},
+    {"url":"https://pantomime.org","label":"Pantomime","language":"en","priority":"core"},
+    {"url":"https://avocat-belgique.com","label":"Avocat Belgique","language":"fr","priority":"core"},
+    {"url":"https://eldiariodelcibao.com","label":"El Diario del Cibao","language":"es","priority":"core"},
+    {"url":"https://andaluztarija.com","label":"Andaluz Tarija","language":"es","priority":"core"},
+    {"url":"https://bizarresexuality.com","label":"Bizarre Sexuality","language":"en","priority":"portfolio"},
+    {"url":"https://pulsoplaneta.es","label":"Pulso Planeta","language":"es","priority":"portfolio"},
+    {"url":"https://findinsurancequotes.net","label":"Find Insurance Quotes","language":"en","priority":"portfolio"},
+    {"url":"https://wyyldeavisfrance.wordpress.com","label":"Wyylde Avis France","language":"fr","priority":"portfolio"}
+  ]
+}
