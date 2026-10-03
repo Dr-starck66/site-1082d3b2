@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "check": "node --check server.js && node --check src/super-router.js && node --check src/router.js && node --check src/workspace7-server.js && node --check src/workspace8-server.js && node --check src/claw.js && node --check src/claw-action.js && node --check src/workspace7.js && node --check src/workspace8.js && node --check src/memory-vault.js && node --check src/memory-vault-probe.js && node --check src/workspace9.js && node --check src/owner-action-probe.js && node --check src/owner-mode.js && node --check src/runtime-baseline.js && node --check src/app.js && node --check src/lovable-ux.js && node -e \"import('./src/super-router.js').then(m=>{const r=m.superRouterSelfTest();console.log('[ASTRA SUPER ROUTER SELFTEST]',JSON.stringify(r));if(!r.ok)process.exit(1)})\""
+    "check": "node --check server.js && node --check src/reliability.js && node --check src/super-router.js && node --check src/router.js && node --check src/workspace7-server.js && node --check src/workspace8-server.js && node --check src/claw.js && node --check src/claw-action.js && node --check src/workspace7.js && node --check src/workspace8.js && node --check src/memory-vault.js && node --check src/memory-vault-probe.js && node --check src/workspace9.js && node --check src/owner-action-probe.js && node --check src/owner-mode.js && node --check src/runtime-baseline.js && node --check src/app.js && node --check src/lovable-ux.js && node -e \"import('./src/super-router.js').then(m=>{const r=m.superRouterSelfTest();console.log('[ASTRA SUPER ROUTER SELFTEST]',JSON.stringify(r));if(!r.ok)process.exit(1)})\""
   },
   "engines": {
     "node": ">=20"
