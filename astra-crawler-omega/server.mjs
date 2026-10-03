@@ -7,6 +7,7 @@ import {analyzeTrafficBoost,rankPortfolio} from "./traffic-booster.mjs";
 const PORT=Number(process.env.PORT||8080);
 const html=fs.readFileSync(new URL("./index.html",import.meta.url),"utf8");
 const portfolio=JSON.parse(fs.readFileSync(new URL("./portfolio-sites.json",import.meta.url),"utf8"));
+let latestPortfolioReport={status:"PENDING",startedAt:null,completedAt:null,ranking:[],errors:[]};
 
 function send(res,code,data,type="application/json; charset=utf-8"){
   res.writeHead(code,{"content-type":type,"cache-control":"no-store"});
@@ -74,6 +75,7 @@ http.createServer(async(req,res)=>{
     });
     if(req.method==="GET"&&u.pathname==="/")return send(res,200,html,"text/html; charset=utf-8");
     if(req.method==="GET"&&u.pathname==="/api/portfolio")return send(res,200,portfolio);
+    if(req.method==="GET"&&u.pathname==="/api/portfolio/latest")return send(res,200,latestPortfolioReport);
 
     if(req.method==="POST"&&u.pathname==="/api/crawl"){
       const x=await body(req);
@@ -93,4 +95,20 @@ http.createServer(async(req,res)=>{
   }catch(e){
     return send(res,Number(e?.status)||500,{error:String(e?.message||e)});
   }
-}).listen(PORT,"0.0.0.0",()=>console.log("ASTRA_CRAWLER_READY port="+PORT));
+}).listen(PORT,"0.0.0.0",()=>{
+  console.log("ASTRA_CRAWLER_READY port="+PORT);
+  if(process.env.NODE_ENV==="production"&&process.env.ASTRA_BOOT_PORTFOLIO_AUDIT!=="0"){
+    setTimeout(async()=>{
+      latestPortfolioReport={status:"RUNNING",startedAt:new Date().toISOString(),completedAt:null,ranking:[],errors:[]};
+      console.log("ASTRA_PORTFOLIO_AUDIT_START sites="+portfolio.sites.length);
+      try{
+        const report=await portfolioRun({maxPages:Number(process.env.ASTRA_PORTFOLIO_MAX_PAGES||8),maxDepth:Number(process.env.ASTRA_PORTFOLIO_MAX_DEPTH||2)});
+        latestPortfolioReport={status:"PASS",startedAt:latestPortfolioReport.startedAt,completedAt:new Date().toISOString(),ranking:report.ranking,errors:report.ranking.filter(x=>x.status!=="PASS")};
+        console.log("ASTRA_PORTFOLIO_AUDIT_RESULT "+JSON.stringify(latestPortfolioReport));
+      }catch(e){
+        latestPortfolioReport={status:"FAIL",startedAt:latestPortfolioReport.startedAt,completedAt:new Date().toISOString(),ranking:[],errors:[String(e?.message||e)]};
+        console.error("ASTRA_PORTFOLIO_AUDIT_FAIL "+JSON.stringify(latestPortfolioReport));
+      }
+    },750);
+  }
+});
