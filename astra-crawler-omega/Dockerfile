@@ -1,6 +1,6 @@
 FROM node:22-alpine
 WORKDIR /app
-COPY package.json ./
+COPY package.json portfolio-sites.json ./
 COPY crawler.mjs traffic-booster.mjs server.mjs index.html ./
 COPY test ./test
 RUN npm test
