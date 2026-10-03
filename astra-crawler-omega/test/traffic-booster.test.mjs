@@ -17,11 +17,11 @@ test("identifies indexable fast wins and blocked pages",()=>{
  assert.ok(r.opportunities[0].querySeeds.includes("avocat"));
 });
 
-test("portfolio ranks actionable domains first",()=>{
+test("portfolio prioritizes broken domains before optimization wins",()=>{
  const a={url:"a",report:{summary:{pages:10,fastWins:5,blocked:0,healthy:5,averageReadiness:60}}};
  const b={url:"b",report:{summary:{pages:10,fastWins:0,blocked:5,healthy:5,averageReadiness:80}}};
- const ranked=rankPortfolio([b,a]);
- assert.equal(ranked[0].url,"a");
+ const ranked=rankPortfolio([a,b]);
+ assert.equal(ranked[0].url,"b");
  assert.equal(ranked.find(x=>x.url==="a").status,"PASS");
  assert.equal(ranked.find(x=>x.url==="b").status,"PARTIAL");
 });
@@ -32,4 +32,6 @@ test("portfolio fails closed when every crawled page is blocked",()=>{
  assert.equal(r.status,"FAIL");
  assert.equal(r.evidence.allPagesBlocked,true);
  assert.equal(r.evidence.usablePages,0);
+ const ok={url:"ok",report:{summary:{pages:2,fastWins:2,blocked:0,healthy:0,averageReadiness:70}}};
+ assert.equal(rankPortfolio([ok,x])[0].url,"blocked");
 });
