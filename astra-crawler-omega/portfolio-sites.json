@@ -66,6 +66,30 @@
       "label": "World Copywriting Institute",
       "language": "en",
       "priority": "portfolio"
+    },
+    {
+      "url": "https://pantomime-production.up.railway.app",
+      "label": "VERIFY Pantomime origin",
+      "language": "fr",
+      "priority": "verification"
+    },
+    {
+      "url": "https://avocat-belgique-content-production.up.railway.app",
+      "label": "VERIFY Avocat origin",
+      "language": "fr",
+      "priority": "verification"
+    },
+    {
+      "url": "https://wci-web-production.up.railway.app",
+      "label": "VERIFY WCI origin",
+      "language": "en",
+      "priority": "verification"
+    },
+    {
+      "url": "https://findinsurancequotes-web-production.up.railway.app",
+      "label": "VERIFY FindInsurance origin",
+      "language": "en",
+      "priority": "verification"
     }
   ]
 }
