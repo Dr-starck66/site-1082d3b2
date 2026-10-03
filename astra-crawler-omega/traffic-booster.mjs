@@ -65,5 +65,5 @@ export function rankPortfolio(reports){
      opportunityScore:r.report?Math.max(0,Math.round((fastWins*12)+(100-averageReadiness)-(blocked*5))):0,
      evidence:{usablePages,allPagesBlocked:pages>0&&blocked>=pages}
    };
- }).sort((a,b)=>b.opportunityScore-a.opportunityScore);
+ }).sort((a,b)=>{const severity={FAIL:0,PARTIAL:1,PASS:2};return (severity[a.status]-severity[b.status])||(b.opportunityScore-a.opportunityScore);});
 }
