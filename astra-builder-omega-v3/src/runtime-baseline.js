@@ -26,7 +26,7 @@ function ensurePreviewDesignFloor(map,changes){
 function ensureBackendAppFloor(map,changes){
  const f=map.get("backend/src/app.ts");if(!f)return;
  let c=String(f.content||""),changed=false;
- const withoutSelf=c.replace(/^\s*import\s+[^\n;]*\s+from\s+["']\.\/app(?:\.ts)?["'];?\s*$/gm,"");
+ const withoutSelf=c.replace(/\bimport\s+[^\n;]*\s+from\s+["']\.\/app(?:\.ts)?["'];?/g,"");
  if(withoutSelf!==c){c=withoutSelf;changed=true}
  const bound=/import\s+express\s+from\s+["']express["']|import\s+\*\s+as\s+express\s+from\s+["']express["']|(?:const|let|var)\s+express\s*=\s*require\(\s*["']express["']\s*\)/.test(c);
  if(/\bexpress\s*\(\s*\)/.test(c)&&!bound){c='import express from "express";\n'+c;changed=true}
@@ -80,10 +80,17 @@ export function runtimeBaselineSelfTest(){
   {path:"backend/src/server.ts",content:'import express from "express"; const app=express(); app.get("/health",(q,s)=>s.send("ok")); app.listen(process.env.PORT)'},
   {path:"backend/package.json",content:"{"}
  ]);
- const m=new Map(r.files.map(f=>[f.path,f.content]));let ok=true;
- for(const p of ["preview/index.html","preview/styles.css","frontend/package.json","frontend/index.html","frontend/tests/astra-contract.test.tsx","backend/src/app.ts","backend/src/auth.ts","backend/src/repository.ts","backend/src/server.ts","backend/tests/astra-contract.test.ts","backend/package.json","backend/tsconfig.json","Dockerfile","deploy.json"])ok=ok&&m.has(p);
- ok=ok&&/name=["']viewport["']/.test(m.get("preview/index.html")||"")&&/:focus-visible/.test(m.get("preview/styles.css")||"")&&/min-height:44px/.test(m.get("preview/styles.css")||"");
- ok=ok&&/import express from ["']express["']/.test(m.get("backend/src/app.ts")||"")&&/export const app/.test(m.get("backend/src/app.ts")||"")&&!/from ["']\.\/app(?:\.ts)?["']/.test(m.get("backend/src/app.ts")||"");
- ok=ok&&!/from ["\']\.\/entities/.test(m.get("backend/src/repository.ts")||"");try{JSON.parse(m.get("backend/package.json"));JSON.parse(m.get("deploy.json"))}catch{ok=false}
- return{ok,count:r.files.length,changes:r.changes.length}
+ const m=new Map(r.files.map(f=>[f.path,f.content])),fail=[];
+ const required=["preview/index.html","preview/styles.css","frontend/package.json","frontend/index.html","frontend/tests/astra-contract.test.tsx","backend/src/app.ts","backend/src/auth.ts","backend/src/repository.ts","backend/src/server.ts","backend/tests/astra-contract.test.ts","backend/package.json","backend/tsconfig.json","Dockerfile","deploy.json"];
+ for(const p of required)if(!m.has(p))fail.push("missing:"+p);
+ if(!/name=["']viewport["']/.test(m.get("preview/index.html")||""))fail.push("viewport");
+ if(!/:focus-visible/.test(m.get("preview/styles.css")||""))fail.push("focus-visible");
+ if(!/min-height:44px/.test(m.get("preview/styles.css")||""))fail.push("touch-target");
+ const app=m.get("backend/src/app.ts")||"";
+ if(!/import express from ["']express["']/.test(app))fail.push("express-import");
+ if(!/export const app/.test(app))fail.push("app-export");
+ if(/from ["']\.\/app(?:\.ts)?["']/.test(app))fail.push("app-self-import");
+ if(/from ["']\.\/entities/.test(m.get("backend/src/repository.ts")||""))fail.push("phantom-entities");
+ try{JSON.parse(m.get("backend/package.json"));JSON.parse(m.get("deploy.json"))}catch{fail.push("json-manifest")}
+ return{ok:fail.length===0,count:r.files.length,changes:r.changes.length,fail}
 }
