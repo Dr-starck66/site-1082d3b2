@@ -26,6 +26,8 @@ function ensurePreviewDesignFloor(map,changes){
 function ensureBackendAppFloor(map,changes){
  const f=map.get("backend/src/app.ts");if(!f)return;
  let c=String(f.content||""),changed=false;
+ const withoutSelf=c.replace(/^\s*import\s+[^\n;]*\s+from\s+["']\.\/app(?:\.ts)?["'];?\s*$/gm,"");
+ if(withoutSelf!==c){c=withoutSelf;changed=true}
  const bound=/import\s+express\s+from\s+["']express["']|import\s+\*\s+as\s+express\s+from\s+["']express["']|(?:const|let|var)\s+express\s*=\s*require\(\s*["']express["']\s*\)/.test(c);
  if(/\bexpress\s*\(\s*\)/.test(c)&&!bound){c='import express from "express";\n'+c;changed=true}
  const exported=/\bexport\s+(?:const|let|var)\s+app\b|\bexport\s*\{[^}]*\bapp\b[^}]*\}/s.test(c);
@@ -49,14 +51,14 @@ export function runtimeBaselineSelfTest(){
   {path:"preview/index.html",content:'<!doctype html><html><head></head><body><main><h1>Test</h1><button>Go</button></main></body></html>'},
   {path:"preview/styles.css",content:'body{margin:0}'},
   {path:"frontend/src/main.tsx",content:'import React from "react"'},
-  {path:"backend/src/app.ts",content:'const app=express();'},
+  {path:"backend/src/app.ts",content:'import {app as shadow} from "./app.ts"; const app=express(); void shadow;'},
   {path:"backend/src/server.ts",content:'import express from "express"; const app=express(); app.get("/health",(q,s)=>s.send("ok")); app.listen(process.env.PORT)'},
   {path:"backend/package.json",content:"{"}
  ]);
  const m=new Map(r.files.map(f=>[f.path,f.content]));let ok=true;
  for(const p of ["preview/index.html","preview/styles.css","frontend/package.json","frontend/index.html","backend/src/app.ts","backend/src/server.ts","backend/package.json","backend/tsconfig.json","Dockerfile","deploy.json"])ok=ok&&m.has(p);
  ok=ok&&/name=["']viewport["']/.test(m.get("preview/index.html")||"")&&/:focus-visible/.test(m.get("preview/styles.css")||"")&&/min-height:44px/.test(m.get("preview/styles.css")||"");
- ok=ok&&/import express from ["']express["']/.test(m.get("backend/src/app.ts")||"")&&/export const app/.test(m.get("backend/src/app.ts")||"");
+ ok=ok&&/import express from ["']express["']/.test(m.get("backend/src/app.ts")||"")&&/export const app/.test(m.get("backend/src/app.ts")||"")&&!/from ["']\.\/app(?:\.ts)?["']/.test(m.get("backend/src/app.ts")||"");
  try{JSON.parse(m.get("backend/package.json"));JSON.parse(m.get("deploy.json"))}catch{ok=false}
  return{ok,count:r.files.length,changes:r.changes.length}
 }
