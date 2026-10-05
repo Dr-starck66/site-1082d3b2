@@ -22,7 +22,9 @@ export function fullstackContractAudit(files=[]){
     for(const m of text.matchAll(importRes)){
       const specifier=m[1];
       if(!specifier.startsWith("."))continue;
-      if(!resolveImport(f.path,specifier,paths))issues.push({code:"MISSING_RELATIVE_IMPORT",path:f.path,detail:specifier});
+      const resolved=resolveImport(f.path,specifier,paths);
+      if(!resolved)issues.push({code:"MISSING_RELATIVE_IMPORT",path:f.path,detail:specifier});
+      else if(resolved===projectPath(f.path))issues.push({code:"SELF_IMPORT",path:f.path,detail:specifier});
     }
   }
 
@@ -79,7 +81,7 @@ export function fullstackContractSelfTest(){
     {path:"frontend/tests/app.test.tsx",content:'import App from "../src/App"; void App;'}
   ];
   const bad=[
-    {path:"backend/src/app.ts",content:'export const app=express();'},
+    {path:"backend/src/app.ts",content:'import {app} from "./app.ts"; export const x=app;'},
     {path:"backend/src/auth.ts",content:'export const requireAuth=require("express").Middleware((req,res,next)=>next());'},
     {path:"backend/src/repository.ts",content:'import {app} from "./server.ts"; export {app};'},
     {path:"backend/tests/server.test.ts",content:'import {request} from "supertest"; import {authRouter} from "./auth.ts";'}
