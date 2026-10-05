@@ -1,7 +1,8 @@
 import{chat,effectiveModel}from"./router.js";
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 let state=null,actions=null;
-const ux={mode:"build",queue:[],attachments:[],selected:null,busy:false,activeDraft:localStorage.getItem("astra-active-draft")||""};
+const CHATGPT_BRIDGE="http://127.0.0.1:1455";
+const ux={mode:"build",queue:[],attachments:[],selected:null,busy:false,activeDraft:localStorage.getItem("astra-active-draft")||"",chatgpt:{reachable:false,connected:false,sharing:false,status:"BRIDGE OFFLINE",detail:"Start the local ASTRA ChatGPT bridge",lastChecked:0}};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
 function refreshCore(){state=window.__ASTRA_STATE__||state;actions=window.__ASTRA_ACTIONS__||actions;return !!(state&&actions)}
@@ -67,9 +68,42 @@ function renderProjectPanels(){
  $("#projectTitle").textContent=state.spec?.appName||"Untitled app"
 }
 function integrationCard(name,status,detail,prompt=""){return`<div class="integration-card"><div class="row"><div><b>${esc(name)}</b><small>${esc(detail)}</small></div><span class="integration-status">${esc(status)}</span></div>${prompt?`<button class="btn tiny wide" data-integration-prompt="${esc(prompt)}" style="margin-top:8px">Add with ASTRA</button>`:""}</div>`}
+function chatgptIntegrationCard(){
+ const s=ux.chatgpt||{},status=s.reachable?(s.connected?(s.sharing?"Connected":"Identity only"):"Ready"):"Bridge offline";
+ const detail=s.reachable?(s.connected?((s.email?String(s.email)+" · ":"")+(s.sharing?"ChatGPT plan sharing active":"Reconnect and allow ChatGPT plan usage")):"OAuth + PKCE local · tokens stay on this device"):"Run npm run chatgpt:bridge on the computer using ASTRA";
+ return `<div class="integration-card"><div class="row"><div><b>ChatGPT Plan</b><small>${esc(detail)}</small></div><span class="integration-status">${esc(status)}</span></div><div class="row" style="margin-top:8px;gap:6px;flex-wrap:wrap"><button class="btn tiny" data-chatgpt-connect>${s.connected?"Reconnect":"Continue with ChatGPT"}</button><button class="btn tiny" data-chatgpt-check>Check</button>${s.connected&&s.sharing?'<button class="btn tiny" data-chatgpt-verify>Verify plan</button>':""}</div></div>`
+}
+async function checkChatGPTBridge({render=true}={}){
+ try{
+  const r=await fetch(CHATGPT_BRIDGE+"/status",{cache:"no-store",signal:AbortSignal.timeout(2200)});
+  const data=await r.json();if(!r.ok)throw new Error(data.reason||("HTTP "+r.status));
+  ux.chatgpt={...data,reachable:true,lastChecked:Date.now(),detail:"local bridge reachable"};
+ }catch(e){
+  ux.chatgpt={reachable:false,connected:false,sharing:false,status:"BRIDGE OFFLINE",detail:String(e?.message||e).slice(0,160),lastChecked:Date.now()};
+ }
+ if(render)renderIntegrations();
+ return ux.chatgpt
+}
+async function verifyChatGPTPlan(){
+ const b=document.querySelector("[data-chatgpt-verify]");if(b){b.disabled=true;b.textContent="Verifying…"}
+ try{
+  const r=await fetch(CHATGPT_BRIDGE+"/verify",{method:"POST",headers:{"content-type":"application/json"},body:"{}",signal:AbortSignal.timeout(90000)});
+  const data=await r.json();if(!r.ok)throw new Error(data.reason||("HTTP "+r.status));
+  ux.chatgpt={...ux.chatgpt,lastVerification:data.status,verifiedModel:data.model||"",lastChecked:Date.now()};
+  msg("assistant",data.status==="PASS"?"ChatGPT plan connection verified with a real Responses API call.":"ChatGPT plan responded but the proof was incomplete.","ChatGPT Plan · "+data.status);
+ }catch(e){msg("assistant","ChatGPT plan verification failed: "+String(e?.message||e),"ChatGPT Plan · FAIL")}
+ finally{await checkChatGPTBridge()}
+}
+function bindChatGPTIntegration(){
+ const connect=document.querySelector("[data-chatgpt-connect]"),check=document.querySelector("[data-chatgpt-check]"),verify=document.querySelector("[data-chatgpt-verify]");
+ if(connect)connect.onclick=()=>{window.open(CHATGPT_BRIDGE+"/start","_blank","noopener,noreferrer");setTimeout(()=>checkChatGPTBridge(),3500)};
+ if(check)check.onclick=()=>checkChatGPTBridge();
+ if(verify)verify.onclick=()=>verifyChatGPTPlan();
+}
 function renderIntegrations(){
  const all=(state.files||[]).map(f=>(f.path+"\n"+f.content)).join("\n").toLowerCase();const ready=state.capabilities?.deployBroker?"Ready":"Setup";
  const html=[
+  chatgptIntegrationCard(),
   integrationCard("GitHub",ready,state.cfg?.githubToken?"Session credential loaded":"Code ownership + sync via deploy broker"),
   integrationCard("Railway",ready,state.deployedUrl?"Published: "+state.deployedUrl:"Deployment + public health gate"),
   integrationCard("Database",/(schema|migration|prisma|create table)/.test(all)?"Generated":"Not added","Postgres / SQLite schema and migrations","Add a production-ready database with schema, migrations, seed data and repository layer."),
@@ -78,7 +112,7 @@ function renderIntegrations(){
   integrationCard("Resend / Email",/(resend|smtp|email)/.test(all)?"Generated":"Available","Transactional email","Add transactional email for signup, password reset and important product notifications."),
   integrationCard("Automation / n8n",/n8n|webhook/.test(all)?"Generated":"Available","Webhooks and workflows","Add a secure webhook integration layer designed for n8n-compatible automations."),
   integrationCard("MCP / AI tools",/mcp|model context protocol/.test(all)?"Generated":"Available","Expose safe app actions to AI clients","Add an MCP server exposing the app's safe user actions with authentication and least privilege.")
- ].join("");$("#integrationsView").innerHTML=html;$$("[data-integration-prompt]").forEach(b=>b.onclick=()=>{setMode("build");$("#idea").value=b.dataset.integrationPrompt;$("#idea").focus()})
+ ].join("");$("#integrationsView").innerHTML=html;$("[data-integration-prompt]").forEach(b=>b.onclick=()=>{setMode("build");$("#idea").value=b.dataset.integrationPrompt;$("#idea").focus()});bindChatGPTIntegration()
 }
 function switchTab(name){const t=document.querySelector(`.tab[data-tab="${name}"]`);if(t)t.click();$$("[data-go-tab]").forEach(b=>b.classList.toggle("active",b.dataset.goTab===name))}
 function setupDevices(){$$(".device-btn").forEach(b=>b.onclick=()=>{$$(".device-btn").forEach(x=>x.classList.remove("active"));b.classList.add("active");const f=$("#preview"),d=b.dataset.device;f.style.width=d==="desktop"?"100%":d==="tablet"?"820px":"390px"})}
@@ -116,12 +150,12 @@ function installPreviewBridge(){
  new MutationObserver(augment).observe(frame,{attributes:true,attributeFilter:["srcdoc"]});frame.addEventListener("load",()=>{if($("#visualEditBtn")?.classList.contains("active"))frame.contentWindow?.postMessage({type:"ASTRA_VISUAL_EDIT_MODE",enabled:true},"*")});augment()
 }
 function setup(){
- if(!state||!actions)return;renderChat();renderAllPanels();renderDrafts().catch(()=>{});
+ if(!state||!actions)return;renderChat();renderAllPanels();renderDrafts().catch(()=>{});checkChatGPTBridge().catch(()=>{});
  $("#modePlan").onclick=()=>setMode("plan");$("#modeBuild").onclick=()=>setMode("build");$("#lovableSendBtn").onclick=sendPrompt;$("#idea").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)){e.preventDefault();sendPrompt()}});
  $("#quickPromptBtn").onclick=()=>$("#quickPrompts").classList.toggle("hidden");$$("[data-preset]").forEach(b=>b.addEventListener("click",()=>{$("#quickPrompts").classList.add("hidden");$("#idea").focus()}));$$("[data-go-tab]").forEach(b=>b.onclick=()=>switchTab(b.dataset.goTab));$("#refreshPreviewBtn").onclick=()=>actions.renderPreview();$("#newDraftBtn").onclick=newDraft;
  setupDevices();setupInspector();installPreviewBridge();setupVisual();setupShare();setupAttachments();
  const observer=new MutationObserver(()=>{renderChat();renderAllPanels();const running=ux.busy;$("#lovableSendBtn").disabled=running;if(!running)drainQueue()});observer.observe($("#globalStatus"),{subtree:true,childList:true,characterData:true,attributes:true});
- setInterval(()=>{renderProjectPanels();renderIntegrations()},3500)
+ setInterval(()=>{renderProjectPanels();renderIntegrations()},3500);setInterval(()=>checkChatGPTBridge({render:true}).catch(()=>{}),12000)
 }
 let bootStartedAt=0;
 function boot(){
