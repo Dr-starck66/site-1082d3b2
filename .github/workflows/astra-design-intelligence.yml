@@ -1,0 +1,35 @@
+name: ASTRA Design Intelligence Ω
+
+on:
+  pull_request:
+    paths:
+      - "astra-builder-omega-v3/**"
+      - ".github/workflows/astra-design-intelligence.yml"
+  push:
+    branches: [main]
+    paths:
+      - "astra-builder-omega-v3/**"
+      - ".github/workflows/astra-design-intelligence.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  design-gate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: astra-builder-omega-v3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Syntax gate
+        run: |
+          node --check src/design-intelligence.js
+          node --check src/design-intelligence-self-test.mjs
+          node --check src/quality.js
+          node --check src/prompts.js
+      - name: Adversarial design self-test
+        run: npm run design:check
