@@ -30,6 +30,14 @@ export function fullstackContractAudit(files=[]){
   if(app&&!/\bexport\s+(?:const|let|var)\s+app\b|\bexport\s*\{[^}]*\bapp\b[^}]*\}/s.test(app.content)){
     issues.push({code:"APP_NOT_EXPORTED",path:app.path,detail:"backend/src/app.ts must export app"});
   }
+  if(app&&/\bexpress\s*\(\s*\)/.test(app.content)&&!/import\s+express\s+from\s+["']express["']|(?:const|let|var)\s+express\s*=\s*require\(\s*["']express["']\s*\)/.test(app.content)){
+    issues.push({code:"EXPRESS_UNBOUND",path:app.path,detail:"express() is used without importing/binding express"});
+  }
+
+  const auth=valid.find(f=>projectPath(f.path)==="backend/src/auth.ts");
+  if(auth&&/(?:require\(\s*["']express["']\s*\)|\bexpress)\.Middleware\s*\(/.test(auth.content)){
+    issues.push({code:"INVALID_EXPRESS_MIDDLEWARE",path:auth.path,detail:"Express has no runtime Middleware constructor; export a normal middleware function"});
+  }
 
   const repo=valid.find(f=>projectPath(f.path)==="backend/src/repository.ts");
   if(repo&&/from\s*["']\.\/(?:server|app)(?:\.ts)?["']|import\s*["']\.\/(?:server|app)(?:\.ts)?["']/i.test(repo.content)){
@@ -71,10 +79,11 @@ export function fullstackContractSelfTest(){
     {path:"frontend/tests/app.test.tsx",content:'import App from "../src/App"; void App;'}
   ];
   const bad=[
-    {path:"backend/src/app.ts",content:'import express from "express"; const app=express();'},
+    {path:"backend/src/app.ts",content:'export const app=express();'},
+    {path:"backend/src/auth.ts",content:'export const requireAuth=require("express").Middleware((req,res,next)=>next());'},
     {path:"backend/src/repository.ts",content:'import {app} from "./server.ts"; export {app};'},
     {path:"backend/tests/server.test.ts",content:'import {request} from "supertest"; import {authRouter} from "./auth.ts";'}
   ];
   const a=fullstackContractAudit(good),b=fullstackContractAudit(bad);
-  return{ok:a.status==="PASS"&&b.status==="FAIL"&&b.issues.length>=4,good:a.status,bad:b.status,badIssues:b.issues.length};
+  return{ok:a.status==="PASS"&&b.status==="FAIL"&&b.issues.length>=6,good:a.status,bad:b.status,badIssues:b.issues.length};
 }
