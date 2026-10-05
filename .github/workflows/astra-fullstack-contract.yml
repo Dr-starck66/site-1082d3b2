@@ -33,5 +33,7 @@ jobs:
           node --check src/design-intelligence.js
       - name: Fullstack contract adversarial self-test
         run: npm run fullstack:check
+      - name: Runtime baseline adversarial self-test
+        run: npm run runtime:check
       - name: Design contract adversarial self-test
         run: npm run design:check
