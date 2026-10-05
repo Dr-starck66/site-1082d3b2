@@ -1,0 +1,37 @@
+name: ASTRA Fullstack Contract Ω
+
+on:
+  pull_request:
+    paths:
+      - "astra-builder-omega-v3/**"
+      - ".github/workflows/astra-fullstack-contract.yml"
+  push:
+    branches: [main]
+    paths:
+      - "astra-builder-omega-v3/**"
+      - ".github/workflows/astra-fullstack-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  fullstack-contract:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: astra-builder-omega-v3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Contract syntax gate
+        run: |
+          node --check server.js
+          node --check src/fullstack-contract.js
+          node --check src/fullstack-contract-self-test.mjs
+          node --check src/design-intelligence.js
+      - name: Fullstack contract adversarial self-test
+        run: npm run fullstack:check
+      - name: Design contract adversarial self-test
+        run: npm run design:check
