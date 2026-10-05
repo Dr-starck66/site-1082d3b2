@@ -5,7 +5,7 @@ export function selectRepairTargets({evidence=[],files=[]}={}){
   const labels=(evidence||[]).filter(e=>e?.status!=="PASS").map(e=>clean((e?.name||"")+" · "+(e?.detail||"")));
   const failureText=labels.join("\n");
   const out=[];
-  const add=p=>{if(paths.has(p)&&!out.includes(p))out.push(p)};
+  const add=p=>{if(/\/tests\/astra-contract\.test\./.test(p))return;if(paths.has(p)&&!out.includes(p))out.push(p)};
 
   for(const m of failureText.matchAll(/((?:backend|frontend|preview)\/(?:src|tests)?\/?[A-Za-z0-9._\/-]+\.(?:ts|tsx|js|jsx|html|css))/g))add(m[1]);
 
@@ -20,10 +20,10 @@ export function selectRepairTargets({evidence=[],files=[]}={}){
   }
 
   if(frontendFailure){
-    add("frontend/src/App.tsx");add("frontend/src/main.tsx");add("frontend/tests/astra-contract.test.tsx");
+    add("frontend/src/App.tsx");add("frontend/src/main.tsx");
   }
   if(backendFailure){
-    add("backend/src/app.ts");add("backend/src/auth.ts");add("backend/src/repository.ts");add("backend/tests/astra-contract.test.ts");
+    add("backend/src/app.ts");add("backend/src/auth.ts");add("backend/src/repository.ts");
   }
   if(designFailure){
     add("preview/index.html");add("preview/styles.css");add("preview/app.js");add("frontend/src/App.tsx");
@@ -32,9 +32,9 @@ export function selectRepairTargets({evidence=[],files=[]}={}){
   const fallback=designFailure
     ?["preview/index.html","preview/styles.css","preview/app.js","frontend/src/App.tsx","frontend/src/main.tsx","backend/src/app.ts","backend/src/auth.ts","backend/src/repository.ts"]
     :frontendFailure
-      ?["frontend/src/App.tsx","frontend/src/main.tsx","frontend/tests/astra-contract.test.tsx","preview/index.html","preview/styles.css","preview/app.js"]
+      ?["frontend/src/App.tsx","frontend/src/main.tsx","preview/index.html","preview/styles.css","preview/app.js"]
       :backendFailure
-        ?["backend/src/app.ts","backend/src/auth.ts","backend/src/repository.ts","backend/tests/astra-contract.test.ts","frontend/src/App.tsx"]
+        ?["backend/src/app.ts","backend/src/auth.ts","backend/src/repository.ts","frontend/src/App.tsx"]
         :["backend/src/app.ts","backend/src/auth.ts","backend/src/repository.ts","frontend/src/App.tsx","preview/index.html","preview/styles.css","preview/app.js"];
 
   if(!out.length)for(const p of fallback)add(p);
