@@ -216,6 +216,13 @@ async function runMissionSmoke(mission){
     const failureText=[...failingValidation,...failingSandbox].map(e=>clean((e.name||"")+" · "+(e.detail||""))).join("\n");
     const mentioned=[];
     for(const m of failureText.matchAll(/((?:backend|frontend|preview)\/(?:src|tests)?\/?[A-Za-z0-9._\/-]+\.(?:ts|tsx|js|jsx))/g))if(!mentioned.includes(m[1]))mentioned.push(m[1]);
+    for(const ev of [...failingValidation,...failingSandbox]){
+     const label=clean((ev?.name||"")+" "+(ev?.detail||"")),scope=/frontend/i.test(label)?"frontend":/(?:backend|runtime health)/i.test(label)?"backend":null;
+     if(!scope)continue;
+     for(const m of label.matchAll(/(?:^|[^A-Za-z0-9_\/])((?:src|tests)\/[A-Za-z0-9._\/-]+\.(?:ts|tsx|js|jsx))/g)){
+      const p=scope+"/"+m[1];if(filesByPath.has(p)&&!mentioned.includes(p))mentioned.push(p)
+     }
+    }
     const designFailure=/ASTRA DESIGN INTELLIGENCE|heading-hierarchy|responsive-viewport|semantic-landmarks|responsive-layout/i.test(failureText);
     const activeTargetOrder=designFailure?designTargetOrder:targetOrder;
     const repairSeeds=[...mentioned];

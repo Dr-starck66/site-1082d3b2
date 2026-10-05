@@ -1,6 +1,6 @@
 {
   "name": "astra-builder-omega-v10",
-  "version": "10.5.1",
+  "version": "10.5.2",
   "private": true,
   "type": "module",
   "scripts": {
