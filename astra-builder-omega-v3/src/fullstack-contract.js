@@ -30,7 +30,7 @@ export function fullstackContractAudit(files=[]){
   if(app&&!/\bexport\s+(?:const|let|var)\s+app\b|\bexport\s*\{[^}]*\bapp\b[^}]*\}/s.test(app.content)){
     issues.push({code:"APP_NOT_EXPORTED",path:app.path,detail:"backend/src/app.ts must export app"});
   }
-  if(app&&/\bexpress\s*\(\s*\)/.test(app.content)&&!/import\s+express\s+from\s+["']express["']|(?:const|let|var)\s+express\s*=\s*require\(\s*["']express["']\s*\)/.test(app.content)){
+  if(app&&/\bexpress\s*\(\s*\)/.test(app.content)&&!/import\s+express\s+from\s+["']express["']|import\s+\*\s+as\s+express\s+from\s+["']express["']|(?:const|let|var)\s+express\s*=\s*require\(\s*["']express["']\s*\)/.test(app.content)){
     issues.push({code:"EXPRESS_UNBOUND",path:app.path,detail:"express() is used without importing/binding express"});
   }
 
