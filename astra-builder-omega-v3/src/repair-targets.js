@@ -4,43 +4,46 @@ export function selectRepairTargets({evidence=[],files=[]}={}){
   const paths=new Set((files||[]).map(f=>String(f?.path||"")).filter(Boolean));
   const labels=(evidence||[]).filter(e=>e?.status!=="PASS").map(e=>clean((e?.name||"")+" · "+(e?.detail||"")));
   const failureText=labels.join("\n");
-  const out=[];
-  const add=p=>{if(/\/tests\/astra-contract\.test\./.test(p))return;if(paths.has(p)&&!out.includes(p))out.push(p)};
+  const explicit=[],fallback=[];
+  const add=(arr,p)=>{if(/\/tests\/astra-contract\.test\./.test(p))return;if(paths.has(p)&&!arr.includes(p))arr.push(p)};
 
-  for(const m of failureText.matchAll(/((?:backend|frontend|preview)\/(?:src|tests)?\/?[A-Za-z0-9._\/-]+\.(?:ts|tsx|js|jsx|html|css))/g))add(m[1]);
+  for(const m of failureText.matchAll(/((?:backend|frontend|preview)\/(?:src|tests)?\/?[A-Za-z0-9._\/-]+\.(?:ts|tsx|js|jsx|html|css))/g))add(explicit,m[1]);
 
   const designFailure=/ASTRA DESIGN INTELLIGENCE|heading-hierarchy|responsive-viewport|semantic-landmarks|responsive-layout/i.test(failureText);
   const frontendFailure=/Build frontend|Tests frontend|frontend\/|src\/App\.tsx|vite:|rolldown|Unexpected token/i.test(failureText);
-  const backendFailure=/Build backend|Tests backend|backend\/|src\/(?:app|auth|repository|server)\.ts|tsc\s+--noEmit/i.test(failureText);
+  const backendFailure=/Build backend|Tests backend|backend\/|src\/(?:app|auth|repository|server)\.ts|tsc\s+--noEmit|Runtime health/i.test(failureText);
 
   for(const label of labels){
     const scope=/frontend/i.test(label)?"frontend":/(?:backend|runtime health|tsc\s+--noEmit)/i.test(label)?"backend":null;
     if(!scope)continue;
-    for(const m of label.matchAll(/(?:^|[^A-Za-z0-9_\/])((?:src|tests)\/[A-Za-z0-9._\/-]+\.(?:ts|tsx|js|jsx))/g))add(scope+"/"+m[1]);
+    for(const m of label.matchAll(/(?:^|[^A-Za-z0-9_\/])((?:src|tests)\/[A-Za-z0-9._\/-]+\.(?:ts|tsx|js|jsx))/g))add(explicit,scope+"/"+m[1]);
   }
 
-  if(frontendFailure){
-    add("frontend/src/App.tsx");add("frontend/src/main.tsx");
+  const hasFrontend=explicit.some(p=>p.startsWith("frontend/"));
+  const hasBackend=explicit.some(p=>p.startsWith("backend/"));
+  const hasPreview=explicit.some(p=>p.startsWith("preview/"));
+
+  if(frontendFailure&&!hasFrontend)add(fallback,"frontend/src/App.tsx");
+  if(backendFailure&&!hasBackend){
+    if(/authRouter|requireAuth|auth\.ts/i.test(failureText))add(fallback,"backend/src/auth.ts");
+    else add(fallback,"backend/src/app.ts");
   }
-  if(backendFailure){
-    add("backend/src/app.ts");add("backend/src/auth.ts");add("backend/src/repository.ts");
-  }
-  if(designFailure){
-    add("preview/index.html");add("preview/styles.css");add("preview/app.js");add("frontend/src/App.tsx");
+  if(designFailure&&!hasPreview){
+    add(fallback,"preview/index.html");add(fallback,"preview/styles.css");add(fallback,"preview/app.js");
   }
 
-  const fallback=designFailure
-    ?["preview/index.html","preview/styles.css","preview/app.js","frontend/src/App.tsx","frontend/src/main.tsx","backend/src/app.ts","backend/src/auth.ts","backend/src/repository.ts"]
-    :frontendFailure
-      ?["frontend/src/App.tsx","frontend/src/main.tsx","preview/index.html","preview/styles.css","preview/app.js"]
-      :backendFailure
-        ?["backend/src/app.ts","backend/src/auth.ts","backend/src/repository.ts","frontend/src/App.tsx"]
-        :["backend/src/app.ts","backend/src/auth.ts","backend/src/repository.ts","frontend/src/App.tsx","preview/index.html","preview/styles.css","preview/app.js"];
-
-  if(!out.length)for(const p of fallback)add(p);
-  if(!out.length)for(const p of paths)if(/\.(?:ts|tsx|js|jsx|html|css)$/.test(p))add(p);
-
-  return{targets:out.slice(0,6),designFailure,frontendFailure,backendFailure,failureText};
+  const out=[...explicit,...fallback];
+  if(!out.length){
+    const order=designFailure
+      ?["preview/index.html","preview/styles.css","preview/app.js","frontend/src/App.tsx"]
+      :frontendFailure
+        ?["frontend/src/App.tsx","frontend/src/main.tsx"]
+        :backendFailure
+          ?["backend/src/app.ts","backend/src/auth.ts","backend/src/repository.ts"]
+          :["frontend/src/App.tsx","backend/src/app.ts","preview/app.js"];
+    for(const p of order)add(out,p);
+  }
+  return{targets:out.slice(0,4),designFailure,frontendFailure,backendFailure,failureText};
 }
 
 export function repairTargetSelfTest(){
