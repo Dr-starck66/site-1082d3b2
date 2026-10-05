@@ -5,6 +5,8 @@ import { createHash, randomUUID } from "node:crypto";
 import { seedPopulation, rankPopulation, evolutionDecision } from "./src/evolution-engine.js";
 import { defaultMetaPolicy, normalizePolicy, mutatePolicies, rewardOutcome } from "./src/meta-evolution.js";
 import { prompts } from "./src/prompts.js";
+import { designAuditEvidence } from "./src/design-intelligence.js";
+import { fullstackContractEvidence } from "./src/fullstack-contract.js";
 import { enforceRuntimeBaseline, runtimeBaselineSelfTest } from "./src/runtime-baseline.js";
 import { compileSecondBrain, createTeamPlan, buildProofGraph, summarizeRouteCost, workspace7SelfTest } from "./src/workspace7-server.js";
 import { compactBrain, normalizeSkill, saveRecord, loadRecord, listRecords, workspace8SelfTest } from "./src/workspace8-server.js";
@@ -206,25 +208,27 @@ async function runMissionSmoke(mission){
   catch(e){sandbox={status:"FAIL",reason:String(e?.message||e)};log("SANDBOX","FAIL",sandbox.reason)}
   if(validation.verdict==="FAIL"||sandbox.status==="FAIL"){
    const clean=s=>String(s||"").replace(/\x1b\[[0-9;]*m/g," ").replace(/\s+/g," ").trim();
-   const targetOrder=["backend/src/app.ts","backend/src/auth.ts","backend/src/repository.ts","backend/tests/server.test.ts","backend/tests/auth.test.ts","frontend/src/App.tsx","frontend/tests/app.test.tsx","preview/app.js"];
+   const targetOrder=["backend/src/app.ts","backend/src/auth.ts","backend/src/repository.ts","backend/tests/server.test.ts","frontend/src/App.tsx","frontend/tests/app.test.tsx","backend/tests/auth.test.ts","preview/index.html","preview/styles.css","preview/app.js"];
    for(let repairCycle=1;repairCycle<=3&&(validation.verdict==="FAIL"||sandbox.status==="FAIL");repairCycle++){
     const failingValidation=(validation.evidence||[]).filter(e=>e.status!=="PASS");
     const failingSandbox=(sandbox.evidence||[]).filter(e=>e.status!=="PASS");
     const failureText=[...failingValidation,...failingSandbox].map(e=>clean((e.name||"")+" · "+(e.detail||""))).join("\n");
     const mentioned=[];
     for(const m of failureText.matchAll(/((?:backend|frontend|preview)\/(?:src|tests)?\/?[A-Za-z0-9._\/-]+\.(?:ts|tsx|js|jsx))/g))if(!mentioned.includes(m[1]))mentioned.push(m[1]);
-    const targets=[...mentioned,...targetOrder].filter((p,i,a)=>a.indexOf(p)===i&&filesByPath.has(p)).slice(0,4);
+    const targets=[...mentioned,...targetOrder].filter((p,i,a)=>a.indexOf(p)===i&&filesByPath.has(p)).slice(0,6);
     if(!targets.length){log("REPAIR_"+repairCycle,"FAIL","no concrete failing source file target");break}
     const repairModel=repairCycle<=2?"qwen-standard-local":"qwen-coder-local",repairBudget=repairCycle<=2?1800:2200;
     log("REPAIR_ROUTE_"+repairCycle,"PASS",repairModel+" · targeted "+targets.join(", "));
     const jobs=targets.map(async targetPath=>{
      const targetFile=filesByPath.get(targetPath),content=String(targetFile?.content||"");
+     const relatedOrder=targetPath.startsWith("backend/")?["backend/src/app.ts","backend/src/auth.ts","backend/src/repository.ts","backend/src/server.ts","backend/tests/server.test.ts","backend/tests/auth.test.ts"]:targetPath.startsWith("frontend/")?["frontend/src/main.tsx","frontend/src/App.tsx","frontend/tests/app.test.tsx"]:["preview/index.html","preview/styles.css","preview/app.js"];
      const input=JSON.stringify({
       app:spec?.appName||"app",
-      goal:String(spec?.goal||mission||"").slice(0,700),
-      acceptance:(spec?.acceptance||[]).slice(0,5),
-      failures:[...failingValidation,...failingSandbox].slice(0,7).map(e=>({name:e.name,status:e.status,detail:clean(e.detail).slice(0,900)})),
-      target:{path:targetPath,content:content.slice(0,7200),truncated:content.length>7200}
+      goal:String(spec?.goal||mission||"").slice(0,500),
+      acceptance:(spec?.acceptance||[]).slice(0,4),
+      failures:[...failingValidation,...failingSandbox].slice(0,5).map(e=>({name:e.name,status:e.status,detail:clean(e.detail).slice(0,500)})),
+      target:{path:targetPath,content:content.slice(0,4500),truncated:content.length>4500},
+      related:relatedOrder.filter(p=>p!==targetPath&&filesByPath.has(p)).slice(0,5).map(p=>({path:p,excerpt:String(filesByPath.get(p)?.content||"").slice(0,800)}))
      });
      const system=prompts.repair+"\nTARGETED REPAIR CONTRACT: repair exactly "+targetPath+". Return JSON {files:[{path:\""+targetPath+"\",content:\"COMPLETE replacement\"}],summary}. Do not touch deterministic server.ts, package.json, tsconfig, Dockerfile or deploy.json. Preserve public API contracts. Fix the compiler/test/runtime error evidenced in the input. Keep the replacement compact.";
      try{return await call("REPAIR_"+repairCycle+"_"+targetPath.replace(/[^a-z0-9]+/gi,"_"),system,input,repairModel,repairBudget)}
@@ -247,10 +251,14 @@ async function runMissionSmoke(mission){
     }catch(e){sandbox={status:"FAIL",reason:String(e?.message||e)};log("SANDBOX_RETEST_"+repairCycle,"FAIL",sandbox.reason)}
    }
   }
-  const compact=JSON.stringify({mission,spec,files:files.slice(0,60).map(x=>({path:x.path,excerpt:String(x.content||"").slice(0,350)})),validation,sandbox:{status:sandbox.status,evidence:sandbox.evidence||[],reason:sandbox.reason||null}});
+  const conciseSpec={appName:spec?.appName||"app",goal:String(spec?.goal||mission||"").slice(0,500),acceptance:(spec?.acceptance||[]).slice(0,5).map(x=>String(x).slice(0,180)),visualDirection:String(spec?.visualDirection||"").slice(0,300)};
+  const conciseEvidence=list=>(list||[]).filter(x=>x.status!=="PASS"||/DESIGN|FULLSTACK/i.test(String(x.name||""))).slice(0,8).map(x=>({name:String(x.name||"").slice(0,120),status:x.status,detail:String(x.detail||"").replace(/\s+/g," ").slice(0,280)}));
+  const auditFiles=["preview/index.html","preview/styles.css","preview/app.js","frontend/src/App.tsx","backend/src/app.ts"].filter(p=>filesByPath.has(p)).map(p=>({path:p,excerpt:String(filesByPath.get(p)?.content||"").slice(0,260)}));
+  const compact=JSON.stringify({mission:String(mission||"").slice(0,450),spec:conciseSpec,manifest:files.map(x=>x.path).slice(0,40),files:auditFiles,validation:{verdict:validation.verdict,evidence:conciseEvidence(validation.evidence)},sandbox:{status:sandbox.status,evidence:conciseEvidence(sandbox.evidence),reason:String(sandbox.reason||"").slice(0,220)}});
   let adversary={risk:"UNVERIFIED",issues:[]},verify={verdict:"UNVERIFIED"};
-  try{adversary=await call("ADVERSARY",prompts.adversary+"\nReturn compact valid JSON only. No code blocks, no long excerpts.",compact,"qwen-standard-local",1600)}catch{}
-  try{verify=await call("VERIFY2",prompts.verify+"\nReturn compact valid JSON only with a clear verdict. Do not include chain-of-thought.",JSON.stringify({validation,sandbox,adversary,files:files.map(x=>x.path),spec}),"qwen-standard-local",1600)}catch{}
+  try{adversary=await call("ADVERSARY",prompts.adversary+"\nReturn compact valid JSON only. No code blocks, no long excerpts.",compact,"qwen-standard-local",1200)}catch{}
+  const verifyInput=JSON.stringify({spec:conciseSpec,validation:{verdict:validation.verdict,evidence:conciseEvidence(validation.evidence)},sandbox:{status:sandbox.status,evidence:conciseEvidence(sandbox.evidence)},adversary:{risk:adversary.risk||"UNVERIFIED",summary:String(adversary.summary||"").slice(0,300),issues:(adversary.issues||[]).slice(0,5)},manifest:files.map(x=>x.path).slice(0,40)});
+  try{verify=await call("VERIFY2",prompts.verify+"\nReturn compact valid JSON only with a clear verdict. Do not include chain-of-thought.",verifyInput,"qwen-standard-local",1200)}catch{}
   const hardFail=validation.verdict==="FAIL"||sandbox.status==="FAIL"||String(verify.verdict||"").toUpperCase()==="FAIL";
   const partial=validation.verdict!=="PASS"||sandbox.status!=="PASS"||String(verify.verdict||"").toUpperCase()!=="PASS";
   const status=hardFail?"FAIL":partial?"PARTIAL":"PASS";
@@ -359,6 +367,8 @@ function validate(project={}){
  add("Auth",files.some(f=>/(auth|session|login|security)/i.test((f.path||"")+" "+(f.content||"")))?"PASS":"PARTIAL","auth/security artifact");
  add("Deploy manifest",files.some(f=>f.path==="deploy.json")?"PASS":"PARTIAL","deploy.json");
  add("Acceptance",Array.isArray(spec.acceptance)&&spec.acceptance.length>=3?"PASS":"PARTIAL",(spec.acceptance?.length||0)+" criteria");
+ const contract=fullstackContractEvidence(files);add(contract.name,contract.status,contract.detail);
+ const design=designAuditEvidence(files,spec);add(design.name,design.status,design.detail);
  const verdict=e.some(x=>x.status==="FAIL")?"FAIL":e.some(x=>x.status==="PARTIAL"||x.status==="UNVERIFIED")?"PARTIAL":"PASS";
  return{verdict,evidence:e,summary:verdict==="PASS"?"Server validation passed":"Server validation requires attention"};
 }
