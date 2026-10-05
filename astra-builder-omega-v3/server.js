@@ -209,13 +209,15 @@ async function runMissionSmoke(mission){
   if(validation.verdict==="FAIL"||sandbox.status==="FAIL"){
    const clean=s=>String(s||"").replace(/\x1b\[[0-9;]*m/g," ").replace(/\s+/g," ").trim();
    const targetOrder=["backend/src/app.ts","backend/src/auth.ts","backend/src/repository.ts","backend/tests/server.test.ts","frontend/src/App.tsx","frontend/tests/app.test.tsx","backend/tests/auth.test.ts","preview/index.html","preview/styles.css","preview/app.js"];
+   const designTargetOrder=["preview/index.html","preview/styles.css","preview/app.js","frontend/src/App.tsx","frontend/tests/app.test.tsx","backend/src/app.ts","backend/src/auth.ts","backend/src/repository.ts","backend/tests/server.test.ts"];
    for(let repairCycle=1;repairCycle<=3&&(validation.verdict==="FAIL"||sandbox.status==="FAIL");repairCycle++){
     const failingValidation=(validation.evidence||[]).filter(e=>e.status!=="PASS");
     const failingSandbox=(sandbox.evidence||[]).filter(e=>e.status!=="PASS");
     const failureText=[...failingValidation,...failingSandbox].map(e=>clean((e.name||"")+" · "+(e.detail||""))).join("\n");
     const mentioned=[];
     for(const m of failureText.matchAll(/((?:backend|frontend|preview)\/(?:src|tests)?\/?[A-Za-z0-9._\/-]+\.(?:ts|tsx|js|jsx))/g))if(!mentioned.includes(m[1]))mentioned.push(m[1]);
-    const targets=[...mentioned,...targetOrder].filter((p,i,a)=>a.indexOf(p)===i&&filesByPath.has(p)).slice(0,6);
+    const activeTargetOrder=/ASTRA DESIGN INTELLIGENCE|heading-hierarchy|responsive-viewport|semantic-landmarks|responsive-layout/i.test(failureText)?designTargetOrder:targetOrder;
+    const targets=[...mentioned,...activeTargetOrder].filter((p,i,a)=>a.indexOf(p)===i&&filesByPath.has(p)).slice(0,6);
     if(!targets.length){log("REPAIR_"+repairCycle,"FAIL","no concrete failing source file target");break}
     const repairModel=repairCycle<=2?"qwen-standard-local":"qwen-coder-local",repairBudget=repairCycle<=2?1800:2200;
     log("REPAIR_ROUTE_"+repairCycle,"PASS",repairModel+" · targeted "+targets.join(", "));
