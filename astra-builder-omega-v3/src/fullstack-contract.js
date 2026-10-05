@@ -19,6 +19,7 @@ export function fullstackContractAudit(files=[]){
   for(const f of valid){
     if(!/\.(?:ts|tsx|js|jsx|mjs|cjs)$/i.test(f.path))continue;
     const text=clean(f.content);
+    if(/^\.{3}$/.test(text.trim()))issues.push({code:"PLACEHOLDER_SOURCE",path:f.path,detail:"source file is only an ellipsis placeholder"});
     for(const m of text.matchAll(importRes)){
       const specifier=m[1];
       if(!specifier.startsWith("."))continue;

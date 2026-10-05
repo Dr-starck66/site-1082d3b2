@@ -31,6 +31,8 @@ jobs:
           node --check src/fullstack-contract.js
           node --check src/fullstack-contract-self-test.mjs
           node --check src/design-intelligence.js
+      - name: Repair target adversarial self-test
+        run: npm run repair-target:check
       - name: Fullstack contract adversarial self-test
         run: npm run fullstack:check
       - name: Runtime baseline adversarial self-test

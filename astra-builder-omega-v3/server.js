@@ -15,6 +15,7 @@ import { runMemoryVaultProbe } from "./src/memory-vault-probe.js";
 import { inspectActionSurface, normalizeActionPlan, executeApprovedActions, clawActionSelfTest } from "./src/claw-action.js";
 import { runOwnerActionProbe } from "./src/owner-action-probe.js";
 import { reliabilitySnapshot } from "./src/reliability.js";
+import { selectRepairTargets } from "./src/repair-targets.js";
 
 const root=process.cwd(),port=Number(process.env.PORT||3000),MAX=4*1024*1024;
 const rescueEvents=[];const pendingClawPlans=new Map();const rescueLog=(type,detail)=>{rescueEvents.push({at:new Date().toISOString(),type,detail:String(detail).slice(0,500)});if(rescueEvents.length>50)rescueEvents.shift();console.error("[ASTRA RESCUE Ω]",type,detail)};
@@ -208,33 +209,17 @@ async function runMissionSmoke(mission){
   catch(e){sandbox={status:"FAIL",reason:String(e?.message||e)};log("SANDBOX","FAIL",sandbox.reason)}
   if(validation.verdict==="FAIL"||sandbox.status==="FAIL"){
    const clean=s=>String(s||"").replace(/\x1b\[[0-9;]*m/g," ").replace(/\s+/g," ").trim();
-   const targetOrder=["backend/src/app.ts","backend/src/auth.ts","backend/src/repository.ts","backend/tests/server.test.ts","frontend/src/App.tsx","frontend/tests/app.test.tsx","backend/tests/auth.test.ts","preview/index.html","preview/styles.css","preview/app.js"];
-   const designTargetOrder=["preview/index.html","preview/styles.css","preview/app.js","frontend/src/App.tsx","frontend/tests/app.test.tsx","backend/src/app.ts","backend/src/auth.ts","backend/src/repository.ts","backend/tests/server.test.ts"];
    for(let repairCycle=1;repairCycle<=3&&(validation.verdict==="FAIL"||sandbox.status==="FAIL");repairCycle++){
     const failingValidation=(validation.evidence||[]).filter(e=>e.status!=="PASS");
     const failingSandbox=(sandbox.evidence||[]).filter(e=>e.status!=="PASS");
-    const failureText=[...failingValidation,...failingSandbox].map(e=>clean((e.name||"")+" · "+(e.detail||""))).join("\n");
-    const mentioned=[];
-    for(const m of failureText.matchAll(/((?:backend|frontend|preview)\/(?:src|tests)?\/?[A-Za-z0-9._\/-]+\.(?:ts|tsx|js|jsx))/g))if(!mentioned.includes(m[1]))mentioned.push(m[1]);
-    for(const ev of [...failingValidation,...failingSandbox]){
-     const label=clean((ev?.name||"")+" "+(ev?.detail||"")),scope=/frontend/i.test(label)?"frontend":/(?:backend|runtime health)/i.test(label)?"backend":null;
-     if(!scope)continue;
-     for(const m of label.matchAll(/(?:^|[^A-Za-z0-9_\/])((?:src|tests)\/[A-Za-z0-9._\/-]+\.(?:ts|tsx|js|jsx))/g)){
-      const p=scope+"/"+m[1];if(filesByPath.has(p)&&!mentioned.includes(p))mentioned.push(p)
-     }
-    }
-    const designFailure=/ASTRA DESIGN INTELLIGENCE|heading-hierarchy|responsive-viewport|semantic-landmarks|responsive-layout/i.test(failureText);
-    const activeTargetOrder=designFailure?designTargetOrder:targetOrder;
-    const repairSeeds=[...mentioned];
-    if(designFailure)for(const p of ["preview/index.html","preview/styles.css","preview/app.js"])if(!repairSeeds.includes(p))repairSeeds.push(p);
-    if(!repairSeeds.length)repairSeeds.push(...activeTargetOrder);
-    const targets=repairSeeds.filter((p,i,a)=>a.indexOf(p)===i&&filesByPath.has(p)).slice(0,6);
-    if(!targets.length){log("REPAIR_"+repairCycle,"FAIL","no concrete failing source file target");break}
+    const routing=selectRepairTargets({evidence:[...failingValidation,...failingSandbox],files:[...filesByPath.values()]});
+    const targets=routing.targets;
+    if(!targets.length){log("REPAIR_"+repairCycle,"FAIL","no concrete failing source file target after deterministic routing");break}
     const repairModel=repairCycle<=2?"qwen-standard-local":"qwen-coder-local",repairBudget=repairCycle<=2?1800:2200;
     log("REPAIR_ROUTE_"+repairCycle,"PASS",repairModel+" · targeted "+targets.join(", "));
     const jobs=targets.map(async targetPath=>{
      const targetFile=filesByPath.get(targetPath),content=String(targetFile?.content||"");
-     const relatedOrder=targetPath.startsWith("backend/")?["backend/src/app.ts","backend/src/auth.ts","backend/src/repository.ts","backend/src/server.ts","backend/tests/server.test.ts","backend/tests/auth.test.ts"]:targetPath.startsWith("frontend/")?["frontend/src/main.tsx","frontend/src/App.tsx","frontend/tests/app.test.tsx"]:["preview/index.html","preview/styles.css","preview/app.js"];
+     const relatedOrder=targetPath.startsWith("backend/")?["backend/src/app.ts","backend/src/auth.ts","backend/src/repository.ts","backend/src/server.ts","backend/tests/astra-contract.test.ts"]:targetPath.startsWith("frontend/")?["frontend/src/main.tsx","frontend/src/App.tsx","frontend/tests/astra-contract.test.tsx"]:["preview/index.html","preview/styles.css","preview/app.js"];
      const input=JSON.stringify({
       app:spec?.appName||"app",
       goal:String(spec?.goal||mission||"").slice(0,500),
@@ -243,7 +228,7 @@ async function runMissionSmoke(mission){
       target:{path:targetPath,content:content.slice(0,4500),truncated:content.length>4500},
       related:relatedOrder.filter(p=>p!==targetPath&&filesByPath.has(p)).slice(0,5).map(p=>({path:p,excerpt:String(filesByPath.get(p)?.content||"").slice(0,800)}))
      });
-     const targetRules=targetPath==="preview/index.html"?" Preserve selector ids/classes used by preview/app.js. Return a complete HTML document with head, viewport meta, exactly one meaningful H1, and semantic header/nav/main where applicable.":targetPath==="preview/styles.css"?" Preserve existing selectors. Include explicit :focus-visible, >=44px interactive target sizing, responsive @media/@container behavior, and reduced-motion handling when motion exists.":targetPath==="preview/app.js"?" Return syntactically complete vanilla JS. Preserve existing DOM selector contracts from index.html and do not invent missing elements.":targetPath==="backend/src/app.ts"?" Import/bind express when express() is used and export const app. Import only sibling files present in related evidence. Never app.listen.":targetPath==="backend/tests/auth.test.ts"?" Import only files that actually exist in related evidence; prefer ../src/auth.ts and ../src/app.ts. Never invent middleware/authMiddleware paths. Use default supertest import or Vitest globals.":targetPath==="backend/tests/server.test.ts"?" Import source files via ../src/*. Use default supertest import and do not invent entities/modules.":"";
+     const targetRules=targetPath==="preview/index.html"?" Preserve selector ids/classes used by preview/app.js. Return a complete HTML document with head, viewport meta, exactly one meaningful H1, and semantic header/nav/main where applicable.":targetPath==="preview/styles.css"?" Preserve existing selectors. Include explicit :focus-visible, >=44px interactive target sizing, responsive @media/@container behavior, and reduced-motion handling when motion exists.":targetPath==="preview/app.js"?" Return syntactically complete vanilla JS. Preserve existing DOM selector contracts from index.html and do not invent missing elements.":targetPath==="frontend/src/App.tsx"?" Return a complete valid React/TSX component, never ellipsis/placeholders. Preserve /api contracts and product features.":targetPath==="frontend/src/main.tsx"?" Return a complete valid React entry point mounting App; never ellipsis/placeholders.":targetPath==="backend/src/app.ts"?" Import/bind express when express() is used and export const app. Import only sibling files present in related evidence. Never app.listen.":targetPath==="backend/src/auth.ts"?" Return syntactically complete TypeScript exporting authRouter and requireAuth; do not invent local middleware modules.":targetPath==="backend/src/repository.ts"?" Do not import ./entities unless that file exists in related evidence; keep type-only records local when necessary.":"";
      const system=prompts.repair+"\nTARGETED REPAIR CONTRACT: repair exactly "+targetPath+". Return JSON {files:[{path:\""+targetPath+"\",content:\"COMPLETE replacement\"}],summary}. Do not touch deterministic server.ts, package.json, tsconfig, Dockerfile or deploy.json. Preserve public API contracts. Fix the compiler/test/runtime error evidenced in the input. Keep the replacement compact."+targetRules;
      try{return await call("REPAIR_"+repairCycle+"_"+targetPath.replace(/[^a-z0-9]+/gi,"_"),system,input,repairModel,repairBudget)}
      catch(e){log("REPAIR_TARGET_"+repairCycle,"FAIL",targetPath+" · "+String(e?.message||e).slice(0,500));return null}
