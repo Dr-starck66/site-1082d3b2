@@ -37,7 +37,7 @@ function ensureBackendAppFloor(map,changes){
 function ensureRepositoryFloor(map,changes){
  const f=map.get("backend/src/repository.ts");if(!f)return;
  let c=String(f.content||""),changed=false;
- c=c.replace(/^\s*import\s+(?:type\s+)?\{([^}]+)\}\s+from\s+["']\.\/entities(?:\.ts)?["'];?\s*$/gm,(full,names)=>{
+ c=c.replace(/\bimport\s+(?:type\s+)?\{([^}]+)\}\s+from\s+["']\.\/entities(?:\.ts)?["'];?/g,(full,names)=>{
   const aliases=String(names).split(",").map(x=>x.trim()).filter(Boolean).map(x=>{
    const parts=x.replace(/^type\s+/,"").split(/\s+as\s+/i),name=(parts[1]||parts[0]).trim();
    return name;
