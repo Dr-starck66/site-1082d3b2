@@ -23,6 +23,13 @@ function ensurePreviewDesignFloor(map,changes){
   if(parts.length)put(map,"preview/styles.css",css+"\n/* ASTRA DESIGN ACCESSIBILITY FLOOR */\n"+parts.join("\n")+"\n",changes,"deterministic accessibility/responsive floor")
  }
 }
+function ensureFrontendAppFloor(map,changes){
+ const f=map.get("frontend/src/App.tsx");if(!f)return;
+ let c=String(f.content||""),changed=false;
+ const withoutSelf=c.replace(/\bimport\s+[^\n;]*\s+from\s+["']\.\/App(?:\.tsx?)?["'];?/g,"");
+ if(withoutSelf!==c){c=withoutSelf;changed=true}
+ if(changed)put(map,"frontend/src/App.tsx",c,changes,"deterministic frontend App self-import floor")
+}
 function ensureBackendAppFloor(map,changes){
  const f=map.get("backend/src/app.ts");if(!f)return;
  let c=String(f.content||""),changed=false;
@@ -32,7 +39,12 @@ function ensureBackendAppFloor(map,changes){
  if(/\bexpress\s*\(\s*\)/.test(c)&&!bound){c='import express from "express";\n'+c;changed=true}
  const exported=/\bexport\s+(?:const|let|var)\s+app\b|\bexport\s*\{[^}]*\bapp\b[^}]*\}/s.test(c);
  if(!exported&&/\b(?:const|let|var)\s+app\b/.test(c)){c=c.replace(/\b(const|let|var)\s+app\b/,'export $1 app');changed=true}
- if(changed)put(map,"backend/src/app.ts",c,changes,"deterministic Express app contract floor")
+ const hasAuth=map.has("backend/src/auth.ts");
+ const authRouterImported=/import\s*\{[^}]*\bauthRouter\b[^}]*\}\s*from\s*["']\.\/auth(?:\.ts)?["']/.test(c);
+ const requireAuthImported=/import\s*\{[^}]*\brequireAuth\b[^}]*\}\s*from\s*["']\.\/auth(?:\.ts)?["']/.test(c);
+ if(hasAuth&&/\bauthRouter\b/.test(c)&&!authRouterImported){c='import { authRouter } from "./auth.ts";\n'+c;changed=true}
+ if(hasAuth&&/\brequireAuth\b/.test(c)&&!requireAuthImported){c='import { requireAuth } from "./auth.ts";\n'+c;changed=true}
+ if(changed)put(map,"backend/src/app.ts",c,changes,"deterministic Express/auth app contract floor")
 }
 function ensureRepositoryFloor(map,changes){
  const f=map.get("backend/src/repository.ts");if(!f)return;
@@ -70,12 +82,12 @@ function ensureBackend(map,files,changes){
  put(map,"backend/tsconfig.json",json({compilerOptions:{target:"ES2022",module:"ESNext",moduleResolution:"Bundler",lib:["ES2022"],esModuleInterop:true,allowSyntheticDefaultImports:true,strict:false,skipLibCheck:true,noEmit:true,resolveJsonModule:true,types:["node"],allowImportingTsExtensions:true},include:["src"]}),changes,"deterministic backend TypeScript contract")
 }
 function ensureDeploy(map,files,changes){if(!files.some(f=>f.path.startsWith("backend/")))return;const docker='FROM node:22-alpine AS frontend\nWORKDIR /app/frontend\nCOPY frontend/package.json ./\nRUN npm install --ignore-scripts --no-audit --no-fund\nCOPY frontend ./\nRUN npm run build\n\nFROM node:22-alpine AS runtime\nWORKDIR /app\nCOPY backend/package.json ./backend/package.json\nRUN cd backend && npm install --ignore-scripts --no-audit --no-fund\nCOPY backend ./backend\nCOPY --from=frontend /app/frontend/dist ./frontend/dist\nENV NODE_ENV=production\nEXPOSE 8080\nWORKDIR /app/backend\nCMD ["npm","start"]\n';put(map,"Dockerfile",docker,changes,"deterministic single-service container");put(map,"deploy.json",json({provider:"railway",rootDirectory:".",dockerfilePath:"Dockerfile",healthPath:"/health",startCommand:null,runtimeRoot:"backend"}),changes,"deterministic deployment contract");put(map,".gitignore","node_modules\ndist\n.env\n.env.*\n!.env.example\n",changes,"deterministic repository hygiene")}
-export function enforceRuntimeBaseline(inputFiles,spec={}){const files=cloneFiles(inputFiles),map=new Map(files.map(f=>[f.path,f])),changes=[];ensurePreviewDesignFloor(map,changes);ensureRepositoryFloor(map,changes);ensureFrontend(map,files,changes);ensureBackend(map,[...map.values()],changes);ensureContractTests(map,changes);ensureDeploy(map,[...map.values()],changes);const out=[...map.values()].sort((a,b)=>a.path.localeCompare(b.path));return{files:out,changes,evidence:{name:"Runtime Baseline Guard",status:changes.length?"PASS":"PASS",detail:changes.length?changes.map(x=>x.path).join(", ")+" normalized by ASTRA":"critical runtime contracts already canonical"}}}
+export function enforceRuntimeBaseline(inputFiles,spec={}){const files=cloneFiles(inputFiles),map=new Map(files.map(f=>[f.path,f])),changes=[];ensurePreviewDesignFloor(map,changes);ensureRepositoryFloor(map,changes);ensureFrontendAppFloor(map,changes);ensureFrontend(map,files,changes);ensureBackend(map,[...map.values()],changes);ensureContractTests(map,changes);ensureDeploy(map,[...map.values()],changes);const out=[...map.values()].sort((a,b)=>a.path.localeCompare(b.path));return{files:out,changes,evidence:{name:"Runtime Baseline Guard",status:changes.length?"PASS":"PASS",detail:changes.length?changes.map(x=>x.path).join(", ")+" normalized by ASTRA":"critical runtime contracts already canonical"}}}
 export function runtimeBaselineSelfTest(){
  const r=enforceRuntimeBaseline([
   {path:"preview/index.html",content:'<!doctype html><html><head></head><body><main><h1>Test</h1><button>Go</button></main></body></html>'},
   {path:"preview/styles.css",content:'body{margin:0}'},
-  {path:"frontend/src/main.tsx",content:'import React from "react"'},{path:"frontend/src/App.tsx",content:'export default function App(){return <main>OK</main>}'},
+  {path:"frontend/src/main.tsx",content:'import React from "react"'},{path:"frontend/src/App.tsx",content:'import AppShadow from "./App"; void AppShadow; export default function App(){return <main>OK</main>}'},
   {path:"backend/src/app.ts",content:'import {app as shadow} from "./app.ts"; import {authRouter,requireAuth} from "./auth.ts"; const app=express(); void shadow; void authRouter; void requireAuth;'},{path:"backend/src/auth.ts",content:'import express from "express"; export const authRouter=express.Router(); export function requireAuth(req,res,next){next()}'},{path:"backend/src/repository.ts",content:'import type {Contact,Deal} from "./entities"; export const store: Contact[]=[]; export type DealRow=Deal;'},
   {path:"backend/src/server.ts",content:'import express from "express"; const app=express(); app.get("/health",(q,s)=>s.send("ok")); app.listen(process.env.PORT)'},
   {path:"backend/package.json",content:"{"}
@@ -90,6 +102,7 @@ export function runtimeBaselineSelfTest(){
  if(!/import express from ["']express["']/.test(app))fail.push("express-import");
  if(!/export const app/.test(app))fail.push("app-export");
  if(/from ["']\.\/app(?:\.ts)?["']/.test(app))fail.push("app-self-import");
+ if(/from ["']\.\/App(?:\.tsx?)?["']/.test(m.get("frontend/src/App.tsx")||""))fail.push("frontend-app-self-import");
  if(/from ["']\.\/entities/.test(m.get("backend/src/repository.ts")||""))fail.push("phantom-entities");
  try{JSON.parse(m.get("backend/package.json"));JSON.parse(m.get("deploy.json"))}catch{fail.push("json-manifest")}
  return{ok:fail.length===0,count:r.files.length,changes:r.changes.length,fail}
