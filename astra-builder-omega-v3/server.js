@@ -216,8 +216,12 @@ async function runMissionSmoke(mission){
     const failureText=[...failingValidation,...failingSandbox].map(e=>clean((e.name||"")+" · "+(e.detail||""))).join("\n");
     const mentioned=[];
     for(const m of failureText.matchAll(/((?:backend|frontend|preview)\/(?:src|tests)?\/?[A-Za-z0-9._\/-]+\.(?:ts|tsx|js|jsx))/g))if(!mentioned.includes(m[1]))mentioned.push(m[1]);
-    const activeTargetOrder=/ASTRA DESIGN INTELLIGENCE|heading-hierarchy|responsive-viewport|semantic-landmarks|responsive-layout/i.test(failureText)?designTargetOrder:targetOrder;
-    const targets=[...mentioned,...activeTargetOrder].filter((p,i,a)=>a.indexOf(p)===i&&filesByPath.has(p)).slice(0,6);
+    const designFailure=/ASTRA DESIGN INTELLIGENCE|heading-hierarchy|responsive-viewport|semantic-landmarks|responsive-layout/i.test(failureText);
+    const activeTargetOrder=designFailure?designTargetOrder:targetOrder;
+    const repairSeeds=[...mentioned];
+    if(designFailure)for(const p of ["preview/index.html","preview/styles.css","preview/app.js"])if(!repairSeeds.includes(p))repairSeeds.push(p);
+    if(!repairSeeds.length)repairSeeds.push(...activeTargetOrder);
+    const targets=repairSeeds.filter((p,i,a)=>a.indexOf(p)===i&&filesByPath.has(p)).slice(0,6);
     if(!targets.length){log("REPAIR_"+repairCycle,"FAIL","no concrete failing source file target");break}
     const repairModel=repairCycle<=2?"qwen-standard-local":"qwen-coder-local",repairBudget=repairCycle<=2?1800:2200;
     log("REPAIR_ROUTE_"+repairCycle,"PASS",repairModel+" · targeted "+targets.join(", "));
