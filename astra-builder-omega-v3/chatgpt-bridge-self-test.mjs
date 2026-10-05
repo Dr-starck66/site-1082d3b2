@@ -1,0 +1,23 @@
+import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
+import { base64url, pkceChallenge, buildAuthorizeUrl, publicStatus, SCOPES, RESOURCE, AUTHORIZE_ENDPOINT } from "./chatgpt-local-bridge.mjs";
+
+const verifier = base64url(Buffer.from("astra-pkce-verifier-test-0123456789"));
+const challenge = pkceChallenge(verifier);
+assert.match(challenge, /^[A-Za-z0-9_-]{43}$/);
+const store = { host_id: `urn:uuid:${randomUUID()}`, profile: null };
+const url = new URL(buildAuthorizeUrl({ store, state: "state-test", nonce: "nonce-test", verifier, port: 1455 }));
+assert.equal(`${url.origin}${url.pathname}`, AUTHORIZE_ENDPOINT);
+assert.equal(url.searchParams.get("client_id"), "dynamic_agent_client");
+assert.equal(url.searchParams.get("agent_name_hint"), "ASTRA Builder");
+assert.equal(url.searchParams.get("ext_agent_host_id"), store.host_id);
+assert.equal(url.searchParams.get("resource"), RESOURCE);
+assert.equal(url.searchParams.get("scope"), SCOPES);
+assert.equal(url.searchParams.get("code_challenge_method"), "S256");
+assert.equal(url.searchParams.get("state"), "state-test");
+assert.equal(url.searchParams.get("nonce"), "nonce-test");
+const status = publicStatus({ host_id: store.host_id, profile: { client_id: "oaiapp_1234567890", email: "x@example.com", access_token: "SECRET", refresh_token: "SECRET2", scopes: ["openid", "chatgpt.tokens.use.direct"], saved_at: new Date().toISOString(), expires_in: 3600 } });
+assert.equal(status.connected, true);
+assert.equal(status.sharing, true);
+assert.equal(JSON.stringify(status).includes("SECRET"), false);
+console.log("[ASTRA CHATGPT BRIDGE SELFTEST] PASS");
