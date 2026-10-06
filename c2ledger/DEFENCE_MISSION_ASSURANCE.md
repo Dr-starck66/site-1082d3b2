@@ -12,7 +12,9 @@ This edition does not provide exploit delivery, destructive actions, offensive a
 
 ## Purple-team validation
 
-The `ADVERSARY_EMULATION_RANGE` module provides bounded security-control simulations using synthetic inputs analyzed in memory. It never performs live exploitation, payload execution, persistence, destructive action, credential theft or autonomous targeting. The purpose is repeatable detector validation and evidence generation.
+The `ADVERSARY_EMULATION_RANGE` module now has two layers. The detector-validation layer runs inert synthetic fixtures through the real rule engine. The advanced range layer contains multi-stage rehearsal playbooks with an explicit threat model, adversary intent, synthetic simulation method, expected telemetry, detections, containment actions, recovery actions and pass criteria for every stage.
+
+The advanced scenarios currently cover blockchain dead-drop-to-execution correlation, CI trust-boundary compromise rehearsal, degraded-network/evidence-store continuity, and distributed software-supply-chain correlation. They are intentionally non-deployable outside the isolated range: no live exploitation, arbitrary command execution, credential theft, persistence, propagation, destructive actions or Internet target selection.
 
 ## Evidence surfaces
 
@@ -21,7 +23,8 @@ The `ADVERSARY_EMULATION_RANGE` module provides bounded security-control simulat
 - `/api/proof` — evidence-backed Mythos Astra Omega proof snapshot.
 - `/api/defence/readiness` — Mission Assurance posture, boundaries, readiness mappings and proof status.
 - `/api/defence/assurance-package` — portable JSON assurance package with SHA-256 digest for offline review.
-- `/api/defence/adversary-emulation` — bounded purple-team scenario catalog and dry-run validation endpoint.
+- `/api/defence/adversary-emulation` — detector-validation catalog plus detailed advanced playbooks.
+- `/api/defence/adversary-emulation/advanced` — complete multi-stage isolated range playbooks.
 - `/api/intel/stix` — STIX 2.1 threat-intelligence export.
 - `/api/scan/sarif` — SARIF output for code-scanning workflows.
 - `/api/ci/gate` — fail-closed CI security decision.
