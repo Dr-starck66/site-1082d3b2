@@ -9,8 +9,8 @@ services:
       C2LEDGER_EVIDENCE_REQUIRED: "true"
       C2LEDGER_ADMIN_TOKEN: ${C2LEDGER_ADMIN_TOKEN:?set C2LEDGER_ADMIN_TOKEN}
       C2LEDGER_SENSOR_TOKEN: ${C2LEDGER_SENSOR_TOKEN:?set C2LEDGER_SENSOR_TOKEN}
-      C2LEDGER_EXPECTED_VERSION: "0.12.0"
-      C2LEDGER_RELEASE_ID: "v0.12.0-disconnected"
+      C2LEDGER_EXPECTED_VERSION: "0.13.0"
+      C2LEDGER_RELEASE_ID: "v0.13.0-disconnected"
     volumes:
       - c2ledger-state:/var/lib/c2ledger
     ports:
