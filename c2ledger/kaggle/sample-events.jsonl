@@ -1,0 +1,5 @@
+{"severity":"info","message":"normal repository metadata","tags":["repo"]}
+{"severity":"low","message":"rpc observation on synthetic chain fixture","tags":["chain","fixture"],"chain":"ethereum"}
+{"severity":"medium","message":"bounded raw ip marker in test telemetry","tags":["range"],"rawIp":"127.0.0.1"}
+{"severity":"info","message":"verified evidence checkpoint","tags":["evidence"]}
+{"severity":"high","message":"synthetic correlated execution-attempt marker for isolated range only","tags":["range","correlation","synthetic"],"chain":"polygon","rawIp":"127.0.0.1"}
