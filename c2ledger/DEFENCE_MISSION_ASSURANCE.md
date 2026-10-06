@@ -10,6 +10,10 @@ Detect blockchain dead-drop C2 and software-supply-chain attack chains, preserve
 
 This edition does not provide exploit delivery, destructive actions, offensive automation, autonomous targeting, or execution of untrusted repository code. The boundary is enforced in the runtime profile exposed at `/api/defence/readiness`.
 
+## Purple-team validation
+
+The `ADVERSARY_EMULATION_RANGE` module provides bounded security-control simulations using synthetic inputs analyzed in memory. It never performs live exploitation, payload execution, persistence, destructive action, credential theft or autonomous targeting. The purpose is repeatable detector validation and evidence generation.
+
 ## Evidence surfaces
 
 - `/health` — liveness and release fingerprint.
@@ -17,6 +21,7 @@ This edition does not provide exploit delivery, destructive actions, offensive a
 - `/api/proof` — evidence-backed Mythos Astra Omega proof snapshot.
 - `/api/defence/readiness` — Mission Assurance posture, boundaries, readiness mappings and proof status.
 - `/api/defence/assurance-package` — portable JSON assurance package with SHA-256 digest for offline review.
+- `/api/defence/adversary-emulation` — bounded purple-team scenario catalog and dry-run validation endpoint.
 - `/api/intel/stix` — STIX 2.1 threat-intelligence export.
 - `/api/scan/sarif` — SARIF output for code-scanning workflows.
 - `/api/ci/gate` — fail-closed CI security decision.
