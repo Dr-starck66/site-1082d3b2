@@ -1,0 +1,91 @@
+name: C2Ledger Kaggle Hybrid Range
+
+on:
+  push:
+    branches: [c2ledger-v1-hardening]
+    paths:
+      - "c2ledger/kaggle/**"
+      - "c2ledger/range-node/**"
+      - ".github/workflows/c2ledger-kaggle-hybrid-range.yml"
+  workflow_dispatch:
+
+jobs:
+  kaggle-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      campaign: ${{ steps.campaign.outputs.campaign }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate Kaggle-compatible campaign
+        id: campaign
+        run: |
+          python3 c2ledger/kaggle/c2ledger_replay.py --out artifacts/kaggle >/tmp/replay.json
+          python3 - <<'PY'
+          import json
+          x=json.load(open("artifacts/kaggle/campaign.json"))
+          assert x["schema"]=="c2ledger-kaggle-replay/v1"
+          assert x["safety"]=={"publicInternetTargets":False,"arbitraryCommands":False,"exploitDelivery":False,"credentialTheft":False,"destructiveActions":False}
+          allowed={"plant-marker","degrade-service","stage-synthetic-data","rotate-canary","recover"}
+          assert x["campaign"] and all(i["effect"] in allowed for i in x["campaign"])
+          with open("/tmp/campaign-line.txt","w") as f: f.write(json.dumps(x["campaign"],separators=(",",":")))
+          PY
+          echo "campaign=$(cat /tmp/campaign-line.txt)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kaggle-replay-evidence
+          path: artifacts/kaggle/
+
+  ephemeral-lab:
+    needs: kaggle-replay
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build isolated range node
+        run: |
+          docker build -t c2ledger-range-node -f c2ledger/range-node/Dockerfile ./c2ledger
+          docker network create --internal c2ledger-ephemeral-range
+          docker run -d --rm --network c2ledger-ephemeral-range --name range-node \
+            -e C2LEDGER_RANGE_TOKEN=range-ci-token \
+            -v c2ledger-range-state:/var/lib/c2ledger-range \
+            c2ledger-range-node
+      - name: Execute bounded campaign against real lab container
+        env:
+          CAMPAIGN: ${{ needs.kaggle-replay.outputs.campaign }}
+        run: |
+          docker run -d --rm --network c2ledger-ephemeral-range --name range-driver \
+            -e CAMPAIGN="$CAMPAIGN" \
+            curlimages/curl:8.12.1 sh -c 'sleep 300'
+          python3 - <<'PY'
+          import json,os,subprocess,time
+          campaign=json.loads(os.environ["CAMPAIGN"])
+          allowed={"plant-marker","degrade-service","stage-synthetic-data","rotate-canary","recover"}
+          evidence=[]
+          for item in campaign:
+              assert item["effect"] in allowed
+              body=json.dumps(item)
+              cmd=["docker","exec","range-driver","curl","-fsS","-X","POST",
+                   "-H","authorization: Bearer range-ci-token","-H","content-type: application/json",
+                   "-d",body,"http://range-node:3200/effect"]
+              out=subprocess.check_output(cmd,text=True)
+              row=json.loads(out); assert row["status"]=="PASS"
+              evidence.append({"requested":item,"result":row["result"]})
+          state=json.loads(subprocess.check_output(["docker","exec","range-driver","curl","-fsS","-H","authorization: Bearer range-ci-token","http://range-node:3200/state"],text=True))
+          assert state["mode"]=="NORMAL"
+          assert state["syntheticFiles"]==0
+          os.makedirs("artifacts/range",exist_ok=True)
+          json.dump({"schema":"c2ledger-ephemeral-lab/v1","campaign":campaign,"evidence":evidence,"finalState":state},open("artifacts/range/result.json","w"),indent=2)
+          PY
+      - name: Prove network confinement
+        run: |
+          test "$(docker network inspect c2ledger-ephemeral-range --format '{{.Internal}}')" = "true"
+          docker inspect range-node --format '{{json .NetworkSettings.Networks}}' >/tmp/networks.json
+          ! docker exec range-driver curl -fsS --max-time 2 https://example.com
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ephemeral-range-evidence
+          path: artifacts/range/
+      - name: Range logs
+        if: always()
+        run: docker logs range-node || true
