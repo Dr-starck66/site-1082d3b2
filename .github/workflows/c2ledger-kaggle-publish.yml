@@ -1,0 +1,35 @@
+name: C2Ledger Kaggle Publish
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish-kaggle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+      KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require Kaggle credentials
+        run: |
+          test -n "$KAGGLE_USERNAME"
+          test -n "$KAGGLE_KEY"
+      - name: Install official Kaggle CLI
+        run: python3 -m pip install --disable-pip-version-check kaggle
+      - name: Prepare private no-internet kernel metadata
+        run: |
+          python3 c2ledger/kaggle/prepare_kernel.py
+          python3 - <<'PY'
+          import json
+          x=json.load(open("c2ledger/kaggle/kernel-metadata.json"))
+          assert x["is_private"] is True
+          assert x["enable_internet"] is False
+          assert x["enable_gpu"] is False
+          assert x["kernel_type"]=="script"
+          PY
+      - name: Push and run Kaggle kernel
+        run: kaggle kernels push -p c2ledger/kaggle --timeout 1800
+      - name: Show Kaggle kernel status
+        run: kaggle kernels status "$KAGGLE_USERNAME/c2ledger-kaggle-replay"
