@@ -36,12 +36,24 @@ jobs:
           node - <<'NODE'
           const fs=require("fs");
           const x=JSON.parse(fs.readFileSync("/tmp/readiness.json","utf8"));
-          if(x.version!=="0.10.0") throw new Error("unexpected version: "+x.version);
+          if(x.version!=="0.11.0") throw new Error("unexpected version: "+x.version);
           if(x.profile?.posture!=="DEFENSIVE_ONLY") throw new Error("defensive posture missing");
           if(x.profile?.boundaries?.offensiveAutomation!==false) throw new Error("offensive automation boundary failed");
           if(x.profile?.boundaries?.exploitDelivery!==false) throw new Error("exploit delivery boundary failed");
           if(x.profile?.boundaries?.destructiveActions!==false) throw new Error("destructive action boundary failed");
           if(x.defenceLayer?.status!=="PASS") throw new Error("defence layer did not pass");
+          NODE
+      - name: Verify bounded adversary emulation
+        run: |
+          curl -fsS http://127.0.0.1:3000/api/defence/adversary-emulation >/tmp/emulation-catalog.json
+          curl -fsS -X POST -H 'content-type: application/json' -d '{"scenarioId":"onchain-dead-drop-chain"}' http://127.0.0.1:3000/api/defence/adversary-emulation >/tmp/emulation-result.json
+          node - <<'NODE'
+          const fs=require("fs");
+          const c=JSON.parse(fs.readFileSync("/tmp/emulation-catalog.json","utf8"));
+          const r=JSON.parse(fs.readFileSync("/tmp/emulation-result.json","utf8"));
+          if(c.mode!=="PURPLE_TEAM_DRY_RUN" || c.safety?.liveExploitation!==false) throw new Error("emulation safety boundary failed");
+          if((c.scenarios||[]).length<4) throw new Error("scenario catalog too small");
+          if(r.status!=="PASS" || r.safety?.executedPayload!==false) throw new Error("emulation detector validation failed");
           NODE
       - name: Verify portable assurance package
         run: |
