@@ -1,0 +1,1 @@
+import {site} from '../../lib/site';export async function GET(){return new Response(`User-agent: *\nAllow: /\nSitemap: ${site.domain}/sitemap.xml\nSitemap: ${site.domain}/news-sitemap.xml\n`,{headers:{'Content-Type':'text/plain'}})}

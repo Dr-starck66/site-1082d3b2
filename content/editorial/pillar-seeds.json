@@ -1,0 +1,146 @@
+[
+  {
+    "title": "Insurance claim denied: documents to review before you appeal",
+    "category": "insurance-claims",
+    "keywords": [
+      "insurance claim denied",
+      "claim appeal"
+    ],
+    "sources": [
+      "https://content.naic.org/consumer/how-file-complaint",
+      "https://content.naic.org/consumer"
+    ]
+  },
+  {
+    "title": "How to dispute a credit card charge: evidence-first checklist",
+    "category": "refunds",
+    "keywords": [
+      "credit card dispute",
+      "chargeback"
+    ],
+    "sources": [
+      "https://www.consumerfinance.gov/consumer-tools/credit-cards/",
+      "https://consumer.ftc.gov/"
+    ]
+  },
+  {
+    "title": "Debt collector contacted you: how to verify the debt before paying",
+    "category": "credit-debt",
+    "keywords": [
+      "debt collection",
+      "debt validation"
+    ],
+    "sources": [
+      "https://www.consumerfinance.gov/consumer-tools/debt-collection/",
+      "https://consumer.ftc.gov/articles/debt-collection-faqs"
+    ]
+  },
+  {
+    "title": "Bank fee you do not recognize: how to investigate and dispute it",
+    "category": "banking-fees",
+    "keywords": [
+      "bank fees",
+      "fee dispute"
+    ],
+    "sources": [
+      "https://www.consumerfinance.gov/consumer-tools/bank-accounts/",
+      "https://www.fdic.gov/resources/consumers/"
+    ]
+  },
+  {
+    "title": "Airline refund rights after cancellation or major schedule change",
+    "category": "travel-refunds",
+    "keywords": [
+      "airline refund",
+      "flight cancellation"
+    ],
+    "sources": [
+      "https://www.transportation.gov/individuals/aviation-consumer-protection/refunds",
+      "https://www.transportation.gov/airconsumer/latest-news"
+    ]
+  },
+  {
+    "title": "Delayed or lost baggage: document expenses and make a claim",
+    "category": "travel-refunds",
+    "keywords": [
+      "lost baggage claim",
+      "delayed baggage"
+    ],
+    "sources": [
+      "https://www.transportation.gov/lost-delayed-or-damaged-baggage",
+      "https://www.transportation.gov/airconsumer"
+    ]
+  },
+  {
+    "title": "Tax refund delayed: official tools and notices to check first",
+    "category": "tax-money",
+    "keywords": [
+      "tax refund delayed",
+      "IRS refund"
+    ],
+    "sources": [
+      "https://www.irs.gov/wheres-my-refund",
+      "https://www.irs.gov/refunds"
+    ]
+  },
+  {
+    "title": "Unclaimed money: where to search official databases without paying a finder",
+    "category": "tax-money",
+    "keywords": [
+      "unclaimed money",
+      "unclaimed property"
+    ],
+    "sources": [
+      "https://www.usa.gov/unclaimed-money",
+      "https://www.usa.gov/money"
+    ]
+  },
+  {
+    "title": "Auto warranty dispute: records that matter when coverage is denied",
+    "category": "warranties",
+    "keywords": [
+      "car warranty dispute",
+      "warranty denied"
+    ],
+    "sources": [
+      "https://consumer.ftc.gov/articles/auto-warranties-and-auto-service-contracts",
+      "https://consumer.ftc.gov/articles/warranties"
+    ]
+  },
+  {
+    "title": "Product warranty claim: preserve proof of purchase and written promises",
+    "category": "warranties",
+    "keywords": [
+      "warranty claim",
+      "consumer warranty"
+    ],
+    "sources": [
+      "https://consumer.ftc.gov/articles/warranties",
+      "https://www.ftc.gov/business-guidance/resources/businesspersons-guide-federal-warranty-law"
+    ]
+  },
+  {
+    "title": "Refund scam warning signs after you already lost money",
+    "category": "consumer-rights",
+    "keywords": [
+      "refund scam",
+      "recovery scam"
+    ],
+    "sources": [
+      "https://consumer.ftc.gov/articles/refund-and-recovery-scams",
+      "https://reportfraud.ftc.gov/"
+    ]
+  },
+  {
+    "title": "Subscription charge after cancellation: refund and dispute workflow",
+    "category": "refunds",
+    "keywords": [
+      "subscription refund",
+      "recurring charge dispute"
+    ],
+    "sources": [
+      "https://consumer.ftc.gov/articles/getting-and-out-free-trials-auto-renewals-and-negative-option-subscriptions",
+      "https://www.consumerfinance.gov/consumer-tools/credit-cards/"
+    ]
+  }
+]

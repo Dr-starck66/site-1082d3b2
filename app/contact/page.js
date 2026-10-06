@@ -1,0 +1,1 @@
+export const metadata={title:'Contact'};export default function Page(){return <main className="section"><article className="article"><h1>Contact</h1><p>Editorial contact details will be published here before launch. Readers should be able to report corrections, source issues and accessibility problems through a monitored channel.</p></article></main>}

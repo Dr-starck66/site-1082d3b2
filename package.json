@@ -1,0 +1,24 @@
+{
+  "name": "refundmoneynow",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint || true",
+    "generate:article": "node scripts/generate-article.mjs",
+    "evidence:check": "node scripts/evidence-gate.mjs",
+    "publish:scheduled": "node scripts/publish-scheduled.mjs",
+    "editorial:discover": "node scripts/discover-topics.mjs",
+    "editorial:run": "node scripts/editorial-run.mjs",
+    "editorial:test": "node scripts/test-pipeline.mjs",
+    "links:enrich": "node scripts/enrich-links.mjs",
+    "editorial:test:e2e": "node scripts/test-e2e-fixture.mjs"
+  },
+  "dependencies": {
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest"
+  }
+}

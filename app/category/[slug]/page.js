@@ -1,0 +1,4 @@
+import Image from 'next/image';
+import {getByCategory} from '../../../lib/articles';
+import {site} from '../../../lib/site';
+export default async function Category({params}){const {slug}=await params;const name=site.categories.find(x=>x[0]===slug)?.[1]||slug.replaceAll('-',' ');const items=getByCategory(slug);return <main className="section"><div className="wrap"><span className="eyebrow">Topic</span><h1>{name}</h1><div className="grid">{items.map(a=><article className="card" key={a.slug}><a href={`/article/${a.slug}`}><Image className="card-image" src={`/article/${a.slug}/opengraph-image`} width={1200} height={675} sizes="(max-width: 850px) 100vw, 33vw" alt=""/></a><div className="card-body"><h3><a href={`/article/${a.slug}`}>{a.title}</a></h3><p>{a.description}</p><div className="meta">{new Date(a.published).toLocaleDateString('en-US')}</div></div></article>)}</div></div></main>}

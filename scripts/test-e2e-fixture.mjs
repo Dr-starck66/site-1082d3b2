@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {spawnSync} from 'node:child_process';
+import {ARTICLES_DIR,writeArticle} from './lib/editorial.mjs';
+const slug='pipeline-e2e-fixture-do-not-publish';const file=path.join(ARTICLES_DIR,`${slug}.md`);
+const paragraph='A consumer should begin by preserving account records, transaction dates, notices, correspondence, and the exact instructions supplied by the relevant provider or regulator. The purpose of the file is to make the timeline auditable and to separate facts from assumptions. Because procedures can change, the current official instructions should be checked before a deadline or eligibility decision is made. [S1] [S2]';
+const body=['This is a pipeline verification fixture. It exists only during the automated test and is deleted before the test exits. [S1]','## What changed','The fixture changes nothing in production and exists only to test the pipeline. [S1]','## What this means for consumers','This confirms that the publication gate can verify citations and minimum content requirements before a file becomes public. [S2]','## Build the evidence file',...Array(9).fill(paragraph),'## What to verify before you act',...Array(4).fill(paragraph)].join('\n\n');
+writeArticle({slug,title:'Pipeline E2E fixture: evidence-first consumer workflow',description:'Offline end-to-end fixture used to verify publishing gates, citations and internal-link enrichment without external network access.',category:'refunds',status:'draft',content_type:'reactive',source_hash:'fixture',sources:['https://www.consumerfinance.gov/consumer-tools/credit-cards/','https://consumer.ftc.gov/'],body});
+function run(script,args=[]){const r=spawnSync(process.execPath,[script,...args],{stdio:'inherit'});if(r.status!==0)throw new Error(`${script} failed`)}
+try{run('scripts/enrich-links.mjs',[file]);run('scripts/evidence-gate.mjs',[file]);const s=fs.readFileSync(file,'utf8');if(!/## Related reading/.test(s))throw new Error('internal links missing');if(!/\[S1\]/.test(s))throw new Error('citation markers missing');console.log('E2E FIXTURE PASS')}finally{if(fs.existsSync(file))fs.unlinkSync(file)}

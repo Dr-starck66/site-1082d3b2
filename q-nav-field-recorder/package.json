@@ -1,8 +1,0 @@
-{
-  "name":"q-nav-x-field-recorder",
-  "version":"1.2.0",
-  "private":true,
-  "type":"module",
-  "engines":{"node":">=22"},
-  "scripts":{"start":"node server.mjs","test":"node --test test/server.test.mjs"}
-}
