@@ -1,5 +1,6 @@
 import { inflateRawSync } from "node:zlib";
 import { RANGE_SCENARIOS, rangeCatalog } from "./range-scenarios";
+import { MISSION_OPS_PROFILE, evaluateMission } from "./mission-ops";
 
 type Sev = "low"|"medium"|"high"|"critical";
 type Rule = {id:string; title:string; severity:Sev; weight:number; category:string; re:RegExp; reason:string};
@@ -282,10 +283,11 @@ const ASTRA_BRICKS = [
  {id:"WATCHER_CURSOR_STATE",version:"1.0",status:"RUNTIME",role:"monotonic per-chain block cursors prevent duplicate rescans"},
  {id:"AUDIT_HASH_CHAIN",version:"1.0",status:"RUNTIME",role:"cryptographically chained tenant audit events with verification"},
  {id:"MISSION_ASSURANCE_DEFENCE",version:"1.0",status:"RUNTIME",role:"defensive mission-assurance profile, offline assurance export and fail-closed readiness evidence"},
- {id:"ADVERSARY_EMULATION_RANGE",version:"1.0",status:"RUNTIME",role:"bounded purple-team simulation of hostile TTP patterns without live exploitation, persistence or destructive actions"}
+ {id:"ADVERSARY_EMULATION_RANGE",version:"1.0",status:"RUNTIME",role:"bounded purple-team simulation of hostile TTP patterns without live exploitation, persistence or destructive actions"},
+ {id:"MISSION_OPS_CONTROL",version:"1.0",status:"RUNTIME",role:"deployable passive sensor control, persistent kill-switch and mission-impact scoring for authorized environments"}
 ];
 
-const PRODUCT_VERSION="0.11.1";
+const PRODUCT_VERSION="0.12.0";
 const RELEASE_ID=String(Bun.env.C2LEDGER_RELEASE_ID||"dev");
 const GITHUB_ALLOWED=new Set(["api.github.com","raw.githubusercontent.com","codeload.github.com"]);
 const CHAIN_ALLOWED=new Set(["ethereum-rpc.publicnode.com","bsc-rpc.publicnode.com","polygon-bor-rpc.publicnode.com","api.trongrid.io","fullnode.mainnet.aptoslabs.com"]);
@@ -420,6 +422,13 @@ async function runAdversaryEmulation(id:string){
   fixtureDigest,
   generatedAt:new Date().toISOString()
  };
+}
+
+function probeMissionOpsLayer(){
+ const controls=MISSION_OPS_PROFILE.controls;
+ const safety=controls.killSwitch===true&&controls.failClosed===true&&controls.boundedConnectors===true&&controls.arbitraryExecution===false&&controls.internetTargeting===false&&controls.exploitDelivery===false&&controls.destructiveActions===false&&controls.credentialTheft===false&&controls.propagation===false;
+ const sample=evaluateMission({criticalAssetsTotal:10,criticalAssetsAvailable:10,detectionsExpected:4,detectionsObserved:4,containmentExpected:2,containmentSucceeded:2,evidenceExpected:3,evidenceVerified:3,recoveryObjectives:2,recoveryMet:2});
+ return {status:safety&&sample.state==="READY"&&sample.score===100?"PASS":"FAIL",profile:MISSION_OPS_PROFILE,sample};
 }
 
 async function probeAdversaryEmulationLayer(){
@@ -830,7 +839,11 @@ function openApiDoc(){
   "/api/defence/readiness":{get:{summary:"Defensive mission-assurance readiness evidence",responses:{"200":{description:"Readiness evidence"}}}},
   "/api/defence/assurance-package":{get:{summary:"Offline JSON mission-assurance evidence package",responses:{"200":{description:"Assurance package"}}}},
   "/api/defence/adversary-emulation":{get:{summary:"List bounded purple-team emulation scenarios",responses:{"200":{description:"Scenario catalog"}}},post:{summary:"Run one dry-run adversary-emulation scenario",responses:{"200":{description:"Simulation result"},"400":{description:"Unknown scenario"}}}},
-  "/api/defence/adversary-emulation/advanced":{get:{summary:"Detailed multi-stage isolated adversary-emulation playbooks",responses:{"200":{description:"Advanced scenario catalog"}}}}
+  "/api/defence/adversary-emulation/advanced":{get:{summary:"Detailed multi-stage isolated adversary-emulation playbooks",responses:{"200":{description:"Advanced scenario catalog"}}}},
+  "/api/mission-ops/profile":{get:{summary:"Deployable Mission Ops profile and safety controls",responses:{"200":{description:"Mission Ops profile"}}}},
+  "/api/mission-ops/evaluate":{post:{summary:"Evaluate mission availability, detection, containment, evidence and recovery",responses:{"200":{description:"Mission score"}}}},
+  "/api/mission-ops/control":{get:{summary:"Read persistent Mission Ops kill-switch state",responses:{"200":{description:"Control state"}}},post:{summary:"Admin-only persistent Mission Ops kill-switch update",security:[{bearerAuth:[]}],responses:{"200":{description:"Control updated"},"401":{description:"Unauthorized"}}}},
+  "/api/sensor/events":{post:{summary:"Authenticated passive sensor event ingestion",responses:{"200":{description:"Event accepted"},"401":{description:"Unauthorized"},"423":{description:"Mission Ops disabled"}}}}
  },components:{securitySchemes:{bearerAuth:{type:"http",scheme:"bearer"}}}};
 }
 async function socSnapshot(){
@@ -1117,6 +1130,7 @@ async function proofSnapshot(){
  const operationalIntegrity=await probeOperationalIntegrity();
  const defenceLayer=await probeDefenceLayer();
  const adversaryEmulation=await probeAdversaryEmulationLayer();
+ const missionOpsLayer=probeMissionOpsLayer();
  const benchmark=runBenchmark(3);
  const rulepackHash=await currentRulepackHash();
  const requiredEvidence=String(Bun.env.C2LEDGER_EVIDENCE_REQUIRED||"false")==="true";
@@ -1124,11 +1138,11 @@ async function proofSnapshot(){
  const expectedVersion=String(Bun.env.C2LEDGER_EXPECTED_VERSION||"");
  const driftSentinel=expectedRulepack?{status:expectedRulepack===rulepackHash?"PASS":"FAIL",expected:expectedRulepack,actual:rulepackHash}:{status:"PARTIAL",reason:"expected-rulepack-not-pinned",actual:rulepackHash};
  const releaseControl=expectedVersion?{status:(RELEASE_ID.startsWith("v"+expectedVersion)&&PRODUCT_VERSION===expectedVersion)?"PASS":"FAIL",expectedVersion,releaseId:RELEASE_ID,runtimeVersion:PRODUCT_VERSION}:{status:"PARTIAL",reason:"expected-version-not-pinned",releaseId:RELEASE_ID,runtimeVersion:PRODUCT_VERSION};
- const hardFail=benchmark.status==="FAIL"||moatLayer.status==="FAIL"||integrationLayer.status==="FAIL"||productizationLayer.status==="FAIL"||commercialLayer.status==="FAIL"||operationalIntegrity.status==="FAIL"||defenceLayer.status==="FAIL"||adversaryEmulation.status==="FAIL"||driftSentinel.status==="FAIL"||releaseControl.status==="FAIL";
+ const hardFail=benchmark.status==="FAIL"||moatLayer.status==="FAIL"||integrationLayer.status==="FAIL"||productizationLayer.status==="FAIL"||commercialLayer.status==="FAIL"||operationalIntegrity.status==="FAIL"||defenceLayer.status==="FAIL"||adversaryEmulation.status==="FAIL"||missionOpsLayer.status==="FAIL"||driftSentinel.status==="FAIL"||releaseControl.status==="FAIL";
  const partial=(!requiredEvidence?false:evidence.status!=="PASS")||driftSentinel.status==="PARTIAL"||releaseControl.status==="PARTIAL";
  const gate=hardFail?"FAIL":partial?"PARTIAL":"PASS";
  const resilience=gate==="PASS"?"ACTIVE":gate==="FAIL"?"QUARANTINED":"SHIELDED";
- return {product:"C2Ledger",version:PRODUCT_VERSION,releaseId:RELEASE_ID,gate,resilience,rulepackHash,selfTest:"PASS",benchmark,evidenceStore:evidence,moatLayer,integrationLayer,productizationLayer,commercialLayer,operationalIntegrity,defenceLayer,adversaryEmulation,driftSentinel,releaseControl,connectorGuard:{status:"PASS",allowedHosts:[...Array.from(GITHUB_ALLOWED),...Array.from(CHAIN_ALLOWED)]},runtime:{deploymentId:Bun.env.RAILWAY_DEPLOYMENT_ID||null,serviceId:Bun.env.RAILWAY_SERVICE_ID||null,environmentId:Bun.env.RAILWAY_ENVIRONMENT_ID||null,publicDomain:Bun.env.RAILWAY_PUBLIC_DOMAIN||null},bricks:ASTRA_BRICKS,time:new Date().toISOString()};
+ return {product:"C2Ledger",version:PRODUCT_VERSION,releaseId:RELEASE_ID,gate,resilience,rulepackHash,selfTest:"PASS",benchmark,evidenceStore:evidence,moatLayer,integrationLayer,productizationLayer,commercialLayer,operationalIntegrity,defenceLayer,adversaryEmulation,missionOpsLayer,driftSentinel,releaseControl,connectorGuard:{status:"PASS",allowedHosts:[...Array.from(GITHUB_ALLOWED),...Array.from(CHAIN_ALLOWED)]},runtime:{deploymentId:Bun.env.RAILWAY_DEPLOYMENT_ID||null,serviceId:Bun.env.RAILWAY_SERVICE_ID||null,environmentId:Bun.env.RAILWAY_ENVIRONMENT_ID||null,publicDomain:Bun.env.RAILWAY_PUBLIC_DOMAIN||null},bricks:ASTRA_BRICKS,time:new Date().toISOString()};
 }
 
 const CSS = `
@@ -1177,6 +1191,41 @@ Bun.serve({port:Number(Bun.env.PORT||3000),async fetch(req){
  if(req.method==="GET"&&u.pathname==="/api/defence/assurance-package"){
   const pkg=await defenceAssurancePackage();
   return new Response(JSON.stringify(pkg),{headers:{...hs("application/json"),"content-disposition":'attachment; filename="c2ledger-mission-assurance.json"'}});
+ }
+ if(req.method==="GET"&&u.pathname==="/api/mission-ops/profile"){
+  const proof=probeMissionOpsLayer();
+  return new Response(JSON.stringify({product:"C2Ledger",version:PRODUCT_VERSION,...proof}),{status:proof.status==="PASS"?200:503,headers:hs("application/json")});
+ }
+ if(req.method==="GET"&&u.pathname==="/api/mission-ops/control"){
+  const state:any=await readState("state/mission-control.json",{enabled:true,reason:"normal",updatedAt:null});
+  return new Response(JSON.stringify({schema:"c2ledger-mission-control/v1",...state}),{headers:hs("application/json")});
+ }
+ if(req.method==="POST"&&u.pathname==="/api/mission-ops/control"){
+  if(!adminAuthorized(req)) return new Response(JSON.stringify({error:"unauthorized"}),{status:401,headers:hs("application/json")});
+  let body:any;try{body=await req.json()}catch{return new Response(JSON.stringify({error:"invalid body"}),{status:400,headers:hs("application/json")})}
+  const state={enabled:body?.enabled===true,reason:String(body?.reason||"operator").slice(0,160),updatedAt:new Date().toISOString()};
+  try{await writeState("state/mission-control.json",state)}catch(e:any){return new Response(JSON.stringify({error:"control state store unavailable",detail:String(e?.message||e)}),{status:503,headers:hs("application/json")})}
+  return new Response(JSON.stringify({schema:"c2ledger-mission-control/v1",...state}),{headers:hs("application/json")});
+ }
+ if(req.method==="POST"&&u.pathname==="/api/mission-ops/evaluate"){
+  let body:any;try{body=await req.json()}catch{return new Response(JSON.stringify({error:"invalid body"}),{status:400,headers:hs("application/json")})}
+  const n=(k:string)=>Math.max(0,Number(body?.[k]||0));
+  const metrics={criticalAssetsTotal:n("criticalAssetsTotal"),criticalAssetsAvailable:n("criticalAssetsAvailable"),detectionsExpected:n("detectionsExpected"),detectionsObserved:n("detectionsObserved"),containmentExpected:n("containmentExpected"),containmentSucceeded:n("containmentSucceeded"),evidenceExpected:n("evidenceExpected"),evidenceVerified:n("evidenceVerified"),recoveryObjectives:n("recoveryObjectives"),recoveryMet:n("recoveryMet")};
+  return new Response(JSON.stringify({metrics,...evaluateMission(metrics)}),{headers:hs("application/json")});
+ }
+ if(req.method==="POST"&&u.pathname==="/api/sensor/events"){
+  const expected=String(Bun.env.C2LEDGER_SENSOR_TOKEN||"");
+  if(!expected) return new Response(JSON.stringify({error:"sensor ingestion unconfigured"}),{status:503,headers:hs("application/json")});
+  if(bearer(req)!==expected) return new Response(JSON.stringify({error:"unauthorized"}),{status:401,headers:hs("application/json")});
+  const control:any=await readState("state/mission-control.json",{enabled:true,reason:"normal"});
+  if(control.enabled!==true) return new Response(JSON.stringify({error:"mission operations disabled",reason:control.reason||"operator"}),{status:423,headers:hs("application/json")});
+  let body:any;try{body=await req.json()}catch{return new Response(JSON.stringify({error:"invalid body"}),{status:400,headers:hs("application/json")})}
+  const safeEvent={sensorId:String(body?.sensorId||req.headers.get("x-c2ledger-sensor")||"unknown").slice(0,96),time:String(body?.time||new Date().toISOString()).slice(0,40),type:String(body?.type||"telemetry").slice(0,48),source:String(body?.source||"local").slice(0,128),severity:String(body?.severity||"info").slice(0,16),message:String(body?.message||"").slice(0,2048),tags:Array.isArray(body?.tags)?body.tags.map((x:any)=>String(x).slice(0,48)).slice(0,20):[]};
+  const events:any=await readState("state/sensor-events.json",{items:[]});
+  events.items=[{...safeEvent,receivedAt:new Date().toISOString()},...(events.items||[])].slice(0,1000);
+  try{await writeState("state/sensor-events.json",events)}catch(e:any){return new Response(JSON.stringify({error:"sensor state store unavailable",detail:String(e?.message||e)}),{status:503,headers:hs("application/json")})}
+  const evidence=await persistEvidence("sensor-event",JSON.stringify(safeEvent),safeEvent);
+  return new Response(JSON.stringify({status:evidence.status==="PASS"?"PASS":"PARTIAL",accepted:true,event:safeEvent,evidence}),{headers:hs("application/json")});
  }
  if(req.method==="GET"&&u.pathname==="/api/defence/adversary-emulation"){
   return new Response(JSON.stringify(await adversaryEmulationCatalog()),{headers:hs("application/json")});
