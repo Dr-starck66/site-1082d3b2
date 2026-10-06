@@ -3,6 +3,7 @@ import { mkdir, unlink } from "node:fs/promises";
 import { dirname } from "node:path";
 import { RANGE_SCENARIOS, rangeCatalog } from "./range-scenarios";
 import { MISSION_OPS_PROFILE, evaluateMission } from "./mission-ops";
+import { AUTHORIZED_RANGE_PROFILE, authorizedRangeUrl, validateEffect } from "./authorized-range";
 
 type Sev = "low"|"medium"|"high"|"critical";
 type Rule = {id:string; title:string; severity:Sev; weight:number; category:string; re:RegExp; reason:string};
@@ -286,10 +287,11 @@ const ASTRA_BRICKS = [
  {id:"AUDIT_HASH_CHAIN",version:"1.0",status:"RUNTIME",role:"cryptographically chained tenant audit events with verification"},
  {id:"MISSION_ASSURANCE_DEFENCE",version:"1.0",status:"RUNTIME",role:"defensive mission-assurance profile, offline assurance export and fail-closed readiness evidence"},
  {id:"ADVERSARY_EMULATION_RANGE",version:"1.0",status:"RUNTIME",role:"bounded purple-team simulation of hostile TTP patterns without live exploitation, persistence or destructive actions"},
- {id:"MISSION_OPS_CONTROL",version:"1.0",status:"RUNTIME",role:"deployable passive sensor control, persistent kill-switch and mission-impact scoring for authorized environments"}
+ {id:"MISSION_OPS_CONTROL",version:"1.0",status:"RUNTIME",role:"deployable passive sensor control, persistent kill-switch and mission-impact scoring for authorized environments"},
+ {id:"AUTHORIZED_RANGE_EFFECTS",version:"1.0",status:"RUNTIME",role:"real lab effects on explicitly authorized private range nodes with public-target denial and finite non-shell actions"}
 ];
 
-const PRODUCT_VERSION="0.12.0";
+const PRODUCT_VERSION="0.13.0";
 const RELEASE_ID=String(Bun.env.C2LEDGER_RELEASE_ID||"dev");
 const GITHUB_ALLOWED=new Set(["api.github.com","raw.githubusercontent.com","codeload.github.com"]);
 const CHAIN_ALLOWED=new Set(["ethereum-rpc.publicnode.com","bsc-rpc.publicnode.com","polygon-bor-rpc.publicnode.com","api.trongrid.io","fullnode.mainnet.aptoslabs.com"]);
@@ -424,6 +426,15 @@ async function runAdversaryEmulation(id:string){
   fixtureDigest,
   generatedAt:new Date().toISOString()
  };
+}
+
+function probeAuthorizedRangeLayer(){
+ const p=AUTHORIZED_RANGE_PROFILE;
+ const safe=p.deployable===true&&p.targetPolicy.publicInternet===false&&p.targetPolicy.arbitraryHosts===false&&p.prohibited.includes("shell")&&p.prohibited.includes("exploit-delivery")&&p.prohibited.includes("credential-theft")&&p.prohibited.includes("propagation");
+ let publicBlocked=false,privateAllowed=false;
+ try{authorizedRangeUrl("https://example.com")}catch{publicBlocked=true}
+ try{authorizedRangeUrl("http://10.8.0.12:3200");privateAllowed=true}catch{}
+ return {status:safe&&publicBlocked&&privateAllowed?"PASS":"FAIL",profile:p,checks:{publicBlocked,privateAllowed,finiteEffects:p.effects.length===5}};
 }
 
 function probeMissionOpsLayer(){
@@ -888,7 +899,9 @@ function openApiDoc(){
   "/api/mission-ops/profile":{get:{summary:"Deployable Mission Ops profile and safety controls",responses:{"200":{description:"Mission Ops profile"}}}},
   "/api/mission-ops/evaluate":{post:{summary:"Evaluate mission availability, detection, containment, evidence and recovery",responses:{"200":{description:"Mission score"}}}},
   "/api/mission-ops/control":{get:{summary:"Read persistent Mission Ops kill-switch state",responses:{"200":{description:"Control state"}}},post:{summary:"Admin-only persistent Mission Ops kill-switch update",security:[{bearerAuth:[]}],responses:{"200":{description:"Control updated"},"401":{description:"Unauthorized"}}}},
-  "/api/sensor/events":{post:{summary:"Authenticated passive sensor event ingestion",responses:{"200":{description:"Event accepted"},"401":{description:"Unauthorized"},"423":{description:"Mission Ops disabled"}}}}
+  "/api/sensor/events":{post:{summary:"Authenticated passive sensor event ingestion",responses:{"200":{description:"Event accepted"},"401":{description:"Unauthorized"},"423":{description:"Mission Ops disabled"}}}},
+  "/api/range/profile":{get:{summary:"Authorized cyber-range target policy and finite lab effects",responses:{"200":{description:"Range profile"}}}},
+  "/api/range/effect":{post:{summary:"Admin-only effect on a pre-authorized private range node",security:[{bearerAuth:[]}],responses:{"200":{description:"Effect applied"},"400":{description:"Blocked target/effect"},"401":{description:"Unauthorized"},"423":{description:"Mission Ops disabled"}}}}
  },components:{securitySchemes:{bearerAuth:{type:"http",scheme:"bearer"}}}};
 }
 async function socSnapshot(){
@@ -1176,6 +1189,7 @@ async function proofSnapshot(){
  const defenceLayer=await probeDefenceLayer();
  const adversaryEmulation=await probeAdversaryEmulationLayer();
  const missionOpsLayer=probeMissionOpsLayer();
+ const authorizedRangeLayer=probeAuthorizedRangeLayer();
  const benchmark=runBenchmark(3);
  const rulepackHash=await currentRulepackHash();
  const requiredEvidence=String(Bun.env.C2LEDGER_EVIDENCE_REQUIRED||"false")==="true";
@@ -1183,11 +1197,11 @@ async function proofSnapshot(){
  const expectedVersion=String(Bun.env.C2LEDGER_EXPECTED_VERSION||"");
  const driftSentinel=expectedRulepack?{status:expectedRulepack===rulepackHash?"PASS":"FAIL",expected:expectedRulepack,actual:rulepackHash}:{status:"PARTIAL",reason:"expected-rulepack-not-pinned",actual:rulepackHash};
  const releaseControl=expectedVersion?{status:(RELEASE_ID.startsWith("v"+expectedVersion)&&PRODUCT_VERSION===expectedVersion)?"PASS":"FAIL",expectedVersion,releaseId:RELEASE_ID,runtimeVersion:PRODUCT_VERSION}:{status:"PARTIAL",reason:"expected-version-not-pinned",releaseId:RELEASE_ID,runtimeVersion:PRODUCT_VERSION};
- const hardFail=benchmark.status==="FAIL"||moatLayer.status==="FAIL"||integrationLayer.status==="FAIL"||productizationLayer.status==="FAIL"||commercialLayer.status==="FAIL"||operationalIntegrity.status==="FAIL"||defenceLayer.status==="FAIL"||adversaryEmulation.status==="FAIL"||missionOpsLayer.status==="FAIL"||driftSentinel.status==="FAIL"||releaseControl.status==="FAIL";
+ const hardFail=benchmark.status==="FAIL"||moatLayer.status==="FAIL"||integrationLayer.status==="FAIL"||productizationLayer.status==="FAIL"||commercialLayer.status==="FAIL"||operationalIntegrity.status==="FAIL"||defenceLayer.status==="FAIL"||adversaryEmulation.status==="FAIL"||missionOpsLayer.status==="FAIL"||authorizedRangeLayer.status==="FAIL"||driftSentinel.status==="FAIL"||releaseControl.status==="FAIL";
  const partial=(!requiredEvidence?false:evidence.status!=="PASS")||driftSentinel.status==="PARTIAL"||releaseControl.status==="PARTIAL";
  const gate=hardFail?"FAIL":partial?"PARTIAL":"PASS";
  const resilience=gate==="PASS"?"ACTIVE":gate==="FAIL"?"QUARANTINED":"SHIELDED";
- return {product:"C2Ledger",version:PRODUCT_VERSION,releaseId:RELEASE_ID,gate,resilience,rulepackHash,selfTest:"PASS",benchmark,evidenceStore:evidence,moatLayer,integrationLayer,productizationLayer,commercialLayer,operationalIntegrity,defenceLayer,adversaryEmulation,missionOpsLayer,driftSentinel,releaseControl,connectorGuard:{status:"PASS",allowedHosts:[...Array.from(GITHUB_ALLOWED),...Array.from(CHAIN_ALLOWED)]},runtime:{deploymentId:Bun.env.RAILWAY_DEPLOYMENT_ID||null,serviceId:Bun.env.RAILWAY_SERVICE_ID||null,environmentId:Bun.env.RAILWAY_ENVIRONMENT_ID||null,publicDomain:Bun.env.RAILWAY_PUBLIC_DOMAIN||null},bricks:ASTRA_BRICKS,time:new Date().toISOString()};
+ return {product:"C2Ledger",version:PRODUCT_VERSION,releaseId:RELEASE_ID,gate,resilience,rulepackHash,selfTest:"PASS",benchmark,evidenceStore:evidence,moatLayer,integrationLayer,productizationLayer,commercialLayer,operationalIntegrity,defenceLayer,adversaryEmulation,missionOpsLayer,authorizedRangeLayer,driftSentinel,releaseControl,connectorGuard:{status:"PASS",allowedHosts:[...Array.from(GITHUB_ALLOWED),...Array.from(CHAIN_ALLOWED)]},runtime:{deploymentId:Bun.env.RAILWAY_DEPLOYMENT_ID||null,serviceId:Bun.env.RAILWAY_SERVICE_ID||null,environmentId:Bun.env.RAILWAY_ENVIRONMENT_ID||null,publicDomain:Bun.env.RAILWAY_PUBLIC_DOMAIN||null},bricks:ASTRA_BRICKS,time:new Date().toISOString()};
 }
 
 const CSS = `
@@ -1236,6 +1250,32 @@ Bun.serve({port:Number(Bun.env.PORT||3000),async fetch(req){
  if(req.method==="GET"&&u.pathname==="/api/defence/assurance-package"){
   const pkg=await defenceAssurancePackage();
   return new Response(JSON.stringify(pkg),{headers:{...hs("application/json"),"content-disposition":'attachment; filename="c2ledger-mission-assurance.json"'}});
+ }
+ if(req.method==="GET"&&u.pathname==="/api/range/profile"){
+  const proof=probeAuthorizedRangeLayer();
+  return new Response(JSON.stringify({product:"C2Ledger",version:PRODUCT_VERSION,...proof}),{status:proof.status==="PASS"?200:503,headers:hs("application/json")});
+ }
+ if(req.method==="POST"&&u.pathname==="/api/range/effect"){
+  if(!adminAuthorized(req)) return new Response(JSON.stringify({error:"unauthorized"}),{status:401,headers:hs("application/json")});
+  const control:any=await readState("state/mission-control.json",{enabled:true,reason:"normal"});
+  if(control.enabled!==true) return new Response(JSON.stringify({error:"mission operations disabled",reason:control.reason||"operator"}),{status:423,headers:hs("application/json")});
+  let body:any;try{body=await req.json()}catch{return new Response(JSON.stringify({error:"invalid body"}),{status:400,headers:hs("application/json")})}
+  try{
+   const effect=validateEffect(String(body?.effect||""));
+   const target=authorizedRangeUrl(String(body?.target||""));
+   const token=String(Bun.env.C2LEDGER_RANGE_TOKEN||"");
+   if(!token) return new Response(JSON.stringify({error:"range token unconfigured"}),{status:503,headers:hs("application/json")});
+   target.pathname="/effect";target.search="";
+   const payload={effect,id:String(body?.id||"").slice(0,80),service:String(body?.service||"").slice(0,80),count:Math.max(1,Math.min(50,Number(body?.count||5)||5))};
+   const res=await fetch(target,{method:"POST",redirect:"error",headers:{"content-type":"application/json",authorization:"Bearer "+token},body:JSON.stringify(payload),signal:AbortSignal.timeout(5000)});
+   const txt=await res.text();
+   if(!res.ok) return new Response(JSON.stringify({error:"range node rejected effect",status:res.status,detail:txt.slice(0,500)}),{status:502,headers:hs("application/json")});
+   const result=JSON.parse(txt);
+   const evidence=await persistEvidence("authorized-range-effect",target.origin,{effect,target:target.origin,result});
+   return new Response(JSON.stringify({status:evidence.status==="PASS"?"PASS":"PARTIAL",target:target.origin,effect,result,evidence}),{headers:hs("application/json")});
+  }catch(e:any){
+   return new Response(JSON.stringify({error:String(e?.message||e),status:"FAIL"}),{status:400,headers:hs("application/json")});
+  }
  }
  if(req.method==="GET"&&u.pathname==="/api/mission-ops/profile"){
   const proof=probeMissionOpsLayer();
