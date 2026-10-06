@@ -19,6 +19,7 @@ on:
 
 permissions:
   contents: write
+  copilot-requests: write
 
 concurrency:
   group: refundmoneynow-editorial
@@ -27,23 +28,28 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 18
     env:
+      GITHUB_TOKEN: ${{ github.token }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
-      NEXT_PUBLIC_SITE_URL: https://refundmoneynow.com
+      NEXT_PUBLIC_SITE_URL: https://refundmoneynow-web-production.up.railway.app
       EDITORIAL_SLOT: ${{ inputs.slot }}
     steps:
       - name: Checkout RefundMoneyNow production branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: refundmoneynow-prod
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
-      - name: Install
+      - name: Install site dependencies
         run: npm install
+      - name: Install Copilot CLI
+        run: |
+          npm install -g @github/copilot
+          copilot --version
       - name: Pipeline self-test
         run: npm run editorial:test
       - name: Generate, verify, link and publish one article
