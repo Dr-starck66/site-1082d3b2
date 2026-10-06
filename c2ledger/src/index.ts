@@ -7,7 +7,7 @@ const RULES: Rule[] = [
  {id:"CHAIN_RPC",title:"Blockchain RPC access",severity:"medium",weight:12,category:"onchain",re:new RegExp("(eth_getLogs|eth_getTransaction|eth_call|JsonRpcProvider|Web3|createPublicClient|rpc\\.(?:ankr|alchemy|infura)|(?:ethereum|polygon|bsc|tron|aptos).{0,40}(?:rpc|provider))","i"),reason:"Code appears to query a blockchain RPC/provider."},
  {id:"DEAD_DROP",title:"Possible blockchain dead-drop decoding",severity:"high",weight:22,category:"onchain",re:new RegExp("(tx\\.(?:to|input|data)|transaction\\.(?:to|input|data)|receipt\\.to|calldata).{0,120}(slice|substring|Buffer\\.from|parseInt)","is"),reason:"Transaction/address data appears to be decoded at runtime."},
  {id:"ONCHAIN_PAYLOAD",title:"On-chain payload storage or retrieval",severity:"high",weight:22,category:"onchain",re:new RegExp("(?:bytes(?:\\s+(?:public|private|internal))?\\s+(?:shellcode|payload|command|script)\\b|function\\s+(?:get|set|update|store)(?:Shellcode|Payload|Command|Script)\\b)","i"),reason:"A smart contract appears to store or expose a payload-like byte sequence; this is a hunting signal, not proof of malicious intent."},
- {id:"REMOTE_EXEC",title:"Dynamic code evaluation",severity:"critical",weight:30,category:"execution",re:new RegExp("(eval\\s*\\(|new\\s+Function\\s*\\(|Invoke-Expression|\\biex\\s*\\()","i"),reason:"Dynamic evaluation can turn resolved or downloaded data into code execution."},
+ {id:"REMOTE_EXEC",title:"Dynamic code evaluation",severity:"critical",weight:30,category:"execution",re:new RegExp("(eval\\s*\\(|(?<!\\.)\\bexec\\s*\\(|new\\s+Function\\s*\\(|Invoke-Expression|\\biex\\s*\\()","i"),reason:"Dynamic evaluation can turn resolved or downloaded data into code execution."},
  {id:"PROCESS_EXEC",title:"Process execution capability",severity:"medium",weight:14,category:"execution",re:new RegExp("(?:node:)?child_process|spawnSync\\s*\\(|spawn\\s*\\(|execSync\\s*\\(|execFileSync\\s*\\(|(?<!\\.)\\bexecFile\\s*\\(|Bun\\.spawn","i"),reason:"The code can launch local processes; this becomes higher risk when correlated with remote, on-chain or untrusted input."},
  {id:"NATIVE_MEMORY_EXEC",title:"Native executable-memory behavior",severity:"critical",weight:28,category:"execution",re:new RegExp("(VirtualAlloc|VirtualProtect|PAGE_EXECUTE_READWRITE|PROT_EXEC|std::mem::transmute|CreateThread|NtAllocateVirtualMemory)","i"),reason:"The code allocates or converts executable memory, a strong signal when paired with retrieved payload bytes."},
  {id:"RAW_IP",title:"Raw-IP network destination",severity:"high",weight:18,category:"network",re:new RegExp("https?:\\/\\/(?:[0-9]{1,3}\\.){3}[0-9]{1,3}(?::[0-9]{1,5})?","i"),reason:"Direct raw-IP connections are a common post-resolution C2 pattern."},
@@ -44,7 +44,7 @@ function scan(content:string,path:string){
  const score=Math.min(100,findings.reduce((n,f)=>n+f.weight,0)+bonus);
  const verdict=score>=80?"CRITICAL":score>=55?"HIGH":score>=30?"ELEVATED":score>=12?"WATCH":"LOW";
  findings.sort((a,b)=>rank[b.severity as Sev]-rank[a.severity as Sev]||b.weight-a.weight);
- return {product:"C2Ledger",version:"0.9.2",verdict,score,path,findings,correlations,scannedBytes:new TextEncoder().encode(content).length,scannedAt:new Date().toISOString(),
+ return {product:"C2Ledger",version:"0.9.3",verdict,score,path,findings,correlations,scannedBytes:new TextEncoder().encode(content).length,scannedAt:new Date().toISOString(),
  guidance:score>=55?["Do not execute this code until reviewed.","Inspect dependency provenance and recent lockfile changes.","Hunt for blockchain RPC followed by raw-IP or child-process activity."]:["No high-confidence blockchain-C2 attack chain was established by this static pass.","Treat this as one signal; behavioral telemetry still matters."]};
 }
 
@@ -282,7 +282,7 @@ const ASTRA_BRICKS = [
  {id:"AUDIT_HASH_CHAIN",version:"1.0",status:"RUNTIME",role:"cryptographically chained tenant audit events with verification"}
 ];
 
-const PRODUCT_VERSION="0.9.2";
+const PRODUCT_VERSION="0.9.3";
 const RELEASE_ID=String(Bun.env.C2LEDGER_RELEASE_ID||"dev");
 const GITHUB_ALLOWED=new Set(["api.github.com","raw.githubusercontent.com","codeload.github.com"]);
 const CHAIN_ALLOWED=new Set(["ethereum-rpc.publicnode.com","bsc-rpc.publicnode.com","polygon-bor-rpc.publicnode.com","api.trongrid.io","fullnode.mainnet.aptoslabs.com"]);
@@ -296,7 +296,7 @@ async function sha256Hex(value:string){
 }
 
 function rulepackDescriptor(){
- return RULES.map(r=>({id:r.id,title:r.title,severity:r.severity,weight:r.weight,category:r.category,reason:r.reason}));
+ return RULES.map(r=>({id:r.id,title:r.title,severity:r.severity,weight:r.weight,category:r.category,reason:r.reason,pattern:r.re.source,flags:r.re.flags}));
 }
 
 async function currentRulepackHash(){
@@ -950,12 +950,12 @@ async function proofSnapshot(){
  const expectedRulepack=String(Bun.env.C2LEDGER_EXPECTED_RULEPACK_HASH||"");
  const expectedVersion=String(Bun.env.C2LEDGER_EXPECTED_VERSION||"");
  const driftSentinel=expectedRulepack?{status:expectedRulepack===rulepackHash?"PASS":"FAIL",expected:expectedRulepack,actual:rulepackHash}:{status:"PARTIAL",reason:"expected-rulepack-not-pinned",actual:rulepackHash};
- const releaseControl=expectedVersion?{status:(RELEASE_ID.startsWith("v"+expectedVersion)&&"0.9.2"===expectedVersion)?"PASS":"FAIL",expectedVersion,releaseId:RELEASE_ID,runtimeVersion:"0.9.2"}:{status:"PARTIAL",reason:"expected-version-not-pinned",releaseId:RELEASE_ID,runtimeVersion:"0.9.2"};
+ const releaseControl=expectedVersion?{status:(RELEASE_ID.startsWith("v"+expectedVersion)&&"0.9.3"===expectedVersion)?"PASS":"FAIL",expectedVersion,releaseId:RELEASE_ID,runtimeVersion:"0.9.3"}:{status:"PARTIAL",reason:"expected-version-not-pinned",releaseId:RELEASE_ID,runtimeVersion:"0.9.3"};
  const hardFail=benchmark.status==="FAIL"||moatLayer.status==="FAIL"||integrationLayer.status==="FAIL"||productizationLayer.status==="FAIL"||commercialLayer.status==="FAIL"||operationalIntegrity.status==="FAIL"||driftSentinel.status==="FAIL"||releaseControl.status==="FAIL";
  const partial=(!requiredEvidence?false:evidence.status!=="PASS")||driftSentinel.status==="PARTIAL"||releaseControl.status==="PARTIAL";
  const gate=hardFail?"FAIL":partial?"PARTIAL":"PASS";
  const resilience=gate==="PASS"?"ACTIVE":gate==="FAIL"?"QUARANTINED":"SHIELDED";
- return {product:"C2Ledger",version:"0.9.2",releaseId:RELEASE_ID,gate,resilience,rulepackHash,selfTest:"PASS",benchmark,evidenceStore:evidence,moatLayer,integrationLayer,productizationLayer,commercialLayer,operationalIntegrity,driftSentinel,releaseControl,connectorGuard:{status:"PASS",allowedHosts:[...Array.from(GITHUB_ALLOWED),...Array.from(CHAIN_ALLOWED)]},runtime:{deploymentId:Bun.env.RAILWAY_DEPLOYMENT_ID||null,serviceId:Bun.env.RAILWAY_SERVICE_ID||null,environmentId:Bun.env.RAILWAY_ENVIRONMENT_ID||null,publicDomain:Bun.env.RAILWAY_PUBLIC_DOMAIN||null},bricks:ASTRA_BRICKS,time:new Date().toISOString()};
+ return {product:"C2Ledger",version:"0.9.3",releaseId:RELEASE_ID,gate,resilience,rulepackHash,selfTest:"PASS",benchmark,evidenceStore:evidence,moatLayer,integrationLayer,productizationLayer,commercialLayer,operationalIntegrity,driftSentinel,releaseControl,connectorGuard:{status:"PASS",allowedHosts:[...Array.from(GITHUB_ALLOWED),...Array.from(CHAIN_ALLOWED)]},runtime:{deploymentId:Bun.env.RAILWAY_DEPLOYMENT_ID||null,serviceId:Bun.env.RAILWAY_SERVICE_ID||null,environmentId:Bun.env.RAILWAY_ENVIRONMENT_ID||null,publicDomain:Bun.env.RAILWAY_PUBLIC_DOMAIN||null},bricks:ASTRA_BRICKS,time:new Date().toISOString()};
 }
 
 const CSS = `
@@ -970,6 +970,7 @@ const safeTest=scan("const p = new ethers.JsonRpcProvider('https://example.inval
 const badTest=scan("const p = new ethers.JsonRpcProvider('https://rpc.example.invalid'); const tx={to:'0xabc'}; const x=tx.to.slice(2); process.env.NODE_TLS_REJECT_UNAUTHORIZED='0'; fetch('http://181.214.149.148:443'); eval(x);","selftest-suspicious");
 if(safeTest.score>20 || badTest.score<80){console.error("SELFTEST FAIL",JSON.stringify({safe:safeTest.score,bad:badTest.score}));process.exit(1);}
 console.log("SELFTEST PASS",JSON.stringify({safe:safeTest.score,bad:badTest.score,safeVerdict:safeTest.verdict,badVerdict:badTest.verdict}));
+console.log("RULEPACK_HASH_PENDING",await currentRulepackHash());
 
 
 const RATE_BUCKET=new Map<string,{count:number,reset:number}>();
@@ -983,7 +984,7 @@ function rateAllowed(req:Request){
 Bun.serve({port:Number(Bun.env.PORT||3000),async fetch(req){
  const u=new URL(req.url);
  if(req.method==="GET"&&u.pathname==="/") return new Response(HTML,{headers:hs("text/html; charset=utf-8")});
- if((req.method==="GET"||req.method==="POST")&&u.pathname==="/health") return new Response(JSON.stringify({ok:true,product:"C2Ledger",version:"0.9.2",releaseId:RELEASE_ID,selfTest:"PASS",time:new Date().toISOString()}),{headers:hs("application/json")});
+ if((req.method==="GET"||req.method==="POST")&&u.pathname==="/health") return new Response(JSON.stringify({ok:true,product:"C2Ledger",version:"0.9.3",releaseId:RELEASE_ID,selfTest:"PASS",time:new Date().toISOString()}),{headers:hs("application/json")});
  if((req.method==="GET"||req.method==="POST")&&u.pathname==="/health/commercial"){
   const proof=await proofSnapshot();
   const ok=proof.gate==="PASS"&&proof.productizationLayer?.status==="PASS"&&proof.commercialLayer?.status==="PASS"&&COMMERCIAL_PLANS.length===4;
