@@ -19,11 +19,15 @@ function privateIPv4(host:string){
   if([a,b,c,d].some(x=>x<0||x>255)) return false;
   return a===10 || (a===172&&b>=16&&b<=31) || (a===192&&b===168) || a===127;
 }
+function explicitHosts(){
+  return new Set(String(Bun.env.C2LEDGER_RANGE_ALLOWED_HOSTS||"")
+    .split(",").map(x=>x.trim().toLowerCase()).filter(Boolean));
+}
 export function authorizedRangeUrl(raw:string){
   const u=new URL(raw);
   if(u.protocol!=="http:"&&u.protocol!=="https:") throw new Error("range node protocol blocked");
   const h=u.hostname.toLowerCase();
-  const ok=h==="localhost"||h==="127.0.0.1"||h.endsWith(".railway.internal")||privateIPv4(h);
+  const ok=h==="localhost"||h==="127.0.0.1"||h.endsWith(".railway.internal")||privateIPv4(h)||explicitHosts().has(h);
   if(!ok) throw new Error("range node target blocked: public/arbitrary hosts are not allowed");
   return u;
 }
