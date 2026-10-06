@@ -49,6 +49,74 @@ function scan(content:string,path:string){
 }
 
 
+
+function zipU16(b:Uint8Array,o:number){return b[o]|(b[o+1]<<8)}
+function zipU32(b:Uint8Array,o:number){return (b[o]|(b[o+1]<<8)|(b[o+2]<<16)|(b[o+3]<<24))>>>0}
+function zipSig(b:Uint8Array,o:number,n:number){return o+3<b.length&&zipU32(b,o)===n}
+function zipName(b:Uint8Array,a:number,z:number){return new TextDecoder().decode(b.slice(a,z));}
+function safeArchivePath(name:string){return !!name&&!name.startsWith("/")&&!name.split("/").includes("..")&&!name.includes("\\");}
+function githubFallbackTextPath(p:string){
+ const x=p.toLowerCase(),b=x.split("/").pop()||"";
+ return b==="package.json"||b==="dockerfile"||[".js",".mjs",".cjs",".ts",".tsx",".jsx",".sh",".bash",".zsh",".ps1",".py",".rb",".php",".yml",".yaml",".json",".toml",".md",".mdx",".rst",".txt",".go",".rs",".java",".kt",".sol",".html",".htm",".vue",".svelte"].some(e=>x.endsWith(e));
+}
+async function scanGithubCodeload(owner:string,repo:string){
+ let z:Uint8Array|null=null,branch="";
+ for(const candidate of ["main","master"]){
+  const u="https://codeload.github.com/"+owner+"/"+repo+"/zip/refs/heads/"+candidate;
+  const r=await safeGithubFetch(u,{headers:{"user-agent":"C2Ledger/0.9"},signal:AbortSignal.timeout(20000)});
+  if(r.ok){
+   const a=new Uint8Array(await r.arrayBuffer());
+   if(a.byteLength>16000000) throw new Error("GitHub API rate-limited and codeload archive exceeds 16 MB fallback limit");
+   z=a;branch=candidate;break;
+  }
+ }
+ if(!z) throw new Error("GitHub API rate-limited and codeload fallback unavailable");
+ let e=-1;for(let i=z.length-22;i>=Math.max(0,z.length-65557);i--){if(zipSig(z,i,0x06054b50)){e=i;break}}
+ if(e<0) throw new Error("codeload fallback ZIP is invalid");
+ const total=Math.min(5000,zipU16(z,e+10)),cd=zipU32(z,e+16);let p=cd;
+ const entries:any[]=[];
+ for(let n=0;n<total&&p+46<=z.length;n++){
+  if(!zipSig(z,p,0x02014b50)) break;
+  const flags=zipU16(z,p+8),method=zipU16(z,p+10),cs=zipU32(z,p+20),us=zipU32(z,p+24),nl=zipU16(z,p+28),xl=zipU16(z,p+30),cl=zipU16(z,p+32),lo=zipU32(z,p+42);
+  const full=zipName(z,p+46,p+46+nl);p+=46+nl+xl+cl;
+  const parts=full.split("/");parts.shift();const path=parts.join("/");
+  if((flags&1)||!safeArchivePath(path)||!githubFallbackTextPath(path)||us<=0||us>300000||lo+30>z.length||!zipSig(z,lo,0x04034b50)) continue;
+  const low=path.toLowerCase(),bn=low.split("/").pop()||"";
+  const isDoc=/\.(?:md|mdx|rst|txt)$/.test(low),isTest=/(^|\/)(?:test|tests|testcases|fixtures|examples?|samples?)(\/|$)/.test(low),isWorkflow=low.startsWith(".github/workflows/");
+  const manifest=["package.json","bun.lock","bun.lockb","package-lock.json","pnpm-lock.yaml","yarn.lock","dockerfile","makefile","tasks.json"].includes(bn);
+  const priority=manifest?0:(!isDoc&&!isTest&&!isWorkflow?1:isWorkflow?2:isTest?3:4);
+  entries.push({path,method,cs,us,lo,priority,isDoc,isTest,isWorkflow});
+ }
+ entries.sort((a,b)=>a.priority-b.priority||a.path.localeCompare(b.path));
+ const selected=entries.slice(0,80),files:any[]=[];let bytesFetched=0,filesScanned=0;
+ for(const x of selected){
+  const lnl=zipU16(z,x.lo+26),lxl=zipU16(z,x.lo+28),ds=x.lo+30+lnl+lxl;if(ds+x.cs>z.length)continue;
+  let raw:Uint8Array;try{raw=x.method===0?z.slice(ds,ds+x.cs):x.method===8?new Uint8Array(inflateRawSync(z.slice(ds,ds+x.cs))):new Uint8Array()}catch{continue}
+  if(!raw.length||raw.byteLength>300000||bytesFetched+raw.byteLength>3500000)continue;
+  const content=new TextDecoder("utf-8",{fatal:false}).decode(raw);if(content.indexOf("\0")>=0)continue;
+  bytesFetched+=raw.byteLength;filesScanned++;
+  let result:any=scan(content,x.path);
+  let findings=(result.findings||[]).filter((f:any)=>!(x.isWorkflow&&(f.id==="CREDENTIALS"||f.id==="CHAIN_RPC")));
+  const cats=new Set(findings.map((f:any)=>f.category));let bonus=0;const correlations:string[]=[];
+  if(cats.has("onchain")&&cats.has("execution")){bonus+=20;correlations.push("on-chain resolution + execution")}
+  if(cats.has("onchain")&&cats.has("network")){bonus+=12;correlations.push("on-chain resolution + raw-IP networking")}
+  if(cats.has("supply-chain")&&(cats.has("execution")||cats.has("credential"))){bonus+=14;correlations.push("supply-chain execution/credential chain")}
+  if(cats.has("evasion")&&cats.has("execution")){bonus+=10;correlations.push("evasion + execution")}
+  let score=Math.min(100,findings.reduce((n:number,f:any)=>n+(f.weight||0),0)+bonus);
+  if(x.isDoc)score=Math.min(score,20);
+  if(x.isTest&&!findings.some((f:any)=>["SHELL_LOADER","SECRET_EXFIL","TLS_BYPASS","ENCODED_EXEC","RAW_IP","NATIVE_MEMORY_EXEC"].includes(f.id)))score=Math.min(score,24);
+  const verdict=score>=80?"CRITICAL":score>=55?"HIGH":score>=30?"ELEVATED":score>=12?"WATCH":"LOW";
+  if(findings.length)files.push({path:x.path,score,verdict,findings,correlations});
+ }
+ const all=files.flatMap((f:any)=>f.findings.map((x:any)=>({...x,path:f.path})));
+ const topFileScore=files.reduce((n:number,f:any)=>Math.max(n,f.score),0);
+ const highConfidence=all.some((f:any)=>["SHELL_LOADER","TLS_BYPASS","ENCODED_EXEC","RAW_IP","NATIVE_MEMORY_EXEC"].includes(f.id))||files.some((f:any)=>(f.correlations||[]).some((x:string)=>x==="on-chain resolution + execution"||x==="on-chain resolution + raw-IP networking"||x==="evasion + execution"));
+ let score=topFileScore;if(!highConfidence&&score>24)score=24;
+ const verdict=score>=80?"CRITICAL":score>=55?"HIGH":score>=30?"ELEVATED":score>=12?"WATCH":"LOW";
+ const huntingSignals=Array.from(new Set(files.flatMap((f:any)=>f.correlations||[])));
+ return {product:"C2Ledger",version:PRODUCT_VERSION,repository:owner+"/"+repo,branch,verdict,score,filesScanned,filesSelected:selected.length,archivesScanned:1,archiveEntriesScanned:filesScanned,filesWithFindings:files.length,bytesFetched,correlations:huntingSignals,files,connectorFallback:"codeload-zip",limitations:["Public GitHub repository codeload fallback used after API rate-limit","Maximum 80 selected text files and 3.5 MB decompressed","Static analysis; no untrusted code is executed"],scannedAt:new Date().toISOString()};
+}
+
 async function scanGithub(repoUrl:string){
  let parsed:URL; try{parsed=new URL(repoUrl.trim());}catch{throw new Error("Use a public GitHub repository URL like https://github.com/owner/repo");}
  if(parsed.protocol!=="https:"||parsed.hostname!=="github.com") throw new Error("Only https://github.com public repository URLs are accepted");
@@ -57,10 +125,10 @@ async function scanGithub(repoUrl:string){
  if(!/^[A-Za-z0-9_.-]+$/.test(owner)||!/^[A-Za-z0-9_.-]+$/.test(repo)) throw new Error("Invalid GitHub owner or repository name");
  const base="https://api.github.com/repos/"+owner+"/"+repo;
  const headers={"accept":"application/vnd.github+json","user-agent":"C2Ledger/0.9"};
- const repoRes=await safeGithubFetch(base,{headers}); if(!repoRes.ok) throw new Error("GitHub repository lookup failed: HTTP "+repoRes.status);
+ const repoRes=await safeGithubFetch(base,{headers}); if(!repoRes.ok){if(repoRes.status===403||repoRes.status===429)return await scanGithubCodeload(owner,repo);throw new Error("GitHub repository lookup failed: HTTP "+repoRes.status);}
  const meta:any=await repoRes.json(); if(meta.private) throw new Error("Private repositories require GitHub App credentials");
  const branch=String(meta.default_branch||"main");
- const treeRes=await safeGithubFetch(base+"/git/trees/"+encodeURIComponent(branch)+"?recursive=1",{headers}); if(!treeRes.ok) throw new Error("GitHub tree lookup failed: HTTP "+treeRes.status);
+ const treeRes=await safeGithubFetch(base+"/git/trees/"+encodeURIComponent(branch)+"?recursive=1",{headers}); if(!treeRes.ok){if(treeRes.status===403||treeRes.status===429)return await scanGithubCodeload(owner,repo);throw new Error("GitHub tree lookup failed: HTTP "+treeRes.status);}
  const tree:any=await treeRes.json();
  const blobs=(tree.tree||[]).filter((x:any)=>x.type==="blob"&&typeof x.path==="string");
  const paths=blobs.filter((x:any)=>(x.size||0)<=240000).map((x:any)=>x.path);
@@ -216,7 +284,7 @@ const ASTRA_BRICKS = [
 
 const PRODUCT_VERSION="0.9.2";
 const RELEASE_ID=String(Bun.env.C2LEDGER_RELEASE_ID||"dev");
-const GITHUB_ALLOWED=new Set(["api.github.com","raw.githubusercontent.com"]);
+const GITHUB_ALLOWED=new Set(["api.github.com","raw.githubusercontent.com","codeload.github.com"]);
 const CHAIN_ALLOWED=new Set(["ethereum-rpc.publicnode.com","bsc-rpc.publicnode.com","polygon-bor-rpc.publicnode.com","api.trongrid.io","fullnode.mainnet.aptoslabs.com"]);
 const SUPPORTED_CHAINS=["ethereum","bsc","polygon","tron","aptos"] as const;
 type SupportedChain=(typeof SUPPORTED_CHAINS)[number];
