@@ -1087,7 +1087,7 @@ function runBenchmark(iterations=10){
  samples.sort((a,b)=>a-b);
  const pick=(q:number)=>samples[Math.min(samples.length-1,Math.floor(samples.length*q))]||0;
  const total=tp+tn+fp+fn;
- return {status:(fp===0&&fn===0)?"PASS":"FAIL",iterations,fixtures:BENCH_FIXTURES.length,totalRuns:total,accuracy:total?(tp+tn)/total:0,precision:tp+fp?tp/(tp+fp):1,recall:tp+fn?tp/(tp+fn):1,confusion:{tp,tn,fp,fn},latencyMs:{p50:Number(pick(.50).toFixed(4)),p95:Number(pick(.95).toFixed(4)),max:Number((samples[samples.length-1]||0).toFixed(4))}};
+ return {status:(fp===0&&fn===0)?"PASS":"FAIL",scope:"synthetic-regression-only",scientificCoverageClaim:false,externalRegressionGate:"scripts/realworld-gate.mjs",iterations,fixtures:BENCH_FIXTURES.length,totalRuns:total,accuracy:total?(tp+tn)/total:0,precision:tp+fp?tp/(tp+fp):1,recall:tp+fn?tp/(tp+fn):1,confusion:{tp,tn,fp,fn},latencyMs:{p50:Number(pick(.50).toFixed(4)),p95:Number(pick(.95).toFixed(4)),max:Number((samples[samples.length-1]||0).toFixed(4))}};
 }
 
 
