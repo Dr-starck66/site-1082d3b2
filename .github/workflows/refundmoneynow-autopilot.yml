@@ -1,0 +1,59 @@
+name: RefundMoneyNow Editorial Autopilot
+on:
+  schedule:
+    - cron: '15 10 * * *'
+    - cron: '30 13 * * *'
+    - cron: '20 16 * * *'
+    - cron: '10 19 * * *'
+    - cron: '30 22 * * *'
+  workflow_dispatch:
+    inputs:
+      slot:
+        description: 'Optional slot: pillar-am, reactive-morning, reactive-midday, pillar-pm, reactive-evening'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refundmoneynow-editorial
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
+      NEXT_PUBLIC_SITE_URL: https://refundmoneynow.com
+      EDITORIAL_SLOT: ${{ inputs.slot }}
+    steps:
+      - name: Checkout RefundMoneyNow production branch
+        uses: actions/checkout@v4
+        with:
+          ref: refundmoneynow-prod
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        run: npm install
+      - name: Pipeline self-test
+        run: npm run editorial:test
+      - name: Generate, verify, link and publish one article
+        run: npm run editorial:run
+      - name: Verify complete content set
+        run: npm run evidence:check
+      - name: Commit publication to production branch
+        run: |
+          git config user.name "RefundMoneyNow Editorial Bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add content/articles data
+          if git diff --cached --quiet; then
+            echo "No publication produced; fail-closed run."
+            exit 0
+          fi
+          git commit -m "Editorial autopilot: publish $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push origin HEAD:refundmoneynow-prod
