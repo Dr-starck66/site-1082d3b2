@@ -2,7 +2,7 @@ name: C2Ledger Mission Assurance Gate
 
 on:
   push:
-    branches: [c2ledger-v1-hardening]
+    branches: [main, c2ledger-v1-hardening]
     paths:
       - "c2ledger/**"
       - ".github/workflows/c2ledger-mission-assurance.yml"
@@ -17,7 +17,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Verify release and rulepack integrity
+        run: |
+          node c2ledger/scripts/release-gate.mjs
+          node c2ledger/scripts/rulepack-gate.mjs
       - name: Build deployable Mission Ops images
         run: |
           docker build -t c2ledger-mission-assurance ./c2ledger
@@ -30,8 +34,8 @@ jobs:
             -e C2LEDGER_EVIDENCE_REQUIRED=true \
             -e C2LEDGER_ADMIN_TOKEN=test-admin \
             -e C2LEDGER_SENSOR_TOKEN=test-sensor \
-            -e C2LEDGER_EXPECTED_VERSION=0.13.0 \
-            -e C2LEDGER_RELEASE_ID=v0.13.0-ci \
+            -e C2LEDGER_EXPECTED_VERSION=0.14.0 \
+            -e C2LEDGER_RELEASE_ID=v0.14.0-ci \
             -v c2ledger-ci-state:/var/lib/c2ledger \
             c2ledger-mission-assurance
       - name: Wait for health
@@ -48,12 +52,14 @@ jobs:
           node - <<'NODE'
           const fs=require("fs");
           const x=JSON.parse(fs.readFileSync("/tmp/readiness.json","utf8"));
-          if(x.version!=="0.13.0") throw new Error("unexpected version: "+x.version);
+          if(x.version!=="0.14.0") throw new Error("unexpected version: "+x.version);
           if(x.profile?.posture!=="DEFENSIVE_ONLY") throw new Error("defensive posture missing");
           if(x.profile?.boundaries?.offensiveAutomation!==false) throw new Error("offensive automation boundary failed");
           if(x.profile?.boundaries?.exploitDelivery!==false) throw new Error("exploit delivery boundary failed");
           if(x.profile?.boundaries?.destructiveActions!==false) throw new Error("destructive action boundary failed");
+          if(x.ready!==true || x.proofGate!=="PASS") throw new Error("full readiness proof gate did not pass");
           if(x.defenceLayer?.status!=="PASS") throw new Error("defence layer did not pass");
+          if(x.releaseControl!=="PASS" || x.driftSentinel!=="PASS") throw new Error("release/drift gate did not pass");
           NODE
       - name: Verify deployable Mission Ops control plane
         run: |

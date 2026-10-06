@@ -1,7 +1,7 @@
 name: C2Ledger Real-World Gate
 on:
   push:
-    branches: [c2ledger-v1-hardening]
+    branches: [main, c2ledger-v1-hardening]
     paths:
       - "c2ledger/**"
       - ".github/workflows/c2ledger-realworld-gate.yml"
@@ -9,11 +9,34 @@ on:
 jobs:
   real-world-gate:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "24"
-      - name: Run C2Ledger real-world regression gate
+      - name: Verify release pins
+        run: |
+          node c2ledger/scripts/release-gate.mjs
+          node c2ledger/scripts/rulepack-gate.mjs
+      - name: Build candidate image
+        run: docker build -t c2ledger-candidate ./c2ledger
+      - name: Run candidate image
+        run: |
+          docker run -d --rm -p 3000:3000 --name c2ledger-candidate \
+            -e C2LEDGER_LOCAL_STATE_DIR=/var/lib/c2ledger \
+            -e C2LEDGER_EVIDENCE_REQUIRED=true \
+            -e C2LEDGER_EXPECTED_VERSION=0.14.0 \
+            -e C2LEDGER_RELEASE_ID=v0.14.0-realworld-ci \
+            -v c2ledger-realworld-state:/var/lib/c2ledger \
+            c2ledger-candidate
+          for i in $(seq 1 40); do curl -fsS http://127.0.0.1:3000/health/deep >/tmp/deep.json && exit 0; sleep 1; done
+          docker logs c2ledger-candidate
+          exit 1
+      - name: Run external repository regression against candidate
+        env:
+          C2LEDGER_URL: http://127.0.0.1:3000
         run: node c2ledger/scripts/realworld-gate.mjs
+      - name: Candidate logs
+        if: always()
+        run: docker logs c2ledger-candidate || true

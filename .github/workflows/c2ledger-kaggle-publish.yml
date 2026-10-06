@@ -11,7 +11,7 @@ jobs:
       KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
       KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Require Kaggle credentials
         run: |
           test -n "$KAGGLE_USERNAME"
@@ -31,5 +31,31 @@ jobs:
           PY
       - name: Push and run Kaggle kernel
         run: kaggle kernels push -p c2ledger/kaggle --timeout 1800
-      - name: Show Kaggle kernel status
-        run: kaggle kernels status "$KAGGLE_USERNAME/c2ledger-kaggle-replay"
+      - name: Wait for real Kaggle completion
+        run: |
+          slug="$KAGGLE_USERNAME/c2ledger-kaggle-replay"
+          for i in $(seq 1 60); do
+            out=$(kaggle kernels status "$slug" 2>&1 || true)
+            echo "$out"
+            echo "$out" | grep -qi 'complete' && break
+            echo "$out" | grep -Eqi 'error|cancel' && exit 1
+            sleep 15
+          done
+          out=$(kaggle kernels status "$slug" 2>&1)
+          echo "$out" | grep -qi 'complete'
+      - name: Download and verify Kaggle output evidence
+        run: |
+          mkdir -p artifacts/kaggle-remote
+          kaggle kernels output "$KAGGLE_USERNAME/c2ledger-kaggle-replay" -p artifacts/kaggle-remote --force
+          test -f artifacts/kaggle-remote/campaign.json
+          python3 - <<'PY'
+          import json
+          x=json.load(open('artifacts/kaggle-remote/campaign.json'))
+          assert x['schema']=='c2ledger-kaggle-replay/v1'
+          assert x['digest'].startswith('sha256:')
+          print(json.dumps({'status':'PASS','execution':'KAGGLE_REMOTE','digest':x['digest']}))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: kaggle-remote-evidence
+          path: artifacts/kaggle-remote/

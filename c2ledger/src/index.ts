@@ -1,5 +1,5 @@
 import { inflateRawSync } from "node:zlib";
-import { mkdir, unlink } from "node:fs/promises";
+import { mkdir, unlink, rename } from "node:fs/promises";
 import { dirname } from "node:path";
 import { RANGE_SCENARIOS, rangeCatalog } from "./range-scenarios";
 import { MISSION_OPS_PROFILE, evaluateMission } from "./mission-ops";
@@ -291,7 +291,8 @@ const ASTRA_BRICKS = [
  {id:"AUTHORIZED_RANGE_EFFECTS",version:"1.0",status:"RUNTIME",role:"real lab effects on explicitly authorized private range nodes with public-target denial and finite non-shell actions"}
 ];
 
-const PRODUCT_VERSION="0.13.0";
+const PRODUCT_VERSION=(await Bun.file(new URL("../VERSION",import.meta.url)).text()).trim();
+const PINNED_RULEPACK_HASH=(await Bun.file(new URL("../RULEPACK.sha256",import.meta.url)).text()).trim();
 const RELEASE_ID=String(Bun.env.C2LEDGER_RELEASE_ID||"dev");
 const GITHUB_ALLOWED=new Set(["api.github.com","raw.githubusercontent.com","codeload.github.com"]);
 const CHAIN_ALLOWED=new Set(["ethereum-rpc.publicnode.com","bsc-rpc.publicnode.com","polygon-bor-rpc.publicnode.com","api.trongrid.io","fullnode.mainnet.aptoslabs.com"]);
@@ -486,7 +487,8 @@ function localStatePath(key:string){
 async function localWrite(key:string,body:string){
  const p=localStatePath(key); if(!p) return false;
  await mkdir(dirname(p),{recursive:true});
- await Bun.write(p,body);
+ const tmp=p+".tmp-"+crypto.randomUUID();
+ try{await Bun.write(tmp,body);await rename(tmp,p);}catch(e){try{await unlink(tmp)}catch{};throw e}
  return true;
 }
 async function localRead(key:string){
@@ -508,6 +510,26 @@ function s3Client(){
   bucket:Bun.env.S3_BUCKET,
   region:Bun.env.S3_REGION||"auto"
  });
+}
+
+function stateBackend(){return s3Client()?"s3":LOCAL_STATE_DIR?"local-volume":null;}
+async function rawStoreWrite(key:string,body:string){
+ const client=s3Client();
+ if(client){await client.write(key,body,{type:"application/json"});return "s3";}
+ if(LOCAL_STATE_DIR){await localWrite(key,body);return "local-volume";}
+ throw new Error("state-store-unavailable");
+}
+async function rawStoreRead(key:string){
+ const client=s3Client();
+ if(client){if(!(await client.exists(key)))return null;return await client.file(key).text();}
+ if(LOCAL_STATE_DIR)return await localRead(key);
+ return null;
+}
+async function rawStoreDelete(key:string){
+ const client=s3Client();
+ if(client){try{await client.delete(key)}catch{};return true;}
+ if(LOCAL_STATE_DIR)return await localDelete(key);
+ return false;
 }
 
 async function persistEvidence(kind:string,inputRef:string,result:any){
@@ -708,23 +730,22 @@ async function inspectTransaction(chain:SupportedChain,txHash:string){
  return {product:"C2Ledger",version:PRODUCT_VERSION,mode:"defensive-metadata-only",chain,transaction:meta,intelMatches:matches,riskScore:risk,verdict:risk>=80?"HIGH":risk>=40?"ELEVATED":"LOW",note:"No payload or contract code is executed."};
 }
 async function probeMoatLayer(){
- const client=s3Client(); if(!client) return {status:"FAIL",reason:"state-store-unavailable"};
+ const backend=stateBackend(); if(!backend) return {status:"FAIL",reason:"state-store-unavailable"};
  const key="probes/moat-"+String(Bun.env.RAILWAY_DEPLOYMENT_ID||"local")+".json";
  const body={schema:"c2ledger-moat-probe/v1",chains:SUPPORTED_CHAINS,releaseId:RELEASE_ID,time:new Date().toISOString()};
  try{
-  await client.write(key,JSON.stringify(body),{type:"application/json"});
-  const read=JSON.parse(await client.file(key).text());
-  await client.delete(key);
+  await rawStoreWrite(key,JSON.stringify(body));
+  const txt=await rawStoreRead(key); const read=txt?JSON.parse(txt):null;
+  await rawStoreDelete(key);
   const tokenProbe="tenant-probe-token";
   const keyHash=await sha256Hex(tokenProbe);
   const indicatorOk=!!normalizeIndicator("address","0x0000000000000000000000000000000000000000");
   const connectorsOk=SUPPORTED_CHAINS.length===5&&CHAIN_ALLOWED.size===5;
   const hashingOk=keyHash!==tokenProbe&&keyHash.length===64;
-  const roundTrip=Array.isArray(read.chains)&&read.chains.length===5;
-  return {status:(indicatorOk&&connectorsOk&&hashingOk&&roundTrip)?"PASS":"FAIL",stateRoundTrip:roundTrip,tenantKeyHashing:hashingOk,indicatorNormalization:indicatorOk,multiChainAdapters:connectorsOk,supportedChains:SUPPORTED_CHAINS};
- }catch(e:any){return {status:"FAIL",reason:String(e?.message||e)};}
+  const roundTrip=Array.isArray(read?.chains)&&read.chains.length===5;
+  return {status:(indicatorOk&&connectorsOk&&hashingOk&&roundTrip)?"PASS":"FAIL",backend,stateRoundTrip:roundTrip,tenantKeyHashing:hashingOk,indicatorNormalization:indicatorOk,multiChainAdapters:connectorsOk,supportedChains:SUPPORTED_CHAINS};
+ }catch(e:any){await rawStoreDelete(key);return {status:"FAIL",backend,reason:String(e?.message||e)};}
 }
-
 
 function sarifLevel(sev:string){return sev==="critical"||sev==="high"?"error":sev==="medium"?"warning":"note";}
 function toSarif(result:any){
@@ -986,19 +1007,19 @@ function pricingHtml(){
  return '<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width"><title>C2Ledger Pricing</title><style>body{font:16px system-ui;background:#070a13;color:#eef2ff;margin:0}main{max-width:1100px;margin:auto;padding:28px}.g{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.c{background:#10162a;border:1px solid #2b3557;border-radius:16px;padding:18px}.p{font-size:30px;font-weight:900}input,textarea,button{box-sizing:border-box;width:100%;padding:11px;margin:5px 0;border-radius:9px;border:1px solid #2b3557;background:#080b14;color:#fff}button{background:#aab8ff;color:#07102a;font-weight:900}@media(max-width:800px){.g{grid-template-columns:1fr 1fr}}</style><main><h1>C2Ledger</h1><p>Defensive blockchain-C2 and software supply-chain threat intelligence.</p><div class=g>'+cards+'</div><section class=c style="margin-top:18px"><h2>Founding Pilot — 30 days</h2><input id=co placeholder=Company><input id=n placeholder="Your name"><input id=e placeholder="Work email"><textarea id=u placeholder="Security use case"></textarea><button id=b>Apply</button><pre id=o></pre></section></main><script>const q=s=>document.querySelector(s);q("#b").onclick=async()=>{let r=await fetch("/api/pilot/apply",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({company:q("#co").value,name:q("#n").value,email:q("#e").value,useCase:q("#u").value})}),j=await r.json();q("#o").textContent=r.ok?"Application received: "+j.applicationId:(j.error||"Could not submit")}</script>';
 }
 async function probeCommercialLayer(){
- const client=s3Client();if(!client)return {status:"FAIL",reason:"state-store-unavailable"};
+ const backend=stateBackend();if(!backend)return {status:"FAIL",reason:"state-store-unavailable"};
  const id="probe-commercial-"+String(Bun.env.RAILWAY_DEPLOYMENT_ID||"local"),aKey="probes/"+id+"-audit.json",pKey="probes/"+id+"-pilot.json";
  try{
-  await client.write(aKey,JSON.stringify({items:[{action:"API_KEY_ROTATED"}]}),{type:"application/json"});const a=JSON.parse(await client.file(aKey).text());
-  await client.write(pKey,JSON.stringify({items:[{status:"PENDING",plan:"founding-pilot"}]}),{type:"application/json"});const p=JSON.parse(await client.file(pKey).text());
-  await client.delete(aKey);await client.delete(pKey);
+  await rawStoreWrite(aKey,JSON.stringify({items:[{action:"API_KEY_ROTATED"}]}));const at=await rawStoreRead(aKey);const a=at?JSON.parse(at):null;
+  await rawStoreWrite(pKey,JSON.stringify({items:[{status:"PENDING",plan:"founding-pilot"}]}));const pt=await rawStoreRead(pKey);const p=pt?JSON.parse(pt):null;
+  await rawStoreDelete(aKey);await rawStoreDelete(pKey);
   const planOk=COMMERCIAL_PLANS.length===4&&COMMERCIAL_PLANS.some(x=>x.id==="soc"&&x.priceMonthlyEur===899);
-  return {status:(a.items?.[0]?.action==="API_KEY_ROTATED"&&p.items?.[0]?.status==="PENDING"&&planOk)?"PASS":"FAIL",pricingPackaging:planOk,pilotWorkflow:true,keyRotation:true,auditTrail:true,privateRoundTrip:true};
- }catch(e:any){try{await client.delete(aKey);await client.delete(pKey)}catch{}return {status:"FAIL",reason:String(e?.message||e)}}
+  return {status:(a?.items?.[0]?.action==="API_KEY_ROTATED"&&p?.items?.[0]?.status==="PENDING"&&planOk)?"PASS":"FAIL",backend,pricingPackaging:planOk,pilotWorkflow:true,keyRotation:true,auditTrail:true,privateRoundTrip:true};
+ }catch(e:any){await rawStoreDelete(aKey);await rawStoreDelete(pKey);return {status:"FAIL",backend,reason:String(e?.message||e)}}
 }
 
 async function probeProductizationLayer(){
- const client=s3Client(); if(!client) return {status:"FAIL",reason:"state-store-unavailable"};
+ const backend=stateBackend(); if(!backend) return {status:"FAIL",reason:"state-store-unavailable"};
  const now=new Date().toISOString();
  const feed={items:[{id:"a".repeat(64),chain:"ethereum",type:"domain",value:"example.invalid",confidence:80,firstSeen:now,lastSeen:now,tags:["probe"]}]};
  const stix=await toStixBundle(feed); const api=openApiDoc(); const html=socHtml();
@@ -1007,20 +1028,20 @@ async function probeProductizationLayer(){
  const incidentKey="probes/productization-incident-"+probeId+".json";
  try{
   const quotaState={schema:"c2ledger-quota-probe/v1",tenant:{id:"probe-tenant",monthlyQuota:250},usage:{requests:1,units:1,lastSeen:now}};
-  await client.write(quotaKey,JSON.stringify(quotaState),{type:"application/json"});
-  const quotaRead=JSON.parse(await client.file(quotaKey).text());
+  await rawStoreWrite(quotaKey,JSON.stringify(quotaState));
+  const qt=await rawStoreRead(quotaKey);const quotaRead=qt?JSON.parse(qt):null;
   const incident={id:"probe-incident",status:"OPEN",source:"probe-tenant",chain:"ethereum",severity:"WATCH",createdAt:now};
-  await client.write(incidentKey,JSON.stringify(incident),{type:"application/json"});
-  const incRead=JSON.parse(await client.file(incidentKey).text()); incRead.status="ACKNOWLEDGED"; incRead.updatedAt=new Date().toISOString();
-  await client.write(incidentKey,JSON.stringify(incRead),{type:"application/json"});
-  const incVerify=JSON.parse(await client.file(incidentKey).text());
-  await client.delete(quotaKey); await client.delete(incidentKey);
+  await rawStoreWrite(incidentKey,JSON.stringify(incident));
+  const it=await rawStoreRead(incidentKey);const incRead=it?JSON.parse(it):null; incRead.status="ACKNOWLEDGED"; incRead.updatedAt=new Date().toISOString();
+  await rawStoreWrite(incidentKey,JSON.stringify(incRead));
+  const iv=await rawStoreRead(incidentKey);const incVerify=iv?JSON.parse(iv):null;
+  await rawStoreDelete(quotaKey); await rawStoreDelete(incidentKey);
   const quotaOk=quotaRead?.usage?.units===1&&quotaRead?.tenant?.monthlyQuota===250;
   const incidentOk=incVerify?.status==="ACKNOWLEDGED";
-  return {status:(stix.type==="bundle"&&stix.objects?.length===1&&api.openapi==="3.1.0"&&html.includes("SOC Console")&&quotaOk&&incidentOk)?"PASS":"FAIL",stix21:stix.type==="bundle",openApi:api.openapi==="3.1.0",socDashboard:html.includes("SOC Console"),incidentLifecycle:incidentOk,tenantQuotaMeter:quotaOk,stateRoundTrip:true};
+  return {status:(stix.type==="bundle"&&stix.objects?.length===1&&api.openapi==="3.1.0"&&html.includes("SOC Console")&&quotaOk&&incidentOk)?"PASS":"FAIL",backend,stix21:stix.type==="bundle",openApi:api.openapi==="3.1.0",socDashboard:html.includes("SOC Console"),incidentLifecycle:incidentOk,tenantQuotaMeter:quotaOk,stateRoundTrip:true};
  }catch(e:any){
-  try{await client.delete(quotaKey);await client.delete(incidentKey);}catch{}
-  return {status:"FAIL",reason:String(e?.message||e),stix21:stix.type==="bundle",openApi:api.openapi==="3.1.0",socDashboard:html.includes("SOC Console")};
+  await rawStoreDelete(quotaKey);await rawStoreDelete(incidentKey);
+  return {status:"FAIL",backend,reason:String(e?.message||e),stix21:stix.type==="bundle",openApi:api.openapi==="3.1.0",socDashboard:html.includes("SOC Console")};
  }
 }
 
@@ -1141,17 +1162,18 @@ async function advanceWatcherCursor(chain:string,height:any){
 }
 async function probeOperationalIntegrity(){
  const id="probe-op-"+String(Bun.env.RAILWAY_DEPLOYMENT_ID||"local"),key="probes/"+id+".json";
- const client=s3Client();if(!client)return {status:"FAIL",reason:"state-store-unavailable"};
+ const backend=stateBackend();if(!backend)return {status:"FAIL",reason:"state-store-unavailable"};
  try{
   const tenant="probe-tenant",t="2026-01-01T00:00:00.000Z",details={x:1},prevHash="GENESIS";
   const h=await sha256Hex(JSON.stringify({tenantId:tenant,action:"PROBE",time:t,details,prevHash}));
   const incidentKey=await sha256Hex(JSON.stringify({chain:"ethereum",indicatorIds:["a","b"],sourceTenant:"probe"}));
   const payload={auditHash:h,incidentKey,cursor:{ethereum:"123"}};
-  await client.write(key,JSON.stringify(payload),{type:"application/json"});const read=JSON.parse(await client.file(key).text());await client.delete(key);
-  const ok=read.auditHash===h&&read.incidentKey===incidentKey&&BigInt(read.cursor.ethereum)===123n;
-  return {status:ok?"PASS":"FAIL",auditHashChain:ok,incidentDedup:ok,watcherCursor:ok,stateRoundTrip:ok};
- }catch(e:any){try{await client.delete(key)}catch{}return {status:"FAIL",reason:String(e?.message||e)}}
+  await rawStoreWrite(key,JSON.stringify(payload));const txt=await rawStoreRead(key);const read=txt?JSON.parse(txt):null;await rawStoreDelete(key);
+  const ok=read?.auditHash===h&&read?.incidentKey===incidentKey&&BigInt(read?.cursor?.ethereum||"0")===123n;
+  return {status:ok?"PASS":"FAIL",backend,auditHashChain:ok,incidentDedup:ok,watcherCursor:ok,stateRoundTrip:ok};
+ }catch(e:any){await rawStoreDelete(key);return {status:"FAIL",backend,reason:String(e?.message||e)}}
 }
+
 async function probeDefenceLayer(){
  const requiredBricks=["EVIDENCE_LEDGER","TARDIGRADE_OMEGA","RELEASE_CONTROL_PLANE","AUDIT_HASH_CHAIN","CONNECTOR_GUARD","ASTRA_HARNESS"];
  const present=new Set(ASTRA_BRICKS.map((x:any)=>x.id));
@@ -1193,7 +1215,7 @@ async function proofSnapshot(){
  const benchmark=runBenchmark(3);
  const rulepackHash=await currentRulepackHash();
  const requiredEvidence=String(Bun.env.C2LEDGER_EVIDENCE_REQUIRED||"false")==="true";
- const expectedRulepack=String(Bun.env.C2LEDGER_EXPECTED_RULEPACK_HASH||"");
+ const expectedRulepack=String(Bun.env.C2LEDGER_EXPECTED_RULEPACK_HASH||PINNED_RULEPACK_HASH||"");
  const expectedVersion=String(Bun.env.C2LEDGER_EXPECTED_VERSION||"");
  const driftSentinel=expectedRulepack?{status:expectedRulepack===rulepackHash?"PASS":"FAIL",expected:expectedRulepack,actual:rulepackHash}:{status:"PARTIAL",reason:"expected-rulepack-not-pinned",actual:rulepackHash};
  const releaseControl=expectedVersion?{status:(RELEASE_ID.startsWith("v"+expectedVersion)&&PRODUCT_VERSION===expectedVersion)?"PASS":"FAIL",expectedVersion,releaseId:RELEASE_ID,runtimeVersion:PRODUCT_VERSION}:{status:"PARTIAL",reason:"expected-version-not-pinned",releaseId:RELEASE_ID,runtimeVersion:PRODUCT_VERSION};
@@ -1208,7 +1230,7 @@ const CSS = `
 :root{font-family:Inter,system-ui,sans-serif;color:#eef2ff;background:#060913}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0,#17204b 0,transparent 34%),#060913;color:#eef2ff}.wrap{max-width:1160px;margin:auto;padding:28px}.nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:48px}.brand{font-size:22px;font-weight:900;letter-spacing:-.04em}.status{font-size:12px;color:#94a3d9}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#55d98d;margin-right:7px}.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:center}.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.16em;color:#8ea2ff;font-weight:800}h1{font-size:clamp(44px,7vw,80px);line-height:.94;letter-spacing:-.055em;margin:12px 0 18px}.lead{font-size:19px;line-height:1.6;color:#b6bfdf}.card{background:#0d1224;border:1px solid #252d4b;border-radius:22px;padding:22px;box-shadow:0 25px 80px #0008}.metric{font-size:56px;font-weight:900}.muted{color:#8d97ba}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:28px 0}.mini{padding:17px;border-radius:16px;border:1px solid #222b48;background:#0a0f20}.mini b{display:block;font-size:20px;margin-bottom:5px}.scanner{margin-top:48px}.scanner h2{font-size:32px}textarea{width:100%;min-height:270px;background:#050814;color:#dbe4ff;border:1px solid #283152;border-radius:16px;padding:16px;font:13px/1.6 ui-monospace,monospace}.row{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0}.btn{border:0;border-radius:12px;padding:12px 16px;font-weight:800;cursor:pointer;background:#8fa2ff;color:#07102a}.btn.secondary{background:#171e36;color:#cbd4ff;border:1px solid #30395d}.out{white-space:pre-wrap;background:#070b17;border:1px solid #252d4b;border-radius:16px;padding:18px;min-height:120px;font:13px/1.55 ui-monospace,monospace;color:#c9d4ff;overflow:auto}footer{margin:50px 0 14px;color:#6f789c;font-size:13px}@media(max-width:800px){.hero{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.wrap{padding:20px}}
 `;
 
-const HTML = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>C2Ledger Mission Assurance — Defensive Cyber Resilience</title><meta name="description" content="Defensive mission assurance for blockchain-C2 detection, software supply-chain evidence, resilient recovery and high-assurance environments."><style>`+CSS+`</style></head><body><main class="wrap"><nav class="nav"><div class="brand">C2Ledger Mission Assurance</div><div class="status"><span class="dot"></span>defensive engine online</div></nav><section class="hero"><div><div class="eyebrow">Defensive cyber resilience × software supply-chain assurance</div><h1>Detect. Prove. Recover.</h1><p class="lead">C2Ledger Mission Assurance detects blockchain dead-drop C2 and software supply-chain attack chains, preserves tamper-evident evidence, and supports fail-closed recovery in high-assurance environments. It never executes untrusted repository code.</p><div class="grid"><div class="mini"><b>Cross-signal</b><span class="muted">Code + network + on-chain</span></div><div class="mini"><b>CI-ready</b><span class="muted">Machine-readable API verdicts</span></div><div class="mini"><b>No execution</b><span class="muted">Static defensive analysis</span></div></div></div><aside class="card"><div class="eyebrow">Risk engine</div><div class="metric">0→100</div><p class="muted">Signals become stronger only when they correlate into an attack chain.</p></aside></section><section class="scanner"><h2>Scan suspicious code</h2><p class="muted">Paste code, or scan a public GitHub repository. C2Ledger analyzes source text only and never executes repository code.</p><div class="row"><input id="repo" style="flex:1;min-width:260px;background:#050814;color:#dbe4ff;border:1px solid #283152;border-radius:12px;padding:12px" placeholder="https://github.com/owner/repo"><button class="btn" id="scanrepo">Scan GitHub repo</button></div><textarea id="src" placeholder="Paste suspicious code here..."></textarea><div class="row"><button class="btn" id="scan">Analyze risk</button><button class="btn secondary" id="sample">Load demo</button><button class="btn secondary" id="clear">Clear</button></div><div id="out" class="out">Ready. API: POST /api/scan</div></section><footer>C2Ledger v0.11.0 Mission Assurance • /health • /api/defence/readiness • /api/proof</footer></main><script>const q=s=>document.querySelector(s);q("#sample").onclick=()=>q("#src").value="const provider = new ethers.JsonRpcProvider('https://example.invalid');\\nconst tx = await provider.getTransaction('0xdeadbeef');\\nconst data = tx.to.slice(2);";q("#clear").onclick=()=>{q("#src").value="";q("#repo").value="";q("#out").textContent="Ready."};q("#scanrepo").onclick=async()=>{const repoUrl=q("#repo").value;if(!repoUrl.trim()){q("#out").textContent="Enter a public GitHub repository URL.";return}q("#out").textContent="Scanning selected repository surfaces…";try{const r=await fetch("/api/scan/github",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({repoUrl})});q("#out").textContent=JSON.stringify(await r.json(),null,2)}catch(e){q("#out").textContent=String(e)}};q("#scan").onclick=async()=>{const content=q("#src").value;if(!content.trim()){q("#out").textContent="Paste code first.";return}q("#out").textContent="Analyzing…";try{const r=await fetch("/api/scan",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({content,path:"dashboard-input"})});q("#out").textContent=JSON.stringify(await r.json(),null,2)}catch(e){q("#out").textContent=String(e)}};</script></body></html>`;
+const HTML = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>C2Ledger Mission Assurance — Defensive Cyber Resilience</title><meta name="description" content="Defensive mission assurance for blockchain-C2 detection, software supply-chain evidence, resilient recovery and high-assurance environments."><style>`+CSS+`</style></head><body><main class="wrap"><nav class="nav"><div class="brand">C2Ledger Mission Assurance</div><div class="status"><span class="dot"></span>defensive engine online</div></nav><section class="hero"><div><div class="eyebrow">Defensive cyber resilience × software supply-chain assurance</div><h1>Detect. Prove. Recover.</h1><p class="lead">C2Ledger Mission Assurance detects blockchain dead-drop C2 and software supply-chain attack chains, preserves tamper-evident evidence, and supports fail-closed recovery in high-assurance environments. It never executes untrusted repository code.</p><div class="grid"><div class="mini"><b>Cross-signal</b><span class="muted">Code + network + on-chain</span></div><div class="mini"><b>CI-ready</b><span class="muted">Machine-readable API verdicts</span></div><div class="mini"><b>No execution</b><span class="muted">Static defensive analysis</span></div></div></div><aside class="card"><div class="eyebrow">Risk engine</div><div class="metric">0→100</div><p class="muted">Signals become stronger only when they correlate into an attack chain.</p></aside></section><section class="scanner"><h2>Scan suspicious code</h2><p class="muted">Paste code, or scan a public GitHub repository. C2Ledger analyzes source text only and never executes repository code.</p><div class="row"><input id="repo" style="flex:1;min-width:260px;background:#050814;color:#dbe4ff;border:1px solid #283152;border-radius:12px;padding:12px" placeholder="https://github.com/owner/repo"><button class="btn" id="scanrepo">Scan GitHub repo</button></div><textarea id="src" placeholder="Paste suspicious code here..."></textarea><div class="row"><button class="btn" id="scan">Analyze risk</button><button class="btn secondary" id="sample">Load demo</button><button class="btn secondary" id="clear">Clear</button></div><div id="out" class="out">Ready. API: POST /api/scan</div></section><footer>C2Ledger v${PRODUCT_VERSION} Mission Assurance • /health • /api/defence/readiness • /api/proof</footer></main><script>const q=s=>document.querySelector(s);q("#sample").onclick=()=>q("#src").value="const provider = new ethers.JsonRpcProvider('https://example.invalid');\\nconst tx = await provider.getTransaction('0xdeadbeef');\\nconst data = tx.to.slice(2);";q("#clear").onclick=()=>{q("#src").value="";q("#repo").value="";q("#out").textContent="Ready."};q("#scanrepo").onclick=async()=>{const repoUrl=q("#repo").value;if(!repoUrl.trim()){q("#out").textContent="Enter a public GitHub repository URL.";return}q("#out").textContent="Scanning selected repository surfaces…";try{const r=await fetch("/api/scan/github",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({repoUrl})});q("#out").textContent=JSON.stringify(await r.json(),null,2)}catch(e){q("#out").textContent=String(e)}};q("#scan").onclick=async()=>{const content=q("#src").value;if(!content.trim()){q("#out").textContent="Paste code first.";return}q("#out").textContent="Analyzing…";try{const r=await fetch("/api/scan",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({content,path:"dashboard-input"})});q("#out").textContent=JSON.stringify(await r.json(),null,2)}catch(e){q("#out").textContent=String(e)}};</script></body></html>`;
 
 function hs(type:string){return {"content-type":type,"x-content-type-options":"nosniff","x-frame-options":"DENY","referrer-policy":"no-referrer","content-security-policy":"default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'"};}
 
@@ -1219,18 +1241,23 @@ console.log("SELFTEST PASS",JSON.stringify({safe:safeTest.score,bad:badTest.scor
 console.log("RULEPACK_HASH_PENDING",await currentRulepackHash());
 
 
-const RATE_BUCKET=new Map<string,{count:number,reset:number}>();
-function rateAllowed(req:Request){
- const now=Date.now(); const ip=(req.headers.get("x-forwarded-for")||req.headers.get("x-real-ip")||"unknown").split(",")[0].trim();
- const key=ip; const cur=RATE_BUCKET.get(key);
- if(!cur||now>=cur.reset){RATE_BUCKET.set(key,{count:1,reset:now+60000});return {ok:true,remaining:59};}
- cur.count++; RATE_BUCKET.set(key,cur); return {ok:cur.count<=60,remaining:Math.max(0,60-cur.count),retryAfter:Math.max(1,Math.ceil((cur.reset-now)/1000))};
+async function rateAllowed(req:Request){
+ const now=Date.now(); const ip=(req.headers.get("x-forwarded-for")||req.headers.get("x-real-ip")||"unknown").split(",")[0].trim().slice(0,128);
+ const id=await sha256Hex(ip||"unknown"); const key="state/rate-limit/"+id+".json";
+ try{
+  const cur:any=await readState(key,{count:0,reset:0});
+  const next=(!cur||now>=Number(cur.reset||0))?{count:1,reset:now+60000}:{count:Number(cur.count||0)+1,reset:Number(cur.reset||now+60000)};
+  await writeState(key,next);
+  return {ok:next.count<=60,remaining:Math.max(0,60-next.count),retryAfter:Math.max(1,Math.ceil((next.reset-now)/1000)),backend:stateBackend()};
+ }catch(e:any){
+  return {ok:false,remaining:0,retryAfter:60,reason:"rate-limit-store-unavailable",detail:String(e?.message||e)};
+ }
 }
 
 Bun.serve({port:Number(Bun.env.PORT||3000),async fetch(req){
  const u=new URL(req.url);
  if(req.method==="GET"&&u.pathname==="/") return new Response(HTML,{headers:hs("text/html; charset=utf-8")});
- if((req.method==="GET"||req.method==="POST")&&u.pathname==="/health") return new Response(JSON.stringify({ok:true,product:"C2Ledger",version:"0.9.3",releaseId:RELEASE_ID,selfTest:"PASS",time:new Date().toISOString()}),{headers:hs("application/json")});
+ if((req.method==="GET"||req.method==="POST")&&u.pathname==="/health") return new Response(JSON.stringify({ok:true,product:"C2Ledger",version:PRODUCT_VERSION,releaseId:RELEASE_ID,selfTest:"PASS",time:new Date().toISOString()}),{headers:hs("application/json")});
  if((req.method==="GET"||req.method==="POST")&&u.pathname==="/health/commercial"){
   const proof=await proofSnapshot();
   const ok=proof.gate==="PASS"&&proof.productizationLayer?.status==="PASS"&&proof.commercialLayer?.status==="PASS"&&COMMERCIAL_PLANS.length===4;
@@ -1244,7 +1271,7 @@ Bun.serve({port:Number(Bun.env.PORT||3000),async fetch(req){
  }
  if(req.method==="GET"&&u.pathname==="/api/defence/readiness"){
   const proof=await proofSnapshot();
-  const ready=proof.defenceLayer?.status==="PASS";
+  const ready=proof.gate==="PASS"&&proof.defenceLayer?.status==="PASS"&&proof.releaseControl?.status==="PASS"&&proof.driftSentinel?.status==="PASS";
   return new Response(JSON.stringify({product:"C2Ledger",edition:DEFENCE_PROFILE.edition,version:PRODUCT_VERSION,ready,profile:DEFENCE_PROFILE,defenceLayer:proof.defenceLayer,proofGate:proof.gate,resilience:proof.resilience,releaseControl:proof.releaseControl?.status,driftSentinel:proof.driftSentinel?.status,time:new Date().toISOString()}),{status:ready?200:503,headers:hs("application/json")});
  }
  if(req.method==="GET"&&u.pathname==="/api/defence/assurance-package"){
@@ -1344,7 +1371,7 @@ Bun.serve({port:Number(Bun.env.PORT||3000),async fetch(req){
  if(req.method==="GET"&&u.pathname==="/pricing") return new Response(pricingHtml(),{headers:hs("text/html; charset=utf-8")});
  if(req.method==="GET"&&u.pathname==="/api/plans") return new Response(JSON.stringify({currency:"EUR",plans:COMMERCIAL_PLANS}),{headers:hs("application/json")});
  if(req.method==="POST"&&u.pathname==="/api/pilot/apply"){
-  const rl=rateAllowed(req); if(!rl.ok) return new Response(JSON.stringify({error:"rate limit exceeded",retryAfter:rl.retryAfter}),{status:429,headers:hs("application/json")});
+  const rl=await rateAllowed(req); if(!rl.ok) return new Response(JSON.stringify({error:"rate limit exceeded",retryAfter:rl.retryAfter}),{status:429,headers:hs("application/json")});
   let body:any; try{body=await req.json();}catch{return new Response(JSON.stringify({error:"invalid body"}),{status:400,headers:hs("application/json")});}
   try{return new Response(JSON.stringify(await submitPilot(body)),{headers:hs("application/json")});}catch(e:any){return new Response(JSON.stringify({error:String(e?.message||e)}),{status:400,headers:hs("application/json")});}
  }
@@ -1449,7 +1476,7 @@ Bun.serve({port:Number(Bun.env.PORT||3000),async fetch(req){
   catch(e:any){return new Response(JSON.stringify({error:String(e?.message||e),status:"FAIL"}),{status:400,headers:hs("application/json")});}
  }
  if(req.method==="POST"&&u.pathname==="/api/multichain/inspect"){
-  const rl=rateAllowed(req); if(!rl.ok) return new Response(JSON.stringify({error:"rate limit exceeded",retryAfter:rl.retryAfter}),{status:429,headers:hs("application/json")});
+  const rl=await rateAllowed(req); if(!rl.ok) return new Response(JSON.stringify({error:"rate limit exceeded",retryAfter:rl.retryAfter}),{status:429,headers:hs("application/json")});
   let body:any; try{body=await req.json();}catch{return new Response(JSON.stringify({error:"invalid body"}),{status:400,headers:hs("application/json")});}
   const chain=String(body?.chain||"").toLowerCase() as SupportedChain; if(!SUPPORTED_CHAINS.includes(chain)) return new Response(JSON.stringify({error:"unsupported chain",supportedChains:SUPPORTED_CHAINS}),{status:400,headers:hs("application/json")});
   try{const result=await inspectTransaction(chain,String(body?.txHash||"")); const evidence=await persistEvidence("multichain-transaction-metadata",chain+"|"+String(body?.txHash||""),result); return new Response(JSON.stringify({...result,evidence}),{headers:hs("application/json")});}
@@ -1505,7 +1532,7 @@ Bun.serve({port:Number(Bun.env.PORT||3000),async fetch(req){
   return new Response(JSON.stringify({product:"C2Ledger",edition:"ASTRA OMEGA",version:PRODUCT_VERSION,releaseId:RELEASE_ID,capabilities:{evidenceLedger:true,contentAddressedProofs:true,dualityArbiter:true,negativeKnowledge:true,replayCapsules:true,benchmarkGate:true,releaseControl:true,connectorGuard:true,rateLimit:true,githubRepositoryScan:true,noUntrustedExecution:true,threatIntelFeed:true,incidentHistory:true,tenantApiKeys:true,multiChainInspection:true,proprietaryMoatData:true,sarifExport:true,ciPrGate:true,githubWebhookReceiver:true,durableAlertQueue:true,longitudinalReputation:true,socDashboard:true,stix21Export:true,tenantQuotaMeter:true,incidentLifecycle:true,openApiContract:true,alertDispatcher:true,commercialOnboarding:true,tenantKeyRotation:true,tenantAuditTrail:true,pricingPackaging:true,enterpriseReadiness:true,missionAssuranceProfile:true,defensiveOnlyBoundary:true,offlineAssuranceExport:true,readinessMapping:true,adversaryEmulationRange:true,purpleTeamValidation:true},assurance:{gate:proof.gate,resilience:proof.resilience,benchmark:proof.benchmark.status,evidenceStore:proof.evidenceStore.status,moatLayer:proof.moatLayer?.status,integrationLayer:proof.integrationLayer?.status,productizationLayer:proof.productizationLayer?.status,commercialLayer:proof.commercialLayer?.status,driftSentinel:proof.driftSentinel.status,releaseControl:proof.releaseControl.status},endpoints:["/api/scan","/api/scan/github","/api/multichain/inspect","/api/intel/feed","/api/intel/stats","/api/intel/ingest","/api/incidents","/api/admin/tenants","/api/scan/sarif","/api/ci/gate","/api/github/webhook","/api/github/action.yml","/api/reputation","/api/alerts/status","/api/alerts/dispatch","/soc","/api/soc/summary","/api/openapi.json","/api/intel/stix","/api/tenant/usage","/api/tenant/scan","/pricing","/api/plans","/api/pilot/apply","/api/admin/pilots","/api/admin/pilots/approve","/api/tenant/key/rotate","/api/tenant/audit","/api/tenant/audit/verify","/api/admin/watcher/cursors","/api/defence/readiness","/api/defence/assurance-package","/api/defence/adversary-emulation","/api/defence/adversary-emulation/advanced","/api/proof","/api/gate","/api/harness","/api/benchmark","/api/bricks","/api/rules"],commercialPositioning:"Defensive mission-assurance and software supply-chain evidence platform for high-assurance environments"}),{headers:hs("application/json")});
  }
  if(req.method==="POST"&&(u.pathname==="/api/scan/github"||u.pathname==="/api/scan")){
-  const rl=rateAllowed(req);
+  const rl=await rateAllowed(req);
   if(!rl.ok) return new Response(JSON.stringify({error:"rate limit exceeded",retryAfter:rl.retryAfter}),{status:429,headers:{...hs("application/json"),"retry-after":String(rl.retryAfter)}});
  }
  if(req.method==="POST"&&u.pathname==="/api/scan/github"){

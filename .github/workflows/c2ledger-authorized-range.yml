@@ -2,7 +2,7 @@ name: C2Ledger Authorized Range Gate
 
 on:
   push:
-    branches: [c2ledger-authorized-range-v1]
+    branches: [main, c2ledger-v1-hardening, c2ledger-authorized-range-v1]
     paths:
       - "c2ledger/**"
       - ".github/workflows/c2ledger-authorized-range.yml"
@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Build engine and range node
         run: |
           docker build -t c2ledger-engine ./c2ledger
@@ -25,7 +25,7 @@ jobs:
           docker network create c2ledger-range-ci
       - name: Start engine and authorized range node
         run: |
-          docker run -d --rm --network c2ledger-range-ci --name c2ledger-engine -p 3000:3000             -e C2LEDGER_LOCAL_STATE_DIR=/var/lib/c2ledger             -e C2LEDGER_EVIDENCE_REQUIRED=true             -e C2LEDGER_ADMIN_TOKEN=range-admin             -e C2LEDGER_RANGE_TOKEN=range-token             -e C2LEDGER_RANGE_ALLOWED_HOSTS=c2ledger-range-node             -e C2LEDGER_EXPECTED_VERSION=0.13.0             -e C2LEDGER_RELEASE_ID=v0.13.0-range-ci             -v c2ledger-range-engine-state:/var/lib/c2ledger             c2ledger-engine
+          docker run -d --rm --network c2ledger-range-ci --name c2ledger-engine -p 3000:3000             -e C2LEDGER_LOCAL_STATE_DIR=/var/lib/c2ledger             -e C2LEDGER_EVIDENCE_REQUIRED=true             -e C2LEDGER_ADMIN_TOKEN=range-admin             -e C2LEDGER_RANGE_TOKEN=range-token             -e C2LEDGER_RANGE_ALLOWED_HOSTS=c2ledger-range-node             -e C2LEDGER_EXPECTED_VERSION=0.14.0             -e C2LEDGER_RELEASE_ID=v0.14.0-range-ci             -v c2ledger-range-engine-state:/var/lib/c2ledger             c2ledger-engine
           docker run -d --rm --network c2ledger-range-ci --name c2ledger-range-node             -e C2LEDGER_RANGE_TOKEN=range-token             -e C2LEDGER_RANGE_ROOT=/var/lib/c2ledger-range             -v c2ledger-range-node-state:/var/lib/c2ledger-range             c2ledger-range-node
       - name: Wait for health
         run: |

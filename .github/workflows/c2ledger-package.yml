@@ -2,7 +2,7 @@ name: C2Ledger Package
 
 on:
   push:
-    branches: [c2ledger-v1-hardening]
+    branches: [main, c2ledger-v1-hardening]
     paths:
       - ".github/workflows/c2ledger-package.yml"
   workflow_dispatch:
@@ -11,14 +11,19 @@ jobs:
   package:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Verify and generate release evidence
+        run: |
+          node c2ledger/scripts/release-gate.mjs --emit
+          node c2ledger/scripts/rulepack-gate.mjs
       - name: Package C2Ledger
         run: |
           mkdir -p package
           cp -R c2ledger package/c2ledger
           cp .github/workflows/c2ledger-*.yml package/ || true
+          cp -R artifacts/release package/release-evidence
       - name: Upload ZIP artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: C2Ledger-current
           path: package/

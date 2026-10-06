@@ -1,6 +1,6 @@
 # C2Ledger Authorized Range Effects
 
-C2Ledger v0.13.0 can apply finite, reversible lab effects to explicitly authorized private range nodes.
+C2Ledger v0.14.0 can apply finite, reversible lab effects to explicitly authorized private range nodes.
 
 Allowed effects:
 - plant-marker

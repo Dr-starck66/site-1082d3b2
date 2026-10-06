@@ -1,4 +1,4 @@
-# C2Ledger Mission Assurance v0.11.1
+# C2Ledger Mission Assurance v0.14.0
 
 Repository-based production source for C2Ledger's defensive Mission Assurance edition.
 
@@ -9,3 +9,12 @@ See [DEFENCE_MISSION_ASSURANCE.md](./DEFENCE_MISSION_ASSURANCE.md) for the produ
 Runtime proof endpoints: `/health`, `/health/deep`, `/api/proof`, `/api/defence/readiness`, `/api/defence/assurance-package`, `/api/defence/adversary-emulation`, `/api/defence/adversary-emulation/advanced`.
 
 No government authorization, CMMC certification, FedRAMP authorization or Pentagon approval is claimed.
+
+
+## Release integrity
+
+`VERSION` is the runtime version source of truth and `RULEPACK.sha256` pins the detector rulepack. CI verifies both before build. Package releases emit SHA-256 file manifests, a CycloneDX SBOM and provenance metadata.
+
+The default durable state backends are Railway/S3-compatible object storage or a local persistent volume for disconnected single-replica deployments. Multi-replica active/active operation is not claimed without an external atomic state backend.
+
+The Kaggle Hybrid Range workflow proves local Kaggle-package compatibility plus an isolated lab campaign. Only the separate Kaggle Publish workflow may claim `KAGGLE_REMOTE` after the private no-internet kernel completes on Kaggle and its output is downloaded and verified.

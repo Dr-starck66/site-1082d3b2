@@ -30,9 +30,12 @@ spec:
         app: c2ledger-mission-node
     spec:
       automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: engine
-          image: c2ledger-engine:0.13.0
+          image: c2ledger-engine:0.14.0
           imagePullPolicy: IfNotPresent
           env:
             - name: PORT
@@ -42,9 +45,9 @@ spec:
             - name: C2LEDGER_EVIDENCE_REQUIRED
               value: "true"
             - name: C2LEDGER_EXPECTED_VERSION
-              value: "0.13.0"
+              value: "0.14.0"
             - name: C2LEDGER_RELEASE_ID
-              value: "v0.13.0-disconnected"
+              value: "v0.14.0-disconnected"
             - name: C2LEDGER_ADMIN_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -57,6 +60,18 @@ spec:
                   key: sensor-token
           ports:
             - containerPort: 3000
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /health/deep
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 20
           volumeMounts:
             - name: state
               mountPath: /var/lib/c2ledger
@@ -67,7 +82,7 @@ spec:
             capabilities:
               drop: ["ALL"]
         - name: sensor
-          image: c2ledger-sensor:0.13.0
+          image: c2ledger-sensor:0.14.0
           imagePullPolicy: IfNotPresent
           env:
             - name: PORT
@@ -88,6 +103,18 @@ spec:
                   key: sensor-ingest-token
           ports:
             - containerPort: 3100
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3100
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3100
+            initialDelaySeconds: 5
+            periodSeconds: 20
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true

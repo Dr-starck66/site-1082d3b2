@@ -2,7 +2,7 @@ name: C2Ledger Kaggle Hybrid Range
 
 on:
   push:
-    branches: [c2ledger-v1-hardening]
+    branches: [main, c2ledger-v1-hardening]
     paths:
       - "c2ledger/kaggle/**"
       - "c2ledger/range-node/**"
@@ -16,7 +16,7 @@ jobs:
     outputs:
       campaign: ${{ steps.campaign.outputs.campaign }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Generate Kaggle-compatible campaign
         id: campaign
         run: |
@@ -31,7 +31,7 @@ jobs:
           with open("/tmp/campaign-line.txt","w") as f: f.write(json.dumps(x["campaign"],separators=(",",":")))
           PY
           echo "campaign=$(cat /tmp/campaign-line.txt)" >> "$GITHUB_OUTPUT"
-      - name: Verify official Kaggle kernel package
+      - name: Verify Kaggle-compatible package locally (not remote execution proof)
         env:
           KAGGLE_USERNAME: c2ledger-ci
           C2LEDGER_KAGGLE_WORKDIR: ${{ github.workspace }}/artifacts/kaggle-kernel
@@ -50,9 +50,9 @@ jobs:
           assert x["schema"]=="c2ledger-kaggle-replay/v1"
           assert x["digest"].startswith("sha256:")
           PY
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: kaggle-replay-evidence
+          name: kaggle-compatibility-evidence
           path: artifacts/kaggle/
 
   ephemeral-lab:
@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Build isolated range node
         run: |
           docker build -t c2ledger-range-node -f c2ledger/range-node/Dockerfile ./c2ledger
@@ -101,7 +101,7 @@ jobs:
           test "$(docker network inspect c2ledger-ephemeral-range --format '{{.Internal}}')" = "true"
           docker inspect range-node --format '{{json .NetworkSettings.Networks}}' >/tmp/networks.json
           ! docker exec range-driver curl -fsS --max-time 2 https://example.com
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ephemeral-range-evidence
           path: artifacts/range/
