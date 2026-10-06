@@ -30,8 +30,8 @@ jobs:
             -e C2LEDGER_EVIDENCE_REQUIRED=true \
             -e C2LEDGER_ADMIN_TOKEN=test-admin \
             -e C2LEDGER_SENSOR_TOKEN=test-sensor \
-            -e C2LEDGER_EXPECTED_VERSION=0.12.0 \
-            -e C2LEDGER_RELEASE_ID=v0.12.0-ci \
+            -e C2LEDGER_EXPECTED_VERSION=0.13.0 \
+            -e C2LEDGER_RELEASE_ID=v0.13.0-ci \
             -v c2ledger-ci-state:/var/lib/c2ledger \
             c2ledger-mission-assurance
       - name: Wait for health
@@ -48,7 +48,7 @@ jobs:
           node - <<'NODE'
           const fs=require("fs");
           const x=JSON.parse(fs.readFileSync("/tmp/readiness.json","utf8"));
-          if(x.version!=="0.12.0") throw new Error("unexpected version: "+x.version);
+          if(x.version!=="0.13.0") throw new Error("unexpected version: "+x.version);
           if(x.profile?.posture!=="DEFENSIVE_ONLY") throw new Error("defensive posture missing");
           if(x.profile?.boundaries?.offensiveAutomation!==false) throw new Error("offensive automation boundary failed");
           if(x.profile?.boundaries?.exploitDelivery!==false) throw new Error("exploit delivery boundary failed");
