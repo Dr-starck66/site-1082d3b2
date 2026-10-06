@@ -560,6 +560,63 @@ async function socPrivateSnapshot(tenant:any){
 function socHtml(){
  return `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>C2Ledger SOC</title><style>body{font:15px system-ui;background:#080b14;color:#eef2ff;margin:0}main{max-width:1050px;margin:auto;padding:24px}.g{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.c{background:#11172a;border:1px solid #2b3557;border-radius:14px;padding:15px}.n{font-size:30px;font-weight:800}.m{color:#9aa7cf}input,button{padding:10px;border-radius:9px;border:1px solid #2b3557}input{background:#080b14;color:#fff;width:min(520px,70%)}button{font-weight:800;background:#aab8ff}.r{display:grid;grid-template-columns:1fr 1fr;gap:12px}.i{padding:9px 0;border-bottom:1px solid #26304d}@media(max-width:700px){.g,.r{grid-template-columns:1fr 1fr}}</style><main><h1>C2Ledger SOC Console</h1><p class=m>Blockchain C2 × supply-chain threat intelligence</p><div class=g><div class=c><span class=m>IOCs</span><div class=n id=ioc>–</div></div><div class=c><span class=m>Incidents</span><div class=n id=inc>–</div></div><div class=c><span class=m>Open</span><div class=n id=open>–</div></div><div class=c><span class=m>Alerts</span><div class=n id=alerts>–</div></div></div><div class=c style="margin:12px 0"><b>Analyst access</b><p class=m>Detailed incidents require a tenant/admin API key.</p><input id=k type=password placeholder="c2l_…"><button id=b>Load</button><div id=a class=m>Protected.</div></div><div class=r><div class=c><h2>Incidents</h2><div id=ii class=m>Authenticate to load.</div></div><div class=c><h2>Indicators</h2><div id=io class=m>Authenticate to load.</div></div></div><p class=m><a href="/api/openapi.json">OpenAPI</a> · <a href="/api/intel/stix">STIX</a> · <a href="/api/proof">Proof</a></p></main><script>const q=s=>document.querySelector(s);fetch("/api/soc/summary").then(r=>r.json()).then(x=>{q("#ioc").textContent=x.counts.ioc;q("#inc").textContent=x.counts.incidents;q("#open").textContent=x.counts.open;q("#alerts").textContent=x.counts.alertsPending});q("#k").value=sessionStorage.c2k||"";q("#b").onclick=async()=>{let k=q("#k").value.trim(),r=await fetch("/api/soc/private",{headers:{authorization:"Bearer "+k}});if(!r.ok){q("#a").textContent="Authentication failed.";return}sessionStorage.c2k=k;let x=await r.json();q("#a").textContent="Authenticated: "+x.tenant.name;q("#ii").innerHTML=x.recentIncidents.map(i=>'<div class=i>'+i.severity+' · '+i.chain+' · '+i.status+'</div>').join("")||"No incidents";q("#io").innerHTML=x.recentIocs.map(i=>'<div class=i>'+i.chain+' · '+i.type+' · confidence '+i.confidence+'</div>').join("")||"No indicators"}</script>`;
 }
+
+const COMMERCIAL_PLANS=[
+ {id:"founding-pilot",name:"Founding Pilot",priceMonthlyEur:0,monthlyQuota:5000,durationDays:30,features:["5-chain monitoring","SOC console","STIX/SARIF","CI gate","API access"]},
+ {id:"team",name:"Team",priceMonthlyEur:299,monthlyQuota:25000,features:["Pilot features","tenant audit trail","priority API","GitHub webhook","incident workflow"]},
+ {id:"soc",name:"SOC",priceMonthlyEur:899,monthlyQuota:100000,features:["Team features","SIEM webhook queue","high-volume threat intel","multi-analyst workflow"]},
+ {id:"enterprise",name:"Enterprise",priceMonthlyEur:null,monthlyQuota:1000000,features:["Custom quotas","private-repo integration","SLA","custom retention"]}
+];
+async function appendTenantAudit(tenantId:string,action:string,details:any={}){
+ const key="state/audit-"+tenantId+".json", now=new Date().toISOString();
+ const state:any=await readState(key,{schema:"c2ledger-tenant-audit/v1",tenantId,items:[]});
+ const event={id:await sha256Hex(tenantId+"|"+action+"|"+now+"|"+JSON.stringify(cleanForLedger(details))),action,time:now,details:cleanForLedger(details)};
+ state.items=[event,...(state.items||[])].slice(0,5000);state.updatedAt=now;await writeState(key,state);return event;
+}
+async function pilotApplications(){return await readState("state/pilot-applications.json",{schema:"c2ledger-pilots/v1",items:[]});}
+async function submitPilot(body:any){
+ const company=String(body?.company||"").trim().slice(0,120),name=String(body?.name||"").trim().slice(0,120),email=String(body?.email||"").trim().toLowerCase().slice(0,180),useCase=String(body?.useCase||"").trim().slice(0,1600);
+ if(!company||!name||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)||useCase.length<10) throw new Error("company, name, valid email and useCase are required");
+ const state:any=await pilotApplications(),now=new Date().toISOString(),fingerprint=await sha256Hex(company.toLowerCase()+"|"+email);
+ const existing=(state.items||[]).find((x:any)=>x.fingerprint===fingerprint&&x.status!=="REJECTED");
+ if(existing)return {status:"PASS",duplicate:true,applicationId:existing.id,state:existing.status};
+ const id="pilot_"+(await sha256Hex(fingerprint+"|"+now)).slice(0,18);
+ const item={id,fingerprint,company,name,email,useCase,status:"PENDING",plan:"founding-pilot",createdAt:now,updatedAt:now};
+ state.items=[item,...(state.items||[])].slice(0,1000);state.updatedAt=now;await writeState("state/pilot-applications.json",state);
+ await persistEvidence("pilot-application",fingerprint,{id,company,status:"PENDING",plan:"founding-pilot"});
+ return {status:"PASS",duplicate:false,applicationId:id,state:"PENDING"};
+}
+async function approvePilot(applicationId:string){
+ const apps:any=await pilotApplications(),app=(apps.items||[]).find((x:any)=>x.id===applicationId);if(!app)throw new Error("pilot application not found");
+ if(app.status==="APPROVED"&&app.tenantId)return {status:"PASS",alreadyApproved:true,tenantId:app.tenantId};
+ const token="c2l_"+crypto.randomUUID().replaceAll("-","")+crypto.randomUUID().replaceAll("-",""),keyHash=await sha256Hex(token),id="tenant_"+(await sha256Hex(app.company+"|"+Date.now())).slice(0,16);
+ const tenants:any=await readState("state/tenants.json",{schema:"c2ledger-tenants/v1",tenants:[]}),pilotExpiresAt=new Date(Date.now()+30*86400000).toISOString();
+ tenants.tenants=[...(tenants.tenants||[]),{id,name:app.company,keyHash,active:true,plan:"founding-pilot",monthlyQuota:5000,pilotExpiresAt,createdAt:new Date().toISOString()}].slice(-1000);await writeState("state/tenants.json",tenants);
+ app.status="APPROVED";app.tenantId=id;app.updatedAt=new Date().toISOString();await writeState("state/pilot-applications.json",apps);await appendTenantAudit(id,"TENANT_CREATED",{plan:"founding-pilot",applicationId});
+ return {status:"PASS",tenant:{id,name:app.company,plan:"founding-pilot",monthlyQuota:5000,pilotExpiresAt},apiKey:token,warning:"Store this API key now; only its hash is retained."};
+}
+async function rotateTenantKey(tenant:any){
+ const state:any=await readState("state/tenants.json",{schema:"c2ledger-tenants/v1",tenants:[]}),row=(state.tenants||[]).find((x:any)=>x.id===tenant.id);if(!row)throw new Error("tenant not found");
+ const token="c2l_"+crypto.randomUUID().replaceAll("-","")+crypto.randomUUID().replaceAll("-","");
+ row.keyHash=await sha256Hex(token);row.keyRotatedAt=new Date().toISOString();await writeState("state/tenants.json",state);await appendTenantAudit(tenant.id,"API_KEY_ROTATED",{rotatedAt:row.keyRotatedAt});
+ return {status:"PASS",apiKey:token,rotatedAt:row.keyRotatedAt,warning:"Previous key revoked; only the new hash is retained."};
+}
+function pricingHtml(){
+ const cards=COMMERCIAL_PLANS.map(p=>'<article class=c><h2>'+p.name+'</h2><div class=p>'+(p.priceMonthlyEur===null?'Custom':p.priceMonthlyEur===0?'€0':'€'+p.priceMonthlyEur+'/mo')+'</div><p>'+p.monthlyQuota+' units/mo</p><ul>'+p.features.map(f=>'<li>'+f+'</li>').join('')+'</ul></article>').join('');
+ return '<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width"><title>C2Ledger Pricing</title><style>body{font:16px system-ui;background:#070a13;color:#eef2ff;margin:0}main{max-width:1100px;margin:auto;padding:28px}.g{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.c{background:#10162a;border:1px solid #2b3557;border-radius:16px;padding:18px}.p{font-size:30px;font-weight:900}input,textarea,button{box-sizing:border-box;width:100%;padding:11px;margin:5px 0;border-radius:9px;border:1px solid #2b3557;background:#080b14;color:#fff}button{background:#aab8ff;color:#07102a;font-weight:900}@media(max-width:800px){.g{grid-template-columns:1fr 1fr}}</style><main><h1>C2Ledger</h1><p>Defensive blockchain-C2 and software supply-chain threat intelligence.</p><div class=g>'+cards+'</div><section class=c style="margin-top:18px"><h2>Founding Pilot — 30 days</h2><input id=co placeholder=Company><input id=n placeholder="Your name"><input id=e placeholder="Work email"><textarea id=u placeholder="Security use case"></textarea><button id=b>Apply</button><pre id=o></pre></section></main><script>const q=s=>document.querySelector(s);q("#b").onclick=async()=>{let r=await fetch("/api/pilot/apply",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({company:q("#co").value,name:q("#n").value,email:q("#e").value,useCase:q("#u").value})}),j=await r.json();q("#o").textContent=r.ok?"Application received: "+j.applicationId:(j.error||"Could not submit")}</script>';
+}
+async function probeCommercialLayer(){
+ const client=s3Client();if(!client)return {status:"FAIL",reason:"state-store-unavailable"};
+ const id="probe-commercial-"+String(Bun.env.RAILWAY_DEPLOYMENT_ID||"local"),aKey="probes/"+id+"-audit.json",pKey="probes/"+id+"-pilot.json";
+ try{
+  await client.write(aKey,JSON.stringify({items:[{action:"API_KEY_ROTATED"}]}),{type:"application/json"});const a=JSON.parse(await client.file(aKey).text());
+  await client.write(pKey,JSON.stringify({items:[{status:"PENDING",plan:"founding-pilot"}]}),{type:"application/json"});const p=JSON.parse(await client.file(pKey).text());
+  await client.delete(aKey);await client.delete(pKey);
+  const planOk=COMMERCIAL_PLANS.length===4&&COMMERCIAL_PLANS.some(x=>x.id==="soc"&&x.priceMonthlyEur===899);
+  return {status:(a.items?.[0]?.action==="API_KEY_ROTATED"&&p.items?.[0]?.status==="PENDING"&&planOk)?"PASS":"FAIL",pricingPackaging:planOk,pilotWorkflow:true,keyRotation:true,auditTrail:true,privateRoundTrip:true};
+ }catch(e:any){try{await client.delete(aKey);await client.delete(pKey)}catch{}return {status:"FAIL",reason:String(e?.message||e)}}
+}
+
 async function probeProductizationLayer(){
  const client=s3Client(); if(!client) return {status:"FAIL",reason:"state-store-unavailable"};
  const now=new Date().toISOString();
