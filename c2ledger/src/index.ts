@@ -1,4 +1,5 @@
 import { inflateRawSync } from "node:zlib";
+import { RANGE_SCENARIOS, rangeCatalog } from "./range-scenarios";
 
 type Sev = "low"|"medium"|"high"|"critical";
 type Rule = {id:string; title:string; severity:Sev; weight:number; category:string; re:RegExp; reason:string};
@@ -284,7 +285,7 @@ const ASTRA_BRICKS = [
  {id:"ADVERSARY_EMULATION_RANGE",version:"1.0",status:"RUNTIME",role:"bounded purple-team simulation of hostile TTP patterns without live exploitation, persistence or destructive actions"}
 ];
 
-const PRODUCT_VERSION="0.11.0";
+const PRODUCT_VERSION="0.11.1";
 const RELEASE_ID=String(Bun.env.C2LEDGER_RELEASE_ID||"dev");
 const GITHUB_ALLOWED=new Set(["api.github.com","raw.githubusercontent.com","codeload.github.com"]);
 const CHAIN_ALLOWED=new Set(["ethereum-rpc.publicnode.com","bsc-rpc.publicnode.com","polygon-bor-rpc.publicnode.com","api.trongrid.io","fullnode.mainnet.aptoslabs.com"]);
@@ -381,6 +382,7 @@ const ADVERSARY_EMULATION_SCENARIOS:EmulationScenario[]=[
 ];
 
 async function adversaryEmulationCatalog(){
+ const advanced=rangeCatalog();
  return {
   product:"C2Ledger",
   edition:DEFENCE_PROFILE.edition,
@@ -391,9 +393,14 @@ async function adversaryEmulationCatalog(){
    destructiveActions:false,
    persistence:false,
    credentialTheft:false,
-   autonomousTargeting:false
+   autonomousTargeting:false,
+   propagation:false,
+   arbitraryExecution:false
   },
-  scenarios:ADVERSARY_EMULATION_SCENARIOS.map(({fixture,...x})=>x)
+  detectorValidationScenarios:ADVERSARY_EMULATION_SCENARIOS.map(({fixture,...x})=>x),
+  advancedScenarioCount:RANGE_SCENARIOS.length,
+  advancedStageCount:RANGE_SCENARIOS.reduce((n,s)=>n+s.stages.length,0),
+  advancedScenarios:advanced.scenarios
  };
 }
 
@@ -419,7 +426,12 @@ async function probeAdversaryEmulationLayer(){
  const rows=[];
  for(const scenario of ADVERSARY_EMULATION_SCENARIOS) rows.push(await runAdversaryEmulation(scenario.id));
  const failed=rows.filter(x=>x.status!=="PASS").map(x=>x.scenario.id);
- return {status:failed.length?"FAIL":"PASS",mode:"PURPLE_TEAM_DRY_RUN",scenarioCount:rows.length,passed:rows.length-failed.length,failed,rows:rows.map(x=>({id:x.scenario.id,status:x.status,score:x.result.score,verdict:x.result.verdict,fixtureDigest:x.fixtureDigest}))};
+ const advanced=rangeCatalog();
+ const stageCount=RANGE_SCENARIOS.reduce((n,s)=>n+s.stages.length,0);
+ const docsComplete=RANGE_SCENARIOS.every(s=>s.objective&&s.threatModel&&s.environment&&s.safetyBoundary.length>=3&&s.stages.every(st=>st.adversaryIntent&&st.simulation&&st.telemetry.length&&st.expectedDetection.length&&st.containment.length&&st.recovery.length&&st.passCriteria.length));
+ const safe=advanced.safety.liveTargeting===false&&advanced.safety.exploitDelivery===false&&advanced.safety.destructiveActions===false&&advanced.safety.credentialTheft===false&&advanced.safety.propagation===false&&advanced.safety.arbitraryExecution===false;
+ const status=failed.length||!docsComplete||!safe||RANGE_SCENARIOS.length<4||stageCount<8?"FAIL":"PASS";
+ return {status,mode:"PURPLE_TEAM_DRY_RUN",detectorScenarioCount:rows.length,advancedScenarioCount:RANGE_SCENARIOS.length,advancedStageCount:stageCount,documentationComplete:docsComplete,safetyGate:safe,passed:rows.length-failed.length,failed,rows:rows.map(x=>({id:x.scenario.id,status:x.status,score:x.result.score,verdict:x.result.verdict,fixtureDigest:x.fixtureDigest}))};
 }
 
 function rulepackDescriptor(){
@@ -817,7 +829,8 @@ function openApiDoc(){
   "/api/github/webhook":{post:{summary:"HMAC-verified GitHub webhook receiver",responses:{"200":{description:"Accepted"},"401":{description:"Invalid signature"}}}},
   "/api/defence/readiness":{get:{summary:"Defensive mission-assurance readiness evidence",responses:{"200":{description:"Readiness evidence"}}}},
   "/api/defence/assurance-package":{get:{summary:"Offline JSON mission-assurance evidence package",responses:{"200":{description:"Assurance package"}}}},
-  "/api/defence/adversary-emulation":{get:{summary:"List bounded purple-team emulation scenarios",responses:{"200":{description:"Scenario catalog"}}},post:{summary:"Run one dry-run adversary-emulation scenario",responses:{"200":{description:"Simulation result"},"400":{description:"Unknown scenario"}}}}
+  "/api/defence/adversary-emulation":{get:{summary:"List bounded purple-team emulation scenarios",responses:{"200":{description:"Scenario catalog"}}},post:{summary:"Run one dry-run adversary-emulation scenario",responses:{"200":{description:"Simulation result"},"400":{description:"Unknown scenario"}}}},
+  "/api/defence/adversary-emulation/advanced":{get:{summary:"Detailed multi-stage isolated adversary-emulation playbooks",responses:{"200":{description:"Advanced scenario catalog"}}}}
  },components:{securitySchemes:{bearerAuth:{type:"http",scheme:"bearer"}}}};
 }
 async function socSnapshot(){
@@ -1168,6 +1181,9 @@ Bun.serve({port:Number(Bun.env.PORT||3000),async fetch(req){
  if(req.method==="GET"&&u.pathname==="/api/defence/adversary-emulation"){
   return new Response(JSON.stringify(await adversaryEmulationCatalog()),{headers:hs("application/json")});
  }
+ if(req.method==="GET"&&u.pathname==="/api/defence/adversary-emulation/advanced"){
+  return new Response(JSON.stringify(rangeCatalog()),{headers:hs("application/json")});
+ }
  if(req.method==="POST"&&u.pathname==="/api/defence/adversary-emulation"){
   let body:any;try{body=await req.json()}catch{return new Response(JSON.stringify({error:"invalid body"}),{status:400,headers:hs("application/json")})}
   try{return new Response(JSON.stringify(await runAdversaryEmulation(String(body?.scenarioId||""))),{headers:hs("application/json")})}
@@ -1352,7 +1368,7 @@ Bun.serve({port:Number(Bun.env.PORT||3000),async fetch(req){
  if(req.method==="GET"&&u.pathname==="/api/rules") return new Response(JSON.stringify({releaseId:RELEASE_ID,productVersion:PRODUCT_VERSION,rules:RULES.map(r=>({id:r.id,title:r.title,severity:r.severity,category:r.category,weight:r.weight,reason:r.reason}))}),{headers:hs("application/json")});
  if(req.method==="GET"&&u.pathname==="/api/enterprise"){
   const proof=await proofSnapshot();
-  return new Response(JSON.stringify({product:"C2Ledger",edition:"ASTRA OMEGA",version:PRODUCT_VERSION,releaseId:RELEASE_ID,capabilities:{evidenceLedger:true,contentAddressedProofs:true,dualityArbiter:true,negativeKnowledge:true,replayCapsules:true,benchmarkGate:true,releaseControl:true,connectorGuard:true,rateLimit:true,githubRepositoryScan:true,noUntrustedExecution:true,threatIntelFeed:true,incidentHistory:true,tenantApiKeys:true,multiChainInspection:true,proprietaryMoatData:true,sarifExport:true,ciPrGate:true,githubWebhookReceiver:true,durableAlertQueue:true,longitudinalReputation:true,socDashboard:true,stix21Export:true,tenantQuotaMeter:true,incidentLifecycle:true,openApiContract:true,alertDispatcher:true,commercialOnboarding:true,tenantKeyRotation:true,tenantAuditTrail:true,pricingPackaging:true,enterpriseReadiness:true,missionAssuranceProfile:true,defensiveOnlyBoundary:true,offlineAssuranceExport:true,readinessMapping:true,adversaryEmulationRange:true,purpleTeamValidation:true},assurance:{gate:proof.gate,resilience:proof.resilience,benchmark:proof.benchmark.status,evidenceStore:proof.evidenceStore.status,moatLayer:proof.moatLayer?.status,integrationLayer:proof.integrationLayer?.status,productizationLayer:proof.productizationLayer?.status,commercialLayer:proof.commercialLayer?.status,driftSentinel:proof.driftSentinel.status,releaseControl:proof.releaseControl.status},endpoints:["/api/scan","/api/scan/github","/api/multichain/inspect","/api/intel/feed","/api/intel/stats","/api/intel/ingest","/api/incidents","/api/admin/tenants","/api/scan/sarif","/api/ci/gate","/api/github/webhook","/api/github/action.yml","/api/reputation","/api/alerts/status","/api/alerts/dispatch","/soc","/api/soc/summary","/api/openapi.json","/api/intel/stix","/api/tenant/usage","/api/tenant/scan","/pricing","/api/plans","/api/pilot/apply","/api/admin/pilots","/api/admin/pilots/approve","/api/tenant/key/rotate","/api/tenant/audit","/api/tenant/audit/verify","/api/admin/watcher/cursors","/api/defence/readiness","/api/defence/assurance-package","/api/defence/adversary-emulation","/api/proof","/api/gate","/api/harness","/api/benchmark","/api/bricks","/api/rules"],commercialPositioning:"Defensive mission-assurance and software supply-chain evidence platform for high-assurance environments"}),{headers:hs("application/json")});
+  return new Response(JSON.stringify({product:"C2Ledger",edition:"ASTRA OMEGA",version:PRODUCT_VERSION,releaseId:RELEASE_ID,capabilities:{evidenceLedger:true,contentAddressedProofs:true,dualityArbiter:true,negativeKnowledge:true,replayCapsules:true,benchmarkGate:true,releaseControl:true,connectorGuard:true,rateLimit:true,githubRepositoryScan:true,noUntrustedExecution:true,threatIntelFeed:true,incidentHistory:true,tenantApiKeys:true,multiChainInspection:true,proprietaryMoatData:true,sarifExport:true,ciPrGate:true,githubWebhookReceiver:true,durableAlertQueue:true,longitudinalReputation:true,socDashboard:true,stix21Export:true,tenantQuotaMeter:true,incidentLifecycle:true,openApiContract:true,alertDispatcher:true,commercialOnboarding:true,tenantKeyRotation:true,tenantAuditTrail:true,pricingPackaging:true,enterpriseReadiness:true,missionAssuranceProfile:true,defensiveOnlyBoundary:true,offlineAssuranceExport:true,readinessMapping:true,adversaryEmulationRange:true,purpleTeamValidation:true},assurance:{gate:proof.gate,resilience:proof.resilience,benchmark:proof.benchmark.status,evidenceStore:proof.evidenceStore.status,moatLayer:proof.moatLayer?.status,integrationLayer:proof.integrationLayer?.status,productizationLayer:proof.productizationLayer?.status,commercialLayer:proof.commercialLayer?.status,driftSentinel:proof.driftSentinel.status,releaseControl:proof.releaseControl.status},endpoints:["/api/scan","/api/scan/github","/api/multichain/inspect","/api/intel/feed","/api/intel/stats","/api/intel/ingest","/api/incidents","/api/admin/tenants","/api/scan/sarif","/api/ci/gate","/api/github/webhook","/api/github/action.yml","/api/reputation","/api/alerts/status","/api/alerts/dispatch","/soc","/api/soc/summary","/api/openapi.json","/api/intel/stix","/api/tenant/usage","/api/tenant/scan","/pricing","/api/plans","/api/pilot/apply","/api/admin/pilots","/api/admin/pilots/approve","/api/tenant/key/rotate","/api/tenant/audit","/api/tenant/audit/verify","/api/admin/watcher/cursors","/api/defence/readiness","/api/defence/assurance-package","/api/defence/adversary-emulation","/api/defence/adversary-emulation/advanced","/api/proof","/api/gate","/api/harness","/api/benchmark","/api/bricks","/api/rules"],commercialPositioning:"Defensive mission-assurance and software supply-chain evidence platform for high-assurance environments"}),{headers:hs("application/json")});
  }
  if(req.method==="POST"&&(u.pathname==="/api/scan/github"||u.pathname==="/api/scan")){
   const rl=rateAllowed(req);
