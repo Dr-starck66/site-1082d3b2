@@ -1,0 +1,54 @@
+name: C2Ledger Production Smoke Gate
+
+on:
+  push:
+    branches: [c2ledger-v1-hardening]
+    paths:
+      - "c2ledger/**"
+      - ".github/workflows/c2ledger-production-smoke.yml"
+  workflow_dispatch:
+
+jobs:
+  production-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Wait for matching Railway production release
+        env:
+          BASE_URL: https://c2ledger-engine-production.up.railway.app
+        run: |
+          set -euo pipefail
+          expected=$(cat c2ledger/VERSION)
+          mkdir -p artifacts/production-smoke
+          matched=0
+          for i in $(seq 1 60); do
+            code=$(curl -sS --max-time 10 -o artifacts/production-smoke/health.json -w '%{http_code}' "$BASE_URL/health" || true)
+            if [ "$code" = "200" ] && node -e 'const fs=require("fs");const x=JSON.parse(fs.readFileSync("artifacts/production-smoke/health.json"));process.exit(x.version===process.argv[1]&&x.releaseId==="v"+process.argv[1]+"-production"?0:1)' "$expected"; then
+              matched=1
+              break
+            fi
+            sleep 5
+          done
+          test "$matched" = "1"
+      - name: Verify deep proof gate and defensive readiness
+        env:
+          BASE_URL: https://c2ledger-engine-production.up.railway.app
+        run: |
+          set -euo pipefail
+          curl -fsS --max-time 20 "$BASE_URL/health/deep" -o artifacts/production-smoke/deep.json
+          curl -fsS --max-time 20 "$BASE_URL/api/defence/readiness" -o artifacts/production-smoke/readiness.json
+          node - <<'NODE'
+          const fs=require('fs');
+          const deep=JSON.parse(fs.readFileSync('artifacts/production-smoke/deep.json'));
+          const ready=JSON.parse(fs.readFileSync('artifacts/production-smoke/readiness.json'));
+          if(deep.ok!==true || deep.gate!=='PASS') throw new Error('deep proof gate did not PASS');
+          if(deep.releaseControl?.status!=='PASS' || deep.driftSentinel?.status!=='PASS') throw new Error('release/drift proof did not PASS');
+          if(ready.ready!==true || ready.proofGate!=='PASS' || ready.releaseControl!=='PASS' || ready.driftSentinel!=='PASS') throw new Error('defence readiness did not PASS');
+          console.log(JSON.stringify({status:'PASS',version:ready.version,proofGate:ready.proofGate,releaseControl:ready.releaseControl,driftSentinel:ready.driftSentinel}));
+          NODE
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: c2ledger-production-smoke-evidence
+          path: artifacts/production-smoke
