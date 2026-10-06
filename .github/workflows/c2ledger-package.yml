@@ -1,0 +1,26 @@
+name: C2Ledger Package
+
+on:
+  push:
+    branches: [c2ledger-v1-hardening]
+    paths:
+      - ".github/workflows/c2ledger-package.yml"
+  workflow_dispatch:
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package C2Ledger
+        run: |
+          mkdir -p package
+          cp -R c2ledger package/c2ledger
+          cp .github/workflows/c2ledger-*.yml package/ || true
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: C2Ledger-current
+          path: package/
+          if-no-files-found: error
+          retention-days: 7
