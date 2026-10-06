@@ -1,0 +1,58 @@
+name: C2Ledger Mission Assurance Gate
+
+on:
+  push:
+    branches: [c2ledger-v1-hardening]
+    paths:
+      - "c2ledger/**"
+      - ".github/workflows/c2ledger-mission-assurance.yml"
+  pull_request:
+    paths:
+      - "c2ledger/**"
+      - ".github/workflows/c2ledger-mission-assurance.yml"
+  workflow_dispatch:
+
+jobs:
+  mission-assurance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build defensive engine
+        run: docker build -t c2ledger-mission-assurance ./c2ledger
+      - name: Start engine
+        run: docker run -d --rm -p 3000:3000 --name c2ledger-ma c2ledger-mission-assurance
+      - name: Wait for health
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3000/health >/tmp/health.json; then exit 0; fi
+            sleep 1
+          done
+          docker logs c2ledger-ma
+          exit 1
+      - name: Verify Mission Assurance boundary
+        run: |
+          curl -fsS http://127.0.0.1:3000/api/defence/readiness >/tmp/readiness.json
+          node - <<'NODE'
+          const fs=require("fs");
+          const x=JSON.parse(fs.readFileSync("/tmp/readiness.json","utf8"));
+          if(x.version!=="0.10.0") throw new Error("unexpected version: "+x.version);
+          if(x.profile?.posture!=="DEFENSIVE_ONLY") throw new Error("defensive posture missing");
+          if(x.profile?.boundaries?.offensiveAutomation!==false) throw new Error("offensive automation boundary failed");
+          if(x.profile?.boundaries?.exploitDelivery!==false) throw new Error("exploit delivery boundary failed");
+          if(x.profile?.boundaries?.destructiveActions!==false) throw new Error("destructive action boundary failed");
+          if(x.defenceLayer?.status!=="PASS") throw new Error("defence layer did not pass");
+          NODE
+      - name: Verify portable assurance package
+        run: |
+          curl -fsS http://127.0.0.1:3000/api/defence/assurance-package >/tmp/assurance.json
+          node - <<'NODE'
+          const fs=require("fs");
+          const x=JSON.parse(fs.readFileSync("/tmp/assurance.json","utf8"));
+          if(x.schema!=="c2ledger-mission-assurance/v1") throw new Error("schema mismatch");
+          if(x.digestAlgorithm!=="SHA-256" || !/^[a-f0-9]{64}$/.test(x.digest||"")) throw new Error("invalid evidence digest");
+          if(x.exportMode!=="offline-json") throw new Error("offline export mode missing");
+          NODE
+      - name: Container logs
+        if: always()
+        run: docker logs c2ledger-ma || true
