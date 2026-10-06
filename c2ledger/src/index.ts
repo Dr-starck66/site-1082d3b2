@@ -363,7 +363,8 @@ async function probeEvidenceStore(){
 async function safeGithubFetch(url:string,init:any={}){
  const u=new URL(url);
  if(u.protocol!=="https:"||!GITHUB_ALLOWED.has(u.hostname)) throw new Error("CONNECTOR_GUARD blocked outbound host: "+u.hostname);
- return await fetch(url,{...init,redirect:"error",signal:AbortSignal.timeout(7000)});
+ const {signal,...rest}=init||{};
+ return await fetch(url,{...rest,redirect:"error",signal:signal||AbortSignal.timeout(12000)});
 }
 
 
