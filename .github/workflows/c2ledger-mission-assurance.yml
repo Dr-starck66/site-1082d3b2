@@ -36,7 +36,7 @@ jobs:
           node - <<'NODE'
           const fs=require("fs");
           const x=JSON.parse(fs.readFileSync("/tmp/readiness.json","utf8"));
-          if(x.version!=="0.11.0") throw new Error("unexpected version: "+x.version);
+          if(x.version!=="0.11.1") throw new Error("unexpected version: "+x.version);
           if(x.profile?.posture!=="DEFENSIVE_ONLY") throw new Error("defensive posture missing");
           if(x.profile?.boundaries?.offensiveAutomation!==false) throw new Error("offensive automation boundary failed");
           if(x.profile?.boundaries?.exploitDelivery!==false) throw new Error("exploit delivery boundary failed");
@@ -52,8 +52,23 @@ jobs:
           const c=JSON.parse(fs.readFileSync("/tmp/emulation-catalog.json","utf8"));
           const r=JSON.parse(fs.readFileSync("/tmp/emulation-result.json","utf8"));
           if(c.mode!=="PURPLE_TEAM_DRY_RUN" || c.safety?.liveExploitation!==false) throw new Error("emulation safety boundary failed");
-          if((c.scenarios||[]).length<4) throw new Error("scenario catalog too small");
+          if((c.detectorValidationScenarios||[]).length<4) throw new Error("detector scenario catalog too small");
+          if((c.advancedScenarios||[]).length<4 || Number(c.advancedStageCount||0)<8) throw new Error("advanced adversary-emulation catalog too small");
+          const a=c.advancedScenarios||[];
+          if(!a.every(s=>s.objective&&s.threatModel&&s.environment&&(s.safetyBoundary||[]).length>=3&&(s.stages||[]).every(x=>x.adversaryIntent&&x.simulation&&(x.telemetry||[]).length&&(x.expectedDetection||[]).length&&(x.containment||[]).length&&(x.recovery||[]).length&&(x.passCriteria||[]).length))) throw new Error("advanced scenario documentation incomplete");
           if(r.status!=="PASS" || r.safety?.executedPayload!==false) throw new Error("emulation detector validation failed");
+          NODE
+      - name: Verify advanced range catalog
+        run: |
+          curl -fsS http://127.0.0.1:3000/api/defence/adversary-emulation/advanced >/tmp/advanced-range.json
+          node - <<'NODE'
+          const fs=require("fs");
+          const x=JSON.parse(fs.readFileSync("/tmp/advanced-range.json","utf8"));
+          if(x.mode!=="ISOLATED_ADVERSARY_EMULATION") throw new Error("advanced range mode mismatch");
+          if((x.scenarios||[]).length<4) throw new Error("advanced range scenario count too small");
+          for(const k of ["liveTargeting","exploitDelivery","destructiveActions","credentialTheft","propagation","arbitraryExecution"]){
+            if(x.safety?.[k]!==false) throw new Error("unsafe range capability: "+k);
+          }
           NODE
       - name: Verify portable assurance package
         run: |
