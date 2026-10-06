@@ -1,7 +1,9 @@
 const ENGINE_URL=String(Bun.env.C2LEDGER_ENGINE_URL||"http://engine:3000").replace(/\/$/,"");
 const SENSOR_ID=String(Bun.env.C2LEDGER_SENSOR_ID||"sensor-local").slice(0,96);
-const TOKEN=String(Bun.env.C2LEDGER_SENSOR_TOKEN||"");
-const MAX_LINE=64*1024;
+const ENGINE_TOKEN=String(Bun.env.C2LEDGER_SENSOR_TOKEN||"");
+const INGEST_TOKEN=String(Bun.env.C2LEDGER_SENSOR_INGEST_TOKEN||"");
+const PORT=Number(Bun.env.PORT||3100);
+const MAX_BODY=64*1024;
 
 function sanitize(x:any){
   const out:any={
@@ -21,30 +23,39 @@ function sanitize(x:any){
   return out;
 }
 
-async function ship(event:any){
-  const body=sanitize(event);
-  const headers:any={"content-type":"application/json","x-c2ledger-sensor":SENSOR_ID};
-  if(TOKEN) headers.authorization="Bearer "+TOKEN;
-  const res=await fetch(ENGINE_URL+"/api/sensor/events",{method:"POST",headers,body:JSON.stringify(body),signal:AbortSignal.timeout(5000)});
-  if(!res.ok) throw new Error("engine rejected event: "+res.status);
+function bearer(req:Request){
+  const h=req.headers.get("authorization")||"";
+  return h.startsWith("Bearer ")?h.slice(7).trim():"";
 }
 
-if(import.meta.main){
-  const reader=Bun.stdin.stream().getReader();
-  const decoder=new TextDecoder();
-  let buf="";
-  while(true){
-    const {done,value}=await reader.read();
-    if(done) break;
-    buf+=decoder.decode(value,{stream:true});
-    if(buf.length>MAX_LINE*4) buf=buf.slice(-MAX_LINE*2);
-    let p;
-    while((p=buf.indexOf("\n"))>=0){
-      const line=buf.slice(0,p).trim(); buf=buf.slice(p+1);
-      if(!line) continue;
-      if(line.length>MAX_LINE){console.error("SENSOR_DROP oversized");continue;}
-      try{await ship(JSON.parse(line));console.log("SENSOR_SENT")}
-      catch(e:any){console.error("SENSOR_FAIL",String(e?.message||e))}
-    }
-  }
+async function ship(event:any){
+  if(!ENGINE_TOKEN) throw new Error("engine sensor token unconfigured");
+  const body=sanitize(event);
+  const res=await fetch(ENGINE_URL+"/api/sensor/events",{
+    method:"POST",
+    headers:{"content-type":"application/json","x-c2ledger-sensor":SENSOR_ID,authorization:"Bearer "+ENGINE_TOKEN},
+    body:JSON.stringify(body),
+    signal:AbortSignal.timeout(5000)
+  });
+  if(!res.ok) throw new Error("engine rejected event: "+res.status);
+  return await res.json();
 }
+
+Bun.serve({
+  port:PORT,
+  async fetch(req){
+    const u=new URL(req.url);
+    if(req.method==="GET"&&u.pathname==="/health") return Response.json({ok:true,sensorId:SENSOR_ID,engine:ENGINE_URL,mode:"PASSIVE_FORWARDER"});
+    if(req.method==="POST"&&u.pathname==="/event"){
+      if(!INGEST_TOKEN) return Response.json({error:"sensor ingest token unconfigured"},{status:503});
+      if(bearer(req)!==INGEST_TOKEN) return Response.json({error:"unauthorized"},{status:401});
+      const len=Number(req.headers.get("content-length")||0);
+      if(len>MAX_BODY) return Response.json({error:"event too large"},{status:413});
+      let body:any; try{body=await req.json()}catch{return Response.json({error:"invalid json"},{status:400})}
+      try{return Response.json({ok:true,forwarded:await ship(body)})}
+      catch(e:any){return Response.json({error:String(e?.message||e)},{status:502})}
+    }
+    return Response.json({error:"not found"},{status:404});
+  }
+});
+console.log("C2LEDGER_SENSOR_READY",JSON.stringify({sensorId:SENSOR_ID,port:PORT,mode:"PASSIVE_FORWARDER"}));
