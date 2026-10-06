@@ -31,6 +31,25 @@ jobs:
           with open("/tmp/campaign-line.txt","w") as f: f.write(json.dumps(x["campaign"],separators=(",",":")))
           PY
           echo "campaign=$(cat /tmp/campaign-line.txt)" >> "$GITHUB_OUTPUT"
+      - name: Verify official Kaggle kernel package
+        env:
+          KAGGLE_USERNAME: c2ledger-ci
+          C2LEDGER_KAGGLE_WORKDIR: ${{ github.workspace }}/artifacts/kaggle-kernel
+          C2LEDGER_KAGGLE_INPUT: ${{ github.workspace }}/artifacts/no-input
+        run: |
+          python3 c2ledger/kaggle/prepare_kernel.py >/tmp/kernel-metadata.json
+          python3 c2ledger/kaggle/kernel.py >/tmp/kernel-run.log
+          python3 - <<'PY'
+          import json
+          m=json.load(open("c2ledger/kaggle/kernel-metadata.json"))
+          assert m["kernel_type"]=="script"
+          assert m["is_private"] is True
+          assert m["enable_internet"] is False
+          assert m["enable_gpu"] is False
+          x=json.load(open("artifacts/kaggle-kernel/campaign.json"))
+          assert x["schema"]=="c2ledger-kaggle-replay/v1"
+          assert x["digest"].startswith("sha256:")
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: kaggle-replay-evidence
