@@ -280,10 +280,11 @@ const ASTRA_BRICKS = [
  {id:"INCIDENT_DEDUP",version:"1.0",status:"RUNTIME",role:"stable correlation keys merge repeated observations into active incidents"},
  {id:"WATCHER_CURSOR_STATE",version:"1.0",status:"RUNTIME",role:"monotonic per-chain block cursors prevent duplicate rescans"},
  {id:"AUDIT_HASH_CHAIN",version:"1.0",status:"RUNTIME",role:"cryptographically chained tenant audit events with verification"},
- {id:"MISSION_ASSURANCE_DEFENCE",version:"1.0",status:"RUNTIME",role:"defensive mission-assurance profile, offline assurance export and fail-closed readiness evidence"}
+ {id:"MISSION_ASSURANCE_DEFENCE",version:"1.0",status:"RUNTIME",role:"defensive mission-assurance profile, offline assurance export and fail-closed readiness evidence"},
+ {id:"ADVERSARY_EMULATION_RANGE",version:"1.0",status:"RUNTIME",role:"bounded purple-team simulation of hostile TTP patterns without live exploitation, persistence or destructive actions"}
 ];
 
-const PRODUCT_VERSION="0.10.0";
+const PRODUCT_VERSION="0.11.0";
 const RELEASE_ID=String(Bun.env.C2LEDGER_RELEASE_ID||"dev");
 const GITHUB_ALLOWED=new Set(["api.github.com","raw.githubusercontent.com","codeload.github.com"]);
 const CHAIN_ALLOWED=new Set(["ethereum-rpc.publicnode.com","bsc-rpc.publicnode.com","polygon-bor-rpc.publicnode.com","api.trongrid.io","fullnode.mainnet.aptoslabs.com"]);
@@ -299,7 +300,10 @@ const DEFENCE_PROFILE={
   exploitDelivery:false,
   destructiveActions:false,
   untrustedCodeExecution:false,
-  autonomousTargeting:false
+  autonomousTargeting:false,
+  liveExploitation:false,
+  credentialTheft:false,
+  persistenceDeployment:false
  },
  missionCapabilities:[
   "blockchain-C2 and dead-drop detection",
@@ -309,7 +313,8 @@ const DEFENCE_PROFILE={
   "CI/PR security gating",
   "fail-closed release and drift control",
   "degraded-state reporting and recovery assurance",
-  "offline JSON assurance-package export"
+  "offline JSON assurance-package export",
+  "bounded adversary-emulation and purple-team detector validation"
  ],
  readinessMappings:[
   {framework:"NIST SP 800-171 Rev. 3",relationship:"engineering-readiness evidence only; not an assessment or certification",evidence:["access-controlled tenant APIs","audit hash chain","evidence ledger","release control","incident lifecycle"]},
@@ -323,6 +328,98 @@ async function sha256Hex(value:string){
  const bytes=new TextEncoder().encode(value);
  const digest=await crypto.subtle.digest("SHA-256",bytes);
  return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+
+type EmulationScenario={
+ id:string;
+ title:string;
+ tactic:string;
+ purpose:string;
+ fixture:string;
+ expectedMinScore:number;
+ expectedVerdicts:string[];
+};
+
+const ADVERSARY_EMULATION_SCENARIOS:EmulationScenario[]=[
+ {
+  id:"onchain-dead-drop-chain",
+  title:"On-chain dead-drop to execution-chain simulation",
+  tactic:"command-and-control / execution correlation",
+  purpose:"Validate correlation of blockchain resolution with an execution-capable sink.",
+  fixture:"const p = new ethers.JsonRpcProvider('https://rpc.example.invalid'); const tx={to:'0xabc'}; const decoded=tx.to.slice(2); eval(decoded);",
+  expectedMinScore:55,
+  expectedVerdicts:["HIGH","CRITICAL"]
+ },
+ {
+  id:"supply-chain-install-execution",
+  title:"Package install-hook simulation",
+  tactic:"software supply chain",
+  purpose:"Validate detection of install-time execution correlated with process execution and credential-sensitive context.",
+  fixture:'{"scripts":{"postinstall":"node build-step.js"}}\nconst token=process.env.GITHUB_TOKEN; child_process.exec("node build-step.js");',
+  expectedMinScore:55,
+  expectedVerdicts:["HIGH","CRITICAL"]
+ },
+ {
+  id:"raw-ip-tls-evasion",
+  title:"Raw-IP and TLS-bypass simulation",
+  tactic:"network / evasion",
+  purpose:"Validate correlation of raw-IP infrastructure with disabled TLS verification and dynamic execution.",
+  fixture:"process.env.NODE_TLS_REJECT_UNAUTHORIZED='0'; fetch('http://181.214.149.148:443'); eval('simulated');",
+  expectedMinScore:55,
+  expectedVerdicts:["HIGH","CRITICAL"]
+ },
+ {
+  id:"gha-trust-boundary",
+  title:"CI trust-boundary simulation",
+  tactic:"CI/CD supply chain",
+  purpose:"Validate detection of unsafe pull-request trust-boundary patterns.",
+  fixture:"on: pull_request_target\nsteps:\n - uses: actions/checkout@v4\n   with:\n     ref: github.event.pull_request.head.sha",
+  expectedMinScore:30,
+  expectedVerdicts:["ELEVATED","HIGH","CRITICAL"]
+ }
+];
+
+async function adversaryEmulationCatalog(){
+ return {
+  product:"C2Ledger",
+  edition:DEFENCE_PROFILE.edition,
+  mode:"PURPLE_TEAM_DRY_RUN",
+  safety:{
+   liveExploitation:false,
+   payloadExecution:false,
+   destructiveActions:false,
+   persistence:false,
+   credentialTheft:false,
+   autonomousTargeting:false
+  },
+  scenarios:ADVERSARY_EMULATION_SCENARIOS.map(({fixture,...x})=>x)
+ };
+}
+
+async function runAdversaryEmulation(id:string){
+ const scenario=ADVERSARY_EMULATION_SCENARIOS.find(x=>x.id===id);
+ if(!scenario) throw new Error("unknown emulation scenario");
+ const result=scan(scenario.fixture,"emulation/"+scenario.id);
+ const detected=result.score>=scenario.expectedMinScore&&scenario.expectedVerdicts.includes(result.verdict);
+ const fixtureDigest=await sha256Hex(scenario.fixture);
+ return {
+  status:detected?"PASS":"FAIL",
+  mode:"PURPLE_TEAM_DRY_RUN",
+  scenario:{id:scenario.id,title:scenario.title,tactic:scenario.tactic,purpose:scenario.purpose},
+  result:{score:result.score,verdict:result.verdict,findings:result.findings.map((x:any)=>({id:x.id,title:x.title,severity:x.severity,category:x.category})),correlations:result.correlations},
+  expectation:{minScore:scenario.expectedMinScore,verdicts:scenario.expectedVerdicts},
+  safety:{executedPayload:false,liveExploit:false,destructiveAction:false,persistence:false,credentialTheft:false,targeting:false},
+  fixtureDigest,
+  generatedAt:new Date().toISOString()
+ };
+}
+
+async function probeAdversaryEmulationLayer(){
+ const rows=[];
+ for(const scenario of ADVERSARY_EMULATION_SCENARIOS) rows.push(await runAdversaryEmulation(scenario.id));
+ const failed=rows.filter(x=>x.status!=="PASS").map(x=>x.scenario.id);
+ return {status:failed.length?"FAIL":"PASS",mode:"PURPLE_TEAM_DRY_RUN",scenarioCount:rows.length,passed:rows.length-failed.length,failed,rows:rows.map(x=>({id:x.scenario.id,status:x.status,score:x.result.score,verdict:x.result.verdict,fixtureDigest:x.fixtureDigest}))};
 }
 
 function rulepackDescriptor(){
@@ -719,7 +816,8 @@ function openApiDoc(){
   "/api/tenant/usage":{get:{summary:"Tenant usage and quota",security:[{bearerAuth:[]}],responses:{"200":{description:"Usage"}}}},
   "/api/github/webhook":{post:{summary:"HMAC-verified GitHub webhook receiver",responses:{"200":{description:"Accepted"},"401":{description:"Invalid signature"}}}},
   "/api/defence/readiness":{get:{summary:"Defensive mission-assurance readiness evidence",responses:{"200":{description:"Readiness evidence"}}}},
-  "/api/defence/assurance-package":{get:{summary:"Offline JSON mission-assurance evidence package",responses:{"200":{description:"Assurance package"}}}}
+  "/api/defence/assurance-package":{get:{summary:"Offline JSON mission-assurance evidence package",responses:{"200":{description:"Assurance package"}}}},
+  "/api/defence/adversary-emulation":{get:{summary:"List bounded purple-team emulation scenarios",responses:{"200":{description:"Scenario catalog"}}},post:{summary:"Run one dry-run adversary-emulation scenario",responses:{"200":{description:"Simulation result"},"400":{description:"Unknown scenario"}}}}
  },components:{securitySchemes:{bearerAuth:{type:"http",scheme:"bearer"}}}};
 }
 async function socSnapshot(){
@@ -1005,6 +1103,7 @@ async function proofSnapshot(){
  const commercialLayer=await probeCommercialLayer();
  const operationalIntegrity=await probeOperationalIntegrity();
  const defenceLayer=await probeDefenceLayer();
+ const adversaryEmulation=await probeAdversaryEmulationLayer();
  const benchmark=runBenchmark(3);
  const rulepackHash=await currentRulepackHash();
  const requiredEvidence=String(Bun.env.C2LEDGER_EVIDENCE_REQUIRED||"false")==="true";
@@ -1012,18 +1111,18 @@ async function proofSnapshot(){
  const expectedVersion=String(Bun.env.C2LEDGER_EXPECTED_VERSION||"");
  const driftSentinel=expectedRulepack?{status:expectedRulepack===rulepackHash?"PASS":"FAIL",expected:expectedRulepack,actual:rulepackHash}:{status:"PARTIAL",reason:"expected-rulepack-not-pinned",actual:rulepackHash};
  const releaseControl=expectedVersion?{status:(RELEASE_ID.startsWith("v"+expectedVersion)&&PRODUCT_VERSION===expectedVersion)?"PASS":"FAIL",expectedVersion,releaseId:RELEASE_ID,runtimeVersion:PRODUCT_VERSION}:{status:"PARTIAL",reason:"expected-version-not-pinned",releaseId:RELEASE_ID,runtimeVersion:PRODUCT_VERSION};
- const hardFail=benchmark.status==="FAIL"||moatLayer.status==="FAIL"||integrationLayer.status==="FAIL"||productizationLayer.status==="FAIL"||commercialLayer.status==="FAIL"||operationalIntegrity.status==="FAIL"||defenceLayer.status==="FAIL"||driftSentinel.status==="FAIL"||releaseControl.status==="FAIL";
+ const hardFail=benchmark.status==="FAIL"||moatLayer.status==="FAIL"||integrationLayer.status==="FAIL"||productizationLayer.status==="FAIL"||commercialLayer.status==="FAIL"||operationalIntegrity.status==="FAIL"||defenceLayer.status==="FAIL"||adversaryEmulation.status==="FAIL"||driftSentinel.status==="FAIL"||releaseControl.status==="FAIL";
  const partial=(!requiredEvidence?false:evidence.status!=="PASS")||driftSentinel.status==="PARTIAL"||releaseControl.status==="PARTIAL";
  const gate=hardFail?"FAIL":partial?"PARTIAL":"PASS";
  const resilience=gate==="PASS"?"ACTIVE":gate==="FAIL"?"QUARANTINED":"SHIELDED";
- return {product:"C2Ledger",version:PRODUCT_VERSION,releaseId:RELEASE_ID,gate,resilience,rulepackHash,selfTest:"PASS",benchmark,evidenceStore:evidence,moatLayer,integrationLayer,productizationLayer,commercialLayer,operationalIntegrity,defenceLayer,driftSentinel,releaseControl,connectorGuard:{status:"PASS",allowedHosts:[...Array.from(GITHUB_ALLOWED),...Array.from(CHAIN_ALLOWED)]},runtime:{deploymentId:Bun.env.RAILWAY_DEPLOYMENT_ID||null,serviceId:Bun.env.RAILWAY_SERVICE_ID||null,environmentId:Bun.env.RAILWAY_ENVIRONMENT_ID||null,publicDomain:Bun.env.RAILWAY_PUBLIC_DOMAIN||null},bricks:ASTRA_BRICKS,time:new Date().toISOString()};
+ return {product:"C2Ledger",version:PRODUCT_VERSION,releaseId:RELEASE_ID,gate,resilience,rulepackHash,selfTest:"PASS",benchmark,evidenceStore:evidence,moatLayer,integrationLayer,productizationLayer,commercialLayer,operationalIntegrity,defenceLayer,adversaryEmulation,driftSentinel,releaseControl,connectorGuard:{status:"PASS",allowedHosts:[...Array.from(GITHUB_ALLOWED),...Array.from(CHAIN_ALLOWED)]},runtime:{deploymentId:Bun.env.RAILWAY_DEPLOYMENT_ID||null,serviceId:Bun.env.RAILWAY_SERVICE_ID||null,environmentId:Bun.env.RAILWAY_ENVIRONMENT_ID||null,publicDomain:Bun.env.RAILWAY_PUBLIC_DOMAIN||null},bricks:ASTRA_BRICKS,time:new Date().toISOString()};
 }
 
 const CSS = `
 :root{font-family:Inter,system-ui,sans-serif;color:#eef2ff;background:#060913}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0,#17204b 0,transparent 34%),#060913;color:#eef2ff}.wrap{max-width:1160px;margin:auto;padding:28px}.nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:48px}.brand{font-size:22px;font-weight:900;letter-spacing:-.04em}.status{font-size:12px;color:#94a3d9}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#55d98d;margin-right:7px}.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:center}.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.16em;color:#8ea2ff;font-weight:800}h1{font-size:clamp(44px,7vw,80px);line-height:.94;letter-spacing:-.055em;margin:12px 0 18px}.lead{font-size:19px;line-height:1.6;color:#b6bfdf}.card{background:#0d1224;border:1px solid #252d4b;border-radius:22px;padding:22px;box-shadow:0 25px 80px #0008}.metric{font-size:56px;font-weight:900}.muted{color:#8d97ba}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:28px 0}.mini{padding:17px;border-radius:16px;border:1px solid #222b48;background:#0a0f20}.mini b{display:block;font-size:20px;margin-bottom:5px}.scanner{margin-top:48px}.scanner h2{font-size:32px}textarea{width:100%;min-height:270px;background:#050814;color:#dbe4ff;border:1px solid #283152;border-radius:16px;padding:16px;font:13px/1.6 ui-monospace,monospace}.row{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0}.btn{border:0;border-radius:12px;padding:12px 16px;font-weight:800;cursor:pointer;background:#8fa2ff;color:#07102a}.btn.secondary{background:#171e36;color:#cbd4ff;border:1px solid #30395d}.out{white-space:pre-wrap;background:#070b17;border:1px solid #252d4b;border-radius:16px;padding:18px;min-height:120px;font:13px/1.55 ui-monospace,monospace;color:#c9d4ff;overflow:auto}footer{margin:50px 0 14px;color:#6f789c;font-size:13px}@media(max-width:800px){.hero{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.wrap{padding:20px}}
 `;
 
-const HTML = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>C2Ledger Mission Assurance — Defensive Cyber Resilience</title><meta name="description" content="Defensive mission assurance for blockchain-C2 detection, software supply-chain evidence, resilient recovery and high-assurance environments."><style>`+CSS+`</style></head><body><main class="wrap"><nav class="nav"><div class="brand">C2Ledger Mission Assurance</div><div class="status"><span class="dot"></span>defensive engine online</div></nav><section class="hero"><div><div class="eyebrow">Defensive cyber resilience × software supply-chain assurance</div><h1>Detect. Prove. Recover.</h1><p class="lead">C2Ledger Mission Assurance detects blockchain dead-drop C2 and software supply-chain attack chains, preserves tamper-evident evidence, and supports fail-closed recovery in high-assurance environments. It never executes untrusted repository code.</p><div class="grid"><div class="mini"><b>Cross-signal</b><span class="muted">Code + network + on-chain</span></div><div class="mini"><b>CI-ready</b><span class="muted">Machine-readable API verdicts</span></div><div class="mini"><b>No execution</b><span class="muted">Static defensive analysis</span></div></div></div><aside class="card"><div class="eyebrow">Risk engine</div><div class="metric">0→100</div><p class="muted">Signals become stronger only when they correlate into an attack chain.</p></aside></section><section class="scanner"><h2>Scan suspicious code</h2><p class="muted">Paste code, or scan a public GitHub repository. C2Ledger analyzes source text only and never executes repository code.</p><div class="row"><input id="repo" style="flex:1;min-width:260px;background:#050814;color:#dbe4ff;border:1px solid #283152;border-radius:12px;padding:12px" placeholder="https://github.com/owner/repo"><button class="btn" id="scanrepo">Scan GitHub repo</button></div><textarea id="src" placeholder="Paste suspicious code here..."></textarea><div class="row"><button class="btn" id="scan">Analyze risk</button><button class="btn secondary" id="sample">Load demo</button><button class="btn secondary" id="clear">Clear</button></div><div id="out" class="out">Ready. API: POST /api/scan</div></section><footer>C2Ledger v0.10.0 Mission Assurance • /health • /api/defence/readiness • /api/proof</footer></main><script>const q=s=>document.querySelector(s);q("#sample").onclick=()=>q("#src").value="const provider = new ethers.JsonRpcProvider('https://example.invalid');\\nconst tx = await provider.getTransaction('0xdeadbeef');\\nconst data = tx.to.slice(2);";q("#clear").onclick=()=>{q("#src").value="";q("#repo").value="";q("#out").textContent="Ready."};q("#scanrepo").onclick=async()=>{const repoUrl=q("#repo").value;if(!repoUrl.trim()){q("#out").textContent="Enter a public GitHub repository URL.";return}q("#out").textContent="Scanning selected repository surfaces…";try{const r=await fetch("/api/scan/github",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({repoUrl})});q("#out").textContent=JSON.stringify(await r.json(),null,2)}catch(e){q("#out").textContent=String(e)}};q("#scan").onclick=async()=>{const content=q("#src").value;if(!content.trim()){q("#out").textContent="Paste code first.";return}q("#out").textContent="Analyzing…";try{const r=await fetch("/api/scan",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({content,path:"dashboard-input"})});q("#out").textContent=JSON.stringify(await r.json(),null,2)}catch(e){q("#out").textContent=String(e)}};</script></body></html>`;
+const HTML = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>C2Ledger Mission Assurance — Defensive Cyber Resilience</title><meta name="description" content="Defensive mission assurance for blockchain-C2 detection, software supply-chain evidence, resilient recovery and high-assurance environments."><style>`+CSS+`</style></head><body><main class="wrap"><nav class="nav"><div class="brand">C2Ledger Mission Assurance</div><div class="status"><span class="dot"></span>defensive engine online</div></nav><section class="hero"><div><div class="eyebrow">Defensive cyber resilience × software supply-chain assurance</div><h1>Detect. Prove. Recover.</h1><p class="lead">C2Ledger Mission Assurance detects blockchain dead-drop C2 and software supply-chain attack chains, preserves tamper-evident evidence, and supports fail-closed recovery in high-assurance environments. It never executes untrusted repository code.</p><div class="grid"><div class="mini"><b>Cross-signal</b><span class="muted">Code + network + on-chain</span></div><div class="mini"><b>CI-ready</b><span class="muted">Machine-readable API verdicts</span></div><div class="mini"><b>No execution</b><span class="muted">Static defensive analysis</span></div></div></div><aside class="card"><div class="eyebrow">Risk engine</div><div class="metric">0→100</div><p class="muted">Signals become stronger only when they correlate into an attack chain.</p></aside></section><section class="scanner"><h2>Scan suspicious code</h2><p class="muted">Paste code, or scan a public GitHub repository. C2Ledger analyzes source text only and never executes repository code.</p><div class="row"><input id="repo" style="flex:1;min-width:260px;background:#050814;color:#dbe4ff;border:1px solid #283152;border-radius:12px;padding:12px" placeholder="https://github.com/owner/repo"><button class="btn" id="scanrepo">Scan GitHub repo</button></div><textarea id="src" placeholder="Paste suspicious code here..."></textarea><div class="row"><button class="btn" id="scan">Analyze risk</button><button class="btn secondary" id="sample">Load demo</button><button class="btn secondary" id="clear">Clear</button></div><div id="out" class="out">Ready. API: POST /api/scan</div></section><footer>C2Ledger v0.11.0 Mission Assurance • /health • /api/defence/readiness • /api/proof</footer></main><script>const q=s=>document.querySelector(s);q("#sample").onclick=()=>q("#src").value="const provider = new ethers.JsonRpcProvider('https://example.invalid');\\nconst tx = await provider.getTransaction('0xdeadbeef');\\nconst data = tx.to.slice(2);";q("#clear").onclick=()=>{q("#src").value="";q("#repo").value="";q("#out").textContent="Ready."};q("#scanrepo").onclick=async()=>{const repoUrl=q("#repo").value;if(!repoUrl.trim()){q("#out").textContent="Enter a public GitHub repository URL.";return}q("#out").textContent="Scanning selected repository surfaces…";try{const r=await fetch("/api/scan/github",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({repoUrl})});q("#out").textContent=JSON.stringify(await r.json(),null,2)}catch(e){q("#out").textContent=String(e)}};q("#scan").onclick=async()=>{const content=q("#src").value;if(!content.trim()){q("#out").textContent="Paste code first.";return}q("#out").textContent="Analyzing…";try{const r=await fetch("/api/scan",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({content,path:"dashboard-input"})});q("#out").textContent=JSON.stringify(await r.json(),null,2)}catch(e){q("#out").textContent=String(e)}};</script></body></html>`;
 
 function hs(type:string){return {"content-type":type,"x-content-type-options":"nosniff","x-frame-options":"DENY","referrer-policy":"no-referrer","content-security-policy":"default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'"};}
 
@@ -1065,6 +1164,14 @@ Bun.serve({port:Number(Bun.env.PORT||3000),async fetch(req){
  if(req.method==="GET"&&u.pathname==="/api/defence/assurance-package"){
   const pkg=await defenceAssurancePackage();
   return new Response(JSON.stringify(pkg),{headers:{...hs("application/json"),"content-disposition":'attachment; filename="c2ledger-mission-assurance.json"'}});
+ }
+ if(req.method==="GET"&&u.pathname==="/api/defence/adversary-emulation"){
+  return new Response(JSON.stringify(await adversaryEmulationCatalog()),{headers:hs("application/json")});
+ }
+ if(req.method==="POST"&&u.pathname==="/api/defence/adversary-emulation"){
+  let body:any;try{body=await req.json()}catch{return new Response(JSON.stringify({error:"invalid body"}),{status:400,headers:hs("application/json")})}
+  try{return new Response(JSON.stringify(await runAdversaryEmulation(String(body?.scenarioId||""))),{headers:hs("application/json")})}
+  catch(e:any){return new Response(JSON.stringify({error:String(e?.message||e)}),{status:400,headers:hs("application/json")})}
  }
  if(req.method==="GET"&&u.pathname==="/api/proof"){
   const proof=await proofSnapshot();
@@ -1245,7 +1352,7 @@ Bun.serve({port:Number(Bun.env.PORT||3000),async fetch(req){
  if(req.method==="GET"&&u.pathname==="/api/rules") return new Response(JSON.stringify({releaseId:RELEASE_ID,productVersion:PRODUCT_VERSION,rules:RULES.map(r=>({id:r.id,title:r.title,severity:r.severity,category:r.category,weight:r.weight,reason:r.reason}))}),{headers:hs("application/json")});
  if(req.method==="GET"&&u.pathname==="/api/enterprise"){
   const proof=await proofSnapshot();
-  return new Response(JSON.stringify({product:"C2Ledger",edition:"ASTRA OMEGA",version:PRODUCT_VERSION,releaseId:RELEASE_ID,capabilities:{evidenceLedger:true,contentAddressedProofs:true,dualityArbiter:true,negativeKnowledge:true,replayCapsules:true,benchmarkGate:true,releaseControl:true,connectorGuard:true,rateLimit:true,githubRepositoryScan:true,noUntrustedExecution:true,threatIntelFeed:true,incidentHistory:true,tenantApiKeys:true,multiChainInspection:true,proprietaryMoatData:true,sarifExport:true,ciPrGate:true,githubWebhookReceiver:true,durableAlertQueue:true,longitudinalReputation:true,socDashboard:true,stix21Export:true,tenantQuotaMeter:true,incidentLifecycle:true,openApiContract:true,alertDispatcher:true,commercialOnboarding:true,tenantKeyRotation:true,tenantAuditTrail:true,pricingPackaging:true,enterpriseReadiness:true,missionAssuranceProfile:true,defensiveOnlyBoundary:true,offlineAssuranceExport:true,readinessMapping:true},assurance:{gate:proof.gate,resilience:proof.resilience,benchmark:proof.benchmark.status,evidenceStore:proof.evidenceStore.status,moatLayer:proof.moatLayer?.status,integrationLayer:proof.integrationLayer?.status,productizationLayer:proof.productizationLayer?.status,commercialLayer:proof.commercialLayer?.status,driftSentinel:proof.driftSentinel.status,releaseControl:proof.releaseControl.status},endpoints:["/api/scan","/api/scan/github","/api/multichain/inspect","/api/intel/feed","/api/intel/stats","/api/intel/ingest","/api/incidents","/api/admin/tenants","/api/scan/sarif","/api/ci/gate","/api/github/webhook","/api/github/action.yml","/api/reputation","/api/alerts/status","/api/alerts/dispatch","/soc","/api/soc/summary","/api/openapi.json","/api/intel/stix","/api/tenant/usage","/api/tenant/scan","/pricing","/api/plans","/api/pilot/apply","/api/admin/pilots","/api/admin/pilots/approve","/api/tenant/key/rotate","/api/tenant/audit","/api/tenant/audit/verify","/api/admin/watcher/cursors","/api/defence/readiness","/api/defence/assurance-package","/api/proof","/api/gate","/api/harness","/api/benchmark","/api/bricks","/api/rules"],commercialPositioning:"Defensive mission-assurance and software supply-chain evidence platform for high-assurance environments"}),{headers:hs("application/json")});
+  return new Response(JSON.stringify({product:"C2Ledger",edition:"ASTRA OMEGA",version:PRODUCT_VERSION,releaseId:RELEASE_ID,capabilities:{evidenceLedger:true,contentAddressedProofs:true,dualityArbiter:true,negativeKnowledge:true,replayCapsules:true,benchmarkGate:true,releaseControl:true,connectorGuard:true,rateLimit:true,githubRepositoryScan:true,noUntrustedExecution:true,threatIntelFeed:true,incidentHistory:true,tenantApiKeys:true,multiChainInspection:true,proprietaryMoatData:true,sarifExport:true,ciPrGate:true,githubWebhookReceiver:true,durableAlertQueue:true,longitudinalReputation:true,socDashboard:true,stix21Export:true,tenantQuotaMeter:true,incidentLifecycle:true,openApiContract:true,alertDispatcher:true,commercialOnboarding:true,tenantKeyRotation:true,tenantAuditTrail:true,pricingPackaging:true,enterpriseReadiness:true,missionAssuranceProfile:true,defensiveOnlyBoundary:true,offlineAssuranceExport:true,readinessMapping:true,adversaryEmulationRange:true,purpleTeamValidation:true},assurance:{gate:proof.gate,resilience:proof.resilience,benchmark:proof.benchmark.status,evidenceStore:proof.evidenceStore.status,moatLayer:proof.moatLayer?.status,integrationLayer:proof.integrationLayer?.status,productizationLayer:proof.productizationLayer?.status,commercialLayer:proof.commercialLayer?.status,driftSentinel:proof.driftSentinel.status,releaseControl:proof.releaseControl.status},endpoints:["/api/scan","/api/scan/github","/api/multichain/inspect","/api/intel/feed","/api/intel/stats","/api/intel/ingest","/api/incidents","/api/admin/tenants","/api/scan/sarif","/api/ci/gate","/api/github/webhook","/api/github/action.yml","/api/reputation","/api/alerts/status","/api/alerts/dispatch","/soc","/api/soc/summary","/api/openapi.json","/api/intel/stix","/api/tenant/usage","/api/tenant/scan","/pricing","/api/plans","/api/pilot/apply","/api/admin/pilots","/api/admin/pilots/approve","/api/tenant/key/rotate","/api/tenant/audit","/api/tenant/audit/verify","/api/admin/watcher/cursors","/api/defence/readiness","/api/defence/assurance-package","/api/defence/adversary-emulation","/api/proof","/api/gate","/api/harness","/api/benchmark","/api/bricks","/api/rules"],commercialPositioning:"Defensive mission-assurance and software supply-chain evidence platform for high-assurance environments"}),{headers:hs("application/json")});
  }
  if(req.method==="POST"&&(u.pathname==="/api/scan/github"||u.pathname==="/api/scan")){
   const rl=rateAllowed(req);
