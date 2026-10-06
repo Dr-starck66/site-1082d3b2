@@ -1,5 +1,5 @@
 import { inflateRawSync } from "node:zlib";
-import { mkdir } from "node:fs/promises";
+import { mkdir, unlink } from "node:fs/promises";
 import { dirname } from "node:path";
 import { RANGE_SCENARIOS, rangeCatalog } from "./range-scenarios";
 import { MISSION_OPS_PROFILE, evaluateMission } from "./mission-ops";
@@ -485,7 +485,7 @@ async function localRead(key:string){
 }
 async function localDelete(key:string){
  const p=localStatePath(key); if(!p) return false;
- try{await Bun.file(p).delete();return true}catch{return false}
+ try{await unlink(p);return true}catch{return false}
 }
 
 function s3Client(){
