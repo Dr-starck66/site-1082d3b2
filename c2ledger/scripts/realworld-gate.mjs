@@ -12,7 +12,7 @@ const cases=[
 const rows={};
 for(const [name,repo,kind] of cases){
  const {r,j}=await json(BASE+"/api/scan/github",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({repoUrl:repo})});
- if(!r.ok)throw new Error(name+" HTTP "+r.status);
+ if(!r.ok)throw new Error(name+" HTTP "+r.status+" "+JSON.stringify(j));
  rows[name]={score:j.score,verdict:j.verdict,archivesScanned:j.archivesScanned||0,archiveEntriesScanned:j.archiveEntriesScanned||0};
  if(kind==="benign"&&j.score>=30)throw new Error(name+" false-positive regression: "+j.score);
  if(kind==="positive"&&j.score<55)throw new Error(name+" positive regression: "+j.score);
