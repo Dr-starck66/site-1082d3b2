@@ -1,5 +1,9 @@
 name: RefundMoneyNow Editorial Autopilot
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/refundmoneynow-autopilot.yml'
   schedule:
     - cron: '15 10 * * *'
     - cron: '30 13 * * *'
