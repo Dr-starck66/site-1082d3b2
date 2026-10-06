@@ -2,8 +2,8 @@
 import json, os, sys
 from pathlib import Path
 
-WORK=Path("/kaggle/working/c2ledger")
-INPUT=Path("/kaggle/input")
+WORK=Path(os.environ.get("C2LEDGER_KAGGLE_WORKDIR","/kaggle/working/c2ledger"))
+INPUT=Path(os.environ.get("C2LEDGER_KAGGLE_INPUT","/kaggle/input"))
 WORK.mkdir(parents=True,exist_ok=True)
 
 def find_events():
