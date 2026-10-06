@@ -1,4 +1,6 @@
 import { inflateRawSync } from "node:zlib";
+import { mkdir } from "node:fs/promises";
+import { dirname } from "node:path";
 import { RANGE_SCENARIOS, rangeCatalog } from "./range-scenarios";
 import { MISSION_OPS_PROFILE, evaluateMission } from "./mission-ops";
 
@@ -464,6 +466,28 @@ function cleanForLedger(value:any):any{
  return value;
 }
 
+const LOCAL_STATE_DIR=String(Bun.env.C2LEDGER_LOCAL_STATE_DIR||"").trim().replace(/\/+$/,"");
+function localStatePath(key:string){
+ if(!LOCAL_STATE_DIR) return null;
+ if(key.includes("..")||key.startsWith("/")) throw new Error("unsafe local state key");
+ return LOCAL_STATE_DIR+"/"+key;
+}
+async function localWrite(key:string,body:string){
+ const p=localStatePath(key); if(!p) return false;
+ await mkdir(dirname(p),{recursive:true});
+ await Bun.write(p,body);
+ return true;
+}
+async function localRead(key:string){
+ const p=localStatePath(key); if(!p) return null;
+ const f=Bun.file(p); if(!(await f.exists())) return null;
+ return await f.text();
+}
+async function localDelete(key:string){
+ const p=localStatePath(key); if(!p) return false;
+ try{await Bun.file(p).delete();return true}catch{return false}
+}
+
 function s3Client(){
  if(!Bun.env.S3_BUCKET||!Bun.env.S3_ENDPOINT||!Bun.env.S3_ACCESS_KEY_ID||!Bun.env.S3_SECRET_ACCESS_KEY) return null;
  return new Bun.S3Client({
@@ -485,27 +509,42 @@ async function persistEvidence(kind:string,inputRef:string,result:any){
  const digest=await sha256Hex(canonical);
  const day=record.createdAt.slice(0,10);
  const key="evidence/"+day+"/"+digest+".json";
+ if(!client&&LOCAL_STATE_DIR){
+  try{
+   await localWrite(key,canonical);
+   const read=await localRead(key);
+   return read===canonical?{status:"PASS",backend:"local-volume",digest,inputHash,rulepackHash,key}:{status:"PARTIAL",reason:"local-write-not-visible",backend:"local-volume",digest,inputHash,rulepackHash,key};
+  }catch(e:any){return {status:"PARTIAL",reason:String(e?.message||e),backend:"local-volume",digest,inputHash,rulepackHash,key}}
+ }
  if(!client) return {status:"PARTIAL",reason:"evidence-store-unconfigured",digest,inputHash,rulepackHash,key:null};
  try{
   await client.write(key,canonical,{type:"application/json"});
   const exists=await client.exists(key);
-  return exists?{status:"PASS",digest,inputHash,rulepackHash,key}:{status:"PARTIAL",reason:"write-not-visible",digest,inputHash,rulepackHash,key};
+  return exists?{status:"PASS",backend:"s3",digest,inputHash,rulepackHash,key}:{status:"PARTIAL",reason:"write-not-visible",backend:"s3",digest,inputHash,rulepackHash,key};
  }catch(e:any){
-  return {status:"PARTIAL",reason:String(e?.message||e),digest,inputHash,rulepackHash,key};
+  return {status:"PARTIAL",reason:String(e?.message||e),backend:"s3",digest,inputHash,rulepackHash,key};
  }
 }
 
 async function probeEvidenceStore(){
  const client=s3Client();
- if(!client) return {status:"FAIL",reason:"unconfigured"};
  const key="probes/"+String(Bun.env.RAILWAY_DEPLOYMENT_ID||"local")+".json";
  const body=JSON.stringify({probe:"C2Ledger",releaseId:RELEASE_ID,time:new Date().toISOString()});
+ if(!client&&LOCAL_STATE_DIR){
+  try{
+   await localWrite(key,body);
+   const read=await localRead(key);
+   await localDelete(key);
+   return {status:read===body?"PASS":"FAIL",backend:"local-volume",roundTrip:read===body};
+  }catch(e:any){return {status:"FAIL",backend:"local-volume",reason:String(e?.message||e)}}
+ }
+ if(!client) return {status:"FAIL",reason:"unconfigured"};
  try{
   await client.write(key,body,{type:"application/json"});
   const read=await client.file(key).text();
   await client.delete(key);
-  return {status:read===body?"PASS":"FAIL",roundTrip:read===body};
- }catch(e:any){return {status:"FAIL",reason:String(e?.message||e)};}
+  return {status:read===body?"PASS":"FAIL",backend:"s3",roundTrip:read===body};
+ }catch(e:any){return {status:"FAIL",backend:"s3",reason:String(e?.message||e)};}
 }
 
 async function safeGithubFetch(url:string,init:any={}){
@@ -523,7 +562,11 @@ async function safeChainFetch(url:string,init:any={}){
 }
 
 async function readState<T>(key:string,fallback:T):Promise<T>{
- const client=s3Client(); if(!client) return fallback;
+ const client=s3Client();
+ if(!client&&LOCAL_STATE_DIR){
+  try{const txt=await localRead(key);return txt?JSON.parse(txt) as T:fallback}catch{return fallback}
+ }
+ if(!client) return fallback;
  try{
   if(!(await client.exists(key))) return fallback;
   const txt=await client.file(key).text();
@@ -531,7 +574,9 @@ async function readState<T>(key:string,fallback:T):Promise<T>{
  }catch{return fallback;}
 }
 async function writeState(key:string,value:any){
- const client=s3Client(); if(!client) throw new Error("state store unavailable");
+ const client=s3Client();
+ if(!client&&LOCAL_STATE_DIR){await localWrite(key,JSON.stringify(value));return true}
+ if(!client) throw new Error("state store unavailable");
  await client.write(key,JSON.stringify(value),{type:"application/json"});
  return true;
 }
