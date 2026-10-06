@@ -82,7 +82,7 @@ async function scanGithub(repoUrl:string){
   const mitigated=/environment\s*:/i.test(content)&&/persist-credentials\s*:\s*false/i.test(content);
   const fs=(result.findings||[]).flatMap((f:any)=>{
    if(wf&&(f.id==="CREDENTIALS"||f.id==="CHAIN_RPC")) return [];
-   if(f.id==="SECRET_EXFIL"&&/api\\.github\\.com/i.test(content)&&/GITHUB_TOKEN/i.test(content)&&!/(?:https?:\\/\\/(?:\\d{1,3}\\.){3}\\d{1,3}|NPM_TOKEN|AWS_SECRET_ACCESS_KEY|CI_JOB_TOKEN)/i.test(content)) return [];
+   if(f.id==="SECRET_EXFIL"&&/api\.github\.com/i.test(content)&&/GITHUB_TOKEN/i.test(content)&&!/(NPM_TOKEN|AWS_SECRET_ACCESS_KEY|CI_JOB_TOKEN)/i.test(content)&&!/(?:\b\d{1,3}\.){3}\d{1,3}\b/.test(content)) return [];
    if(wf&&f.id==="REMOTE_EXEC"&&!untrusted) return [];
    if(wf&&f.id==="GHA_UNTRUSTED"&&mitigated) return [{...f,severity:"medium",weight:18,reason:f.reason+" Mitigations detected; manual review still recommended."}];
    return [f];
