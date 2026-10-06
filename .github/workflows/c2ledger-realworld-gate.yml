@@ -1,0 +1,19 @@
+name: C2Ledger Real-World Gate
+on:
+  push:
+    branches: [c2ledger-v1-hardening]
+    paths:
+      - "c2ledger/**"
+      - ".github/workflows/c2ledger-realworld-gate.yml"
+  workflow_dispatch:
+jobs:
+  real-world-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run C2Ledger real-world regression gate
+        run: node c2ledger/scripts/realworld-gate.mjs
