@@ -1,3 +1,4 @@
+import { inflateRawSync } from "node:zlib";
 
 type Sev = "low"|"medium"|"high"|"critical";
 type Rule = {id:string; title:string; severity:Sev; weight:number; category:string; re:RegExp; reason:string};
@@ -63,7 +64,7 @@ async function scanGithub(repoUrl:string){
  const tree:any=await treeRes.json();
  const blobs=(tree.tree||[]).filter((x:any)=>x.type==="blob"&&typeof x.path==="string");
  const paths=blobs.filter((x:any)=>(x.size||0)<=240000).map((x:any)=>x.path);
- const archives=blobs.filter((x:any)=>(x.size||0)>0&&(x.size||0)<=2000000&&/\.(?:tgz|tar\.gz)$/i.test(x.path)&&/(dataset|samples?|malware|fixtures?)/i.test(x.path)).slice(0,20);
+ const archives=blobs.filter((x:any)=>(x.size||0)>0&&(x.size||0)<=2000000&&/\.(?:tgz|tar\.gz|zip)$/i.test(x.path)&&/(dataset|samples?|malware|fixtures?)/i.test(x.path)).slice(0,20);
  const lower=(p:string)=>p.toLowerCase(), baseName=(p:string)=>lower(p).split("/").pop()||"";
  const isWorkflow=(p:string)=>lower(p).startsWith(".github/workflows/")&&/\.ya?ml$/.test(lower(p));
  const isDoc=(p:string)=>/\.(?:md|mdx|rst|txt)$/.test(lower(p));
@@ -80,7 +81,7 @@ async function scanGithub(repoUrl:string){
  const files:any[]=[]; let totalBytes=0, fetched=0, archivesScanned=0, archiveEntriesScanned=0;
  function tarText(bytes:Uint8Array,a:number,b:number){return new TextDecoder().decode(bytes.slice(a,b)).replace(/\0.*$/s,"").trim();}
  function safeTarName(name:string){return !!name&&!name.startsWith("/")&&!name.split("/").includes("..")&&!name.includes("\\");}
- function textEntry(name:string){const x=name.toLowerCase(),b=x.split("/").pop()||"";return b==="package.json"||b==="dockerfile"||[".js",".mjs",".cjs",".ts",".tsx",".jsx",".sh",".bash",".zsh",".ps1",".py",".rb",".php",".yml",".yaml",".json",".toml"].some(e=>x.endsWith(e));}
+ function textEntry(name:string){const x=name.toLowerCase(),b=x.split("/").pop()||"";return b==="package.json"||b==="dockerfile"||[".js",".mjs",".cjs",".ts",".tsx",".jsx",".sh",".bash",".zsh",".ps1",".py",".rb",".php",".yml",".yaml",".json",".toml",".md",".txt"].some(e=>x.endsWith(e));}
  async function inspectTgz(url:string,archivePath:string){
   const out:any[]=[];const r=await safeGithubFetch(url,{headers:{"user-agent":"C2Ledger/0.9"}});if(!r.ok)return out;
   const compressed=new Uint8Array(await r.arrayBuffer());if(compressed.byteLength>2000000)return out;
@@ -102,6 +103,28 @@ async function scanGithub(repoUrl:string){
     }
    }
    entries++;off=dataStart+Math.ceil(size/512)*512;
+  }
+  archivesScanned++;return out;
+ }
+ function u16(b:Uint8Array,o:number){return b[o]|(b[o+1]<<8)}
+ function u32(b:Uint8Array,o:number){return (b[o]|(b[o+1]<<8)|(b[o+2]<<16)|(b[o+3]<<24))>>>0}
+ function sig(b:Uint8Array,o:number,n:number){return o+3<b.length&&u32(b,o)===n}
+ async function inspectZip(url:string,archivePath:string){
+  const out:any[]=[];const r=await safeGithubFetch(url,{headers:{"user-agent":"C2Ledger/0.9"}});if(!r.ok)return out;
+  const z=new Uint8Array(await r.arrayBuffer());if(z.byteLength>2000000)return out;
+  let e=-1;for(let i=z.length-22;i>=Math.max(0,z.length-65557);i--){if(sig(z,i,0x06054b50)){e=i;break}}if(e<0)return out;
+  const total=Math.min(120,u16(z,e+10)),cd=u32(z,e+16);let p=cd,entries=0,textBytes=0;
+  for(let n=0;n<total&&p+46<=z.length&&entries<120&&textBytes<1500000;n++){
+   if(!sig(z,p,0x02014b50))break;
+   const flags=u16(z,p+8),method=u16(z,p+10),cs=u32(z,p+20),us=u32(z,p+24),nl=u16(z,p+28),xl=u16(z,p+30),cl=u16(z,p+32),lo=u32(z,p+42);
+   const name=tarText(z,p+46,p+46+nl);p+=46+nl+xl+cl;entries++;
+   if((flags&1)||!safeTarName(name)||!textEntry(name)||us>300000||textBytes+us>1500000||lo+30>z.length||!sig(z,lo,0x04034b50))continue;
+   const lnl=u16(z,lo+26),lxl=u16(z,lo+28),ds=lo+30+lnl+lxl;if(ds+cs>z.length)continue;
+   let raw:Uint8Array;try{raw=method===0?z.slice(ds,ds+cs):method===8?new Uint8Array(inflateRawSync(z.slice(ds,ds+cs))):new Uint8Array()}catch{continue}
+   if(!raw.length||raw.byteLength>300000)continue;
+   const content=new TextDecoder("utf-8",{fatal:false}).decode(raw);if(content.indexOf("\0")>=0)continue;
+   const vpath=archivePath+"!"+name,result=contextual(vpath,content,scan(content,vpath));archiveEntriesScanned++;textBytes+=raw.byteLength;
+   if(result.findings.length)out.push({path:vpath,score:result.score,verdict:result.verdict,findings:result.findings,correlations:result.correlations});
   }
   archivesScanned++;return out;
  }
@@ -137,7 +160,7 @@ async function scanGithub(repoUrl:string){
  }
  for(const a of archives){
   const raw="https://raw.githubusercontent.com/"+owner+"/"+repo+"/"+encodeURIComponent(branch)+"/"+a.path.split("/").map(encodeURIComponent).join("/");
-  const af=await inspectTgz(raw,a.path);files.push(...af);
+  const af=/\.zip$/i.test(a.path)?await inspectZip(raw,a.path):await inspectTgz(raw,a.path);files.push(...af);
  }
  const all=files.flatMap((f:any)=>f.findings.map((x:any)=>({...x,path:f.path})));
  const topFileScore=files.reduce((n:number,f:any)=>Math.max(n,f.score),0);
@@ -146,7 +169,7 @@ async function scanGithub(repoUrl:string){
  if(!highConfidence&&score>24) score=24;
  const verdict=score>=80?"CRITICAL":score>=55?"HIGH":score>=30?"ELEVATED":score>=12?"WATCH":"LOW";
  const huntingSignals=Array.from(new Set(files.flatMap((f:any)=>f.correlations||[])));
- return {product:"C2Ledger",version:PRODUCT_VERSION,repository:owner+"/"+repo,branch,verdict,score,filesScanned:fetched,filesSelected:selected.length,archivesScanned,archiveEntriesScanned,filesWithFindings:files.length,bytesFetched:totalBytes,correlations:huntingSignals,files,limitations:["Public GitHub repositories only","Maximum 80 selected text files and 20 bounded npm archives","Archive inspection is in-memory, read-only and never executes package code","Static analysis; no untrusted code is executed"],selection:{candidateFiles:paths.length,selectedFiles:selected.length,archiveCandidates:archives.length,coveragePct:paths.length?Math.round(selected.length/paths.length*10000)/100:0,workflowCap:8,docsCap:6,testCap:8},scannedAt:new Date().toISOString()};
+ return {product:"C2Ledger",version:PRODUCT_VERSION,repository:owner+"/"+repo,branch,verdict,score,filesScanned:fetched,filesSelected:selected.length,archivesScanned,archiveEntriesScanned,filesWithFindings:files.length,bytesFetched:totalBytes,correlations:huntingSignals,files,limitations:["Public GitHub repositories only","Maximum 80 selected text files and 20 bounded TGZ/ZIP archives","Archive inspection is in-memory, read-only, rejects unsafe paths/encryption and never executes package code","Static analysis; no untrusted code is executed"],selection:{candidateFiles:paths.length,selectedFiles:selected.length,archiveCandidates:archives.length,coveragePct:paths.length?Math.round(selected.length/paths.length*10000)/100:0,workflowCap:8,docsCap:6,testCap:8},scannedAt:new Date().toISOString()};
 }
 
 const ASTRA_BRICKS = [
