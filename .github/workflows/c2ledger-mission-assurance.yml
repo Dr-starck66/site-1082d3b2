@@ -101,7 +101,8 @@ jobs:
             -d '{"enabled":true,"reason":"ci-resume"}' http://127.0.0.1:3000/api/mission-ops/control >/tmp/control-on.json
       - name: Verify disconnected deployment definitions
         run: |
-          docker compose -f c2ledger/deploy/docker-compose.disconnected.yml config >/tmp/compose.yaml
+          C2LEDGER_ADMIN_TOKEN=ci-admin C2LEDGER_SENSOR_TOKEN=ci-sensor C2LEDGER_SENSOR_INGEST_TOKEN=ci-ingest \
+            docker compose -f c2ledger/deploy/docker-compose.disconnected.yml config >/tmp/compose.yaml
           grep -q 'internal: true' /tmp/compose.yaml
           grep -q 'readOnlyRootFilesystem: true' c2ledger/deploy/k8s-disconnected.yaml
           grep -q 'egress: \[\]' c2ledger/deploy/k8s-disconnected.yaml
