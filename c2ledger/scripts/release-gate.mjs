@@ -9,7 +9,7 @@ for(const [f,w] of must){const t=fs.readFileSync(path.join(root,f),"utf8");if(!t
 const src=fs.readFileSync(path.join(root,"src/index.ts"),"utf8");
 if(/version:\s*"0\./.test(src)) throw new Error("hard-coded runtime version remains in source");
 if(!src.includes('proof.gate==="PASS"&&proof.defenceLayer?.status==="PASS"')) throw new Error("readiness is not fail-closed on full proof gate");
-for(const f of ["Dockerfile","sensor/Dockerfile","range-node/Dockerfile"]){const t=fs.readFileSync(path.join(root,f),"utf8");if(!t.startsWith("FROM oven/bun:1.4.0-alpine"))throw new Error(`${f} Bun base not exact-version pinned`);if(!t.includes("USER bun"))throw new Error(`${f} does not run non-root`)}
+for(const f of ["Dockerfile","sensor/Dockerfile","range-node/Dockerfile"]){const t=fs.readFileSync(path.join(root,f),"utf8");if(!t.startsWith("FROM oven/bun:1.4.0-alpine@sha256:07235578f79ef8c6f97d94aee7938e76f5cdba5f21ae5dbfdd3d3d38058437eb"))throw new Error(`${f} Bun base not immutable-digest pinned`);if(!t.includes("USER bun"))throw new Error(`${f} does not run non-root`)}
 const wfDir=fs.existsSync(".github/workflows")?".github/workflows":".";
 const wfs=fs.readdirSync(wfDir).filter(x=>/^c2ledger-.*\.yml$/.test(x));
 for(const f of wfs){const t=fs.readFileSync(path.join(wfDir,f),"utf8");if(/uses:\s*[^\s]+@v\d/.test(t))throw new Error(`${f} has mutable GitHub Action tag`);if(t.includes("branches: [c2ledger-v1-hardening]")||t.includes("branches: [c2ledger-authorized-range-v1]"))throw new Error(`${f} does not cover main`)}

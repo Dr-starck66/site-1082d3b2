@@ -13,7 +13,7 @@ No government authorization, CMMC certification, FedRAMP authorization or Pentag
 
 ## Release integrity
 
-`VERSION` is the runtime version source of truth and `RULEPACK.sha256` pins the detector rulepack. CI verifies both before build. Package releases emit SHA-256 file manifests, a CycloneDX SBOM and provenance metadata.
+`VERSION` is the runtime version source of truth and `RULEPACK.sha256` pins the detector rulepack. CI verifies both before build. Container bases are pinned to the tested Bun multi-arch manifest digest. Package releases emit SHA-256 file manifests, a CycloneDX SBOM and provenance metadata.
 
 The default durable state backends are Railway/S3-compatible object storage or a local persistent volume for disconnected single-replica deployments. Multi-replica active/active operation is not claimed without an external atomic state backend.
 
