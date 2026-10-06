@@ -12,16 +12,37 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
       KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
       KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Require Kaggle credentials
         run: |
-          test -n "$KAGGLE_USERNAME"
-          test -n "$KAGGLE_KEY"
-      - name: Install official Kaggle CLI
-        run: python3 -m pip install --disable-pip-version-check kaggle
+          if [ -n "$KAGGLE_API_TOKEN" ]; then
+            echo "Kaggle modern API token detected"
+          else
+            test -n "$KAGGLE_USERNAME"
+            test -n "$KAGGLE_KEY"
+            echo "Kaggle legacy credentials detected"
+          fi
+      - name: Install official Kaggle tooling
+        run: python3 -m pip install --disable-pip-version-check kaggle kagglehub
+      - name: Resolve authenticated Kaggle username
+        run: |
+          if [ -n "$KAGGLE_API_TOKEN" ]; then
+            python3 - <<'PY'
+            import os, kagglehub
+            username=kagglehub.whoami()["username"]
+            if not username:
+                raise SystemExit("Kaggle token authenticated but username could not be resolved")
+            with open(os.environ["GITHUB_ENV"],"a",encoding="utf-8") as f:
+                f.write("KAGGLE_USERNAME="+username+"\n")
+            print("Authenticated Kaggle user:", username)
+            PY
+          else
+            echo "Using legacy Kaggle username from secret"
+          fi
       - name: Prepare private no-internet kernel metadata
         run: |
           python3 c2ledger/kaggle/prepare_kernel.py
