@@ -2,7 +2,6 @@
 const nextConfig = {
   poweredByHeader: false,
   compress: true,
-  output: 'standalone',
   experimental: {},
 };
 export default nextConfig;
