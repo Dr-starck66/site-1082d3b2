@@ -4,6 +4,7 @@ on:
   push:
     branches: [main, c2ledger-v1-hardening]
     paths:
+      - "c2ledger/**"
       - ".github/workflows/c2ledger-package.yml"
   workflow_dispatch:
 
