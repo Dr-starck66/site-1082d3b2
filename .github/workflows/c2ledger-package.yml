@@ -5,7 +5,7 @@ on:
     branches: [main, c2ledger-v1-hardening]
     paths:
       - "c2ledger/**"
-      - ".github/workflows/c2ledger-package.yml"
+      - ".github/workflows/c2ledger-*.yml"
   workflow_dispatch:
 
 jobs:
