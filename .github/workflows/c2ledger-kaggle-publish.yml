@@ -2,7 +2,7 @@ name: C2Ledger Kaggle Publish
 
 on:
   push:
-    branches: [c2ledger-v1-hardening]
+    branches: [main, c2ledger-v1-hardening]
     paths:
       - ".github/workflows/c2ledger-kaggle-publish.yml"
   workflow_dispatch:
