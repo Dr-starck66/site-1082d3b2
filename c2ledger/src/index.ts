@@ -727,20 +727,22 @@ async function inspectTransaction(chain:SupportedChain,txHash:string){
  return {product:"C2Ledger",version:PRODUCT_VERSION,mode:"defensive-metadata-only",chain,transaction:meta,intelMatches:matches,riskScore:risk,verdict:risk>=80?"HIGH":risk>=40?"ELEVATED":"LOW",note:"No payload or contract code is executed."};
 }
 async function probeMoatLayer(){
- const client=s3Client(); if(!client) return {status:"FAIL",reason:"state-store-unavailable"};
+ const client=s3Client(); if(!client&&!LOCAL_STATE_DIR) return {status:"FAIL",reason:"state-store-unavailable"};
  const key="probes/moat-"+String(Bun.env.RAILWAY_DEPLOYMENT_ID||"local")+".json";
  const body={schema:"c2ledger-moat-probe/v1",chains:SUPPORTED_CHAINS,releaseId:RELEASE_ID,time:new Date().toISOString()};
  try{
-  await client.write(key,JSON.stringify(body),{type:"application/json"});
-  const read=JSON.parse(await client.file(key).text());
-  await client.delete(key);
+  const raw=JSON.stringify(body);
+  if(client){await client.write(key,raw,{type:"application/json"});}else{await localWrite(key,raw);}
+  const text=client?await client.file(key).text():await localRead(key);
+  const read=JSON.parse(text||"{}");
+  if(client){await client.delete(key);}else{await localDelete(key);}
   const tokenProbe="tenant-probe-token";
   const keyHash=await sha256Hex(tokenProbe);
   const indicatorOk=!!normalizeIndicator("address","0x0000000000000000000000000000000000000000");
   const connectorsOk=SUPPORTED_CHAINS.length===5&&CHAIN_ALLOWED.size===5;
   const hashingOk=keyHash!==tokenProbe&&keyHash.length===64;
   const roundTrip=Array.isArray(read.chains)&&read.chains.length===5;
-  return {status:(indicatorOk&&connectorsOk&&hashingOk&&roundTrip)?"PASS":"FAIL",stateRoundTrip:roundTrip,tenantKeyHashing:hashingOk,indicatorNormalization:indicatorOk,multiChainAdapters:connectorsOk,supportedChains:SUPPORTED_CHAINS};
+  return {status:(indicatorOk&&connectorsOk&&hashingOk&&roundTrip)?"PASS":"FAIL",backend:client?"s3":"local-volume",stateRoundTrip:roundTrip,tenantKeyHashing:hashingOk,indicatorNormalization:indicatorOk,multiChainAdapters:connectorsOk,supportedChains:SUPPORTED_CHAINS};
  }catch(e:any){return {status:"FAIL",reason:String(e?.message||e)};}
 }
 
@@ -1007,19 +1009,23 @@ function pricingHtml(){
  return '<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width"><title>C2Ledger Pricing</title><style>body{font:16px system-ui;background:#070a13;color:#eef2ff;margin:0}main{max-width:1100px;margin:auto;padding:28px}.g{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.c{background:#10162a;border:1px solid #2b3557;border-radius:16px;padding:18px}.p{font-size:30px;font-weight:900}input,textarea,button{box-sizing:border-box;width:100%;padding:11px;margin:5px 0;border-radius:9px;border:1px solid #2b3557;background:#080b14;color:#fff}button{background:#aab8ff;color:#07102a;font-weight:900}@media(max-width:800px){.g{grid-template-columns:1fr 1fr}}</style><main><h1>C2Ledger</h1><p>Defensive blockchain-C2 and software supply-chain threat intelligence.</p><div class=g>'+cards+'</div><section class=c style="margin-top:18px"><h2>Founding Pilot — 30 days</h2><input id=co placeholder=Company><input id=n placeholder="Your name"><input id=e placeholder="Work email"><textarea id=u placeholder="Security use case"></textarea><button id=b>Apply</button><pre id=o></pre></section></main><script>const q=s=>document.querySelector(s);q("#b").onclick=async()=>{let r=await fetch("/api/pilot/apply",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({company:q("#co").value,name:q("#n").value,email:q("#e").value,useCase:q("#u").value})}),j=await r.json();q("#o").textContent=r.ok?"Application received: "+j.applicationId:(j.error||"Could not submit")}</script>';
 }
 async function probeCommercialLayer(){
- const client=s3Client();if(!client)return {status:"FAIL",reason:"state-store-unavailable"};
+ const client=s3Client();if(!client&&!LOCAL_STATE_DIR)return {status:"FAIL",reason:"state-store-unavailable"};
  const id="probe-commercial-"+String(Bun.env.RAILWAY_DEPLOYMENT_ID||"local"),aKey="probes/"+id+"-audit.json",pKey="probes/"+id+"-pilot.json";
  try{
-  await client.write(aKey,JSON.stringify({items:[{action:"API_KEY_ROTATED"}]}),{type:"application/json"});const a=JSON.parse(await client.file(aKey).text());
-  await client.write(pKey,JSON.stringify({items:[{status:"PENDING",plan:"founding-pilot"}]}),{type:"application/json"});const p=JSON.parse(await client.file(pKey).text());
-  await client.delete(aKey);await client.delete(pKey);
+  const aBody=JSON.stringify({items:[{action:"API_KEY_ROTATED"}]});
+  const pBody=JSON.stringify({items:[{status:"PENDING",plan:"founding-pilot"}]});
+  if(client){await client.write(aKey,aBody,{type:"application/json"});await client.write(pKey,pBody,{type:"application/json"});}
+  else{await localWrite(aKey,aBody);await localWrite(pKey,pBody);}
+  const a=JSON.parse((client?await client.file(aKey).text():await localRead(aKey))||"{}");
+  const p=JSON.parse((client?await client.file(pKey).text():await localRead(pKey))||"{}");
+  if(client){await client.delete(aKey);await client.delete(pKey);}else{await localDelete(aKey);await localDelete(pKey);}
   const planOk=COMMERCIAL_PLANS.length===4&&COMMERCIAL_PLANS.some(x=>x.id==="soc"&&x.priceMonthlyEur===899);
-  return {status:(a.items?.[0]?.action==="API_KEY_ROTATED"&&p.items?.[0]?.status==="PENDING"&&planOk)?"PASS":"FAIL",pricingPackaging:planOk,pilotWorkflow:true,keyRotation:true,auditTrail:true,privateRoundTrip:true};
- }catch(e:any){try{await client.delete(aKey);await client.delete(pKey)}catch{}return {status:"FAIL",reason:String(e?.message||e)}}
+  return {status:(a.items?.[0]?.action==="API_KEY_ROTATED"&&p.items?.[0]?.status==="PENDING"&&planOk)?"PASS":"FAIL",backend:client?"s3":"local-volume",pricingPackaging:planOk,pilotWorkflow:true,keyRotation:true,auditTrail:true,privateRoundTrip:true};
+ }catch(e:any){try{if(client){await client.delete(aKey);await client.delete(pKey)}else{await localDelete(aKey);await localDelete(pKey)}}catch{}return {status:"FAIL",reason:String(e?.message||e)}}
 }
 
 async function probeProductizationLayer(){
- const client=s3Client(); if(!client) return {status:"FAIL",reason:"state-store-unavailable"};
+ const client=s3Client(); if(!client&&!LOCAL_STATE_DIR) return {status:"FAIL",reason:"state-store-unavailable"};
  const now=new Date().toISOString();
  const feed={items:[{id:"a".repeat(64),chain:"ethereum",type:"domain",value:"example.invalid",confidence:80,firstSeen:now,lastSeen:now,tags:["probe"]}]};
  const stix=await toStixBundle(feed); const api=openApiDoc(); const html=socHtml();
@@ -1028,19 +1034,21 @@ async function probeProductizationLayer(){
  const incidentKey="probes/productization-incident-"+probeId+".json";
  try{
   const quotaState={schema:"c2ledger-quota-probe/v1",tenant:{id:"probe-tenant",monthlyQuota:250},usage:{requests:1,units:1,lastSeen:now}};
-  await client.write(quotaKey,JSON.stringify(quotaState),{type:"application/json"});
-  const quotaRead=JSON.parse(await client.file(quotaKey).text());
+  const quotaBody=JSON.stringify(quotaState);
+  if(client){await client.write(quotaKey,quotaBody,{type:"application/json"});}else{await localWrite(quotaKey,quotaBody);}
+  const quotaRead=JSON.parse((client?await client.file(quotaKey).text():await localRead(quotaKey))||"{}");
   const incident={id:"probe-incident",status:"OPEN",source:"probe-tenant",chain:"ethereum",severity:"WATCH",createdAt:now};
-  await client.write(incidentKey,JSON.stringify(incident),{type:"application/json"});
-  const incRead=JSON.parse(await client.file(incidentKey).text()); incRead.status="ACKNOWLEDGED"; incRead.updatedAt=new Date().toISOString();
-  await client.write(incidentKey,JSON.stringify(incRead),{type:"application/json"});
-  const incVerify=JSON.parse(await client.file(incidentKey).text());
-  await client.delete(quotaKey); await client.delete(incidentKey);
+  const incidentBody=JSON.stringify(incident);
+  if(client){await client.write(incidentKey,incidentBody,{type:"application/json"});}else{await localWrite(incidentKey,incidentBody);}
+  const incRead=JSON.parse((client?await client.file(incidentKey).text():await localRead(incidentKey))||"{}"); incRead.status="ACKNOWLEDGED"; incRead.updatedAt=new Date().toISOString();
+  if(client){await client.write(incidentKey,JSON.stringify(incRead),{type:"application/json"});}else{await localWrite(incidentKey,JSON.stringify(incRead));}
+  const incVerify=JSON.parse((client?await client.file(incidentKey).text():await localRead(incidentKey))||"{}");
+  if(client){await client.delete(quotaKey);await client.delete(incidentKey);}else{await localDelete(quotaKey);await localDelete(incidentKey);}
   const quotaOk=quotaRead?.usage?.units===1&&quotaRead?.tenant?.monthlyQuota===250;
   const incidentOk=incVerify?.status==="ACKNOWLEDGED";
-  return {status:(stix.type==="bundle"&&stix.objects?.length===1&&api.openapi==="3.1.0"&&html.includes("SOC Console")&&quotaOk&&incidentOk)?"PASS":"FAIL",stix21:stix.type==="bundle",openApi:api.openapi==="3.1.0",socDashboard:html.includes("SOC Console"),incidentLifecycle:incidentOk,tenantQuotaMeter:quotaOk,stateRoundTrip:true};
+  return {status:(stix.type==="bundle"&&stix.objects?.length===1&&api.openapi==="3.1.0"&&html.includes("SOC Console")&&quotaOk&&incidentOk)?"PASS":"FAIL",backend:client?"s3":"local-volume",stix21:stix.type==="bundle",openApi:api.openapi==="3.1.0",socDashboard:html.includes("SOC Console"),incidentLifecycle:incidentOk,tenantQuotaMeter:quotaOk,stateRoundTrip:true};
  }catch(e:any){
-  try{await client.delete(quotaKey);await client.delete(incidentKey);}catch{}
+  try{if(client){await client.delete(quotaKey);await client.delete(incidentKey);}else{await localDelete(quotaKey);await localDelete(incidentKey);}}catch{}
   return {status:"FAIL",reason:String(e?.message||e),stix21:stix.type==="bundle",openApi:api.openapi==="3.1.0",socDashboard:html.includes("SOC Console")};
  }
 }
