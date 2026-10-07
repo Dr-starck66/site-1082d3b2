@@ -1,41 +1,41 @@
 {
   "slot": {
-    "id": "reactive-midday",
-    "kind": "reactive",
+    "id": "pillar-pm",
+    "kind": "pillar",
     "targetWords": [
-      700,
-      1200
+      1500,
+      2600
     ],
     "categories": [
-      "credit-debt",
-      "banking-fees",
-      "tax-money"
+      "travel-refunds",
+      "tax-money",
+      "warranties"
     ]
   },
   "provider": "github-copilot-cli",
   "topic": {
-    "title": "Payment Processor Nuvei Must Implement Robust Merchant Screening Practices and Pay $4.85 Million to Settle FTC Charges that the Firm Facilitated Merchant Fraud",
-    "category": "credit-debt"
+    "title": "Tax refund delayed: official tools and notices to check first",
+    "category": "tax-money"
   },
-  "slug": "nuvei-to-pay-485-million-in-ftc-settlement-over-merchant-fraud-allegations",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/nuvei-to-pay-485-million-in-ftc-settlement-over-merchant-fraud-allegations.md",
+  "slug": "tax-refund-delayed-official-tools-and-notices-to-check-first",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/tax-refund-delayed-official-tools-and-notices-to-check-first.md",
   "evidence": [
     {
-      "url": "https://www.ftc.gov/news-events/news/press-releases/2026/09/payment-processor-nuvei-must-implement-robust-merchant-screening-practices-pay-485-million-settle",
-      "sha256": "b303398821971ae385c8ea44c52e39daab7acdb84ecbb7a8fe6d31d5e07c079a",
+      "url": "https://www.irs.gov/refunds",
+      "sha256": "4e572c92623dc083cd2c4b746d6397680a32956db4ce1a335d0338a6f9b40c9c",
       "official": true
     },
     {
-      "url": "https://www.consumerfinance.gov/consumer-tools/credit-reports-and-scores/",
-      "sha256": "2cfd245fb15f5e737935d3ed90d36e6977fcfa210792d3db2c1bff29a791cb49",
+      "url": "https://www.irs.gov/refunds",
+      "sha256": "4e572c92623dc083cd2c4b746d6397680a32956db4ce1a335d0338a6f9b40c9c",
       "official": true
     },
     {
-      "url": "https://www.consumerfinance.gov/consumer-tools/debt-collection/",
-      "sha256": "f732ab396be85d155d3a1dea9571d3ff066e5aed1660787280ed42a6840d2018",
+      "url": "https://www.usa.gov/unclaimed-money",
+      "sha256": "c0bee0b615aebfdf29ad85db8b8f851529813dd287bfff301ebc0c3837f04dd7",
       "official": true
     }
   ],
-  "words": 900,
-  "createdAt": "2026-10-07T17:25:23.098Z"
+  "words": 1661,
+  "createdAt": "2026-10-07T19:26:36.374Z"
 }
