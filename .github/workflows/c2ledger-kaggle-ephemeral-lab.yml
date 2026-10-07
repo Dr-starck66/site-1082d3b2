@@ -153,6 +153,7 @@ jobs:
           node - <<'NODE'
           const fs=require("fs");
           const x=JSON.parse(fs.readFileSync("/tmp/proof.json","utf8"));
+          console.log(JSON.stringify({gate:x.gate,benchmark:x.benchmark?.status,evidenceStore:x.evidenceStore?.status,moatLayer:x.moatLayer?.status,integrationLayer:x.integrationLayer?.status,productizationLayer:x.productizationLayer?.status,commercialLayer:x.commercialLayer?.status,operationalIntegrity:x.operationalIntegrity?.status,defenceLayer:x.defenceLayer?.status,adversaryEmulation:x.adversaryEmulation?.status,missionOpsLayer:x.missionOpsLayer?.status,authorizedRangeLayer:x.authorizedRangeLayer?.status,kaggleRangeLayer:x.kaggleRangeLayer?.status,driftSentinel:x.driftSentinel?.status,releaseControl:x.releaseControl?.status},null,2));
           if(x.gate!=="PASS") throw new Error("proof gate="+x.gate);
           if(x.kaggleRangeLayer?.status!=="PASS") throw new Error("Kaggle layer did not pass");
           if(x.authorizedRangeLayer?.status!=="PASS") throw new Error("authorized range layer did not pass");
