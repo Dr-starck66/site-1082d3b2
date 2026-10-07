@@ -85,7 +85,7 @@ jobs:
             -e C2LEDGER_EXPECTED_VERSION=0.14.0 \
             -e C2LEDGER_RELEASE_ID=v0.14.0-kaggle-ci \
             -v c2ledger-kaggle-state:/var/lib/c2ledger \
-            -v "$PWD/c2ledger/kaggle/out:/app/kaggle/out" \
+            -v "$PWD/c2ledger/kaggle/out:/app/c2ledger/kaggle/out" \
             c2ledger-engine:0.14.0
           ready=0
           for i in $(seq 1 30); do
@@ -110,7 +110,7 @@ jobs:
           docker exec \
             -e C2LEDGER_ENGINE_URL=http://127.0.0.1:3000 \
             -e C2LEDGER_ADMIN_TOKEN=admin-ci-token \
-            c2ledger-engine bun kaggle/orchestrate_plan.mjs kaggle/out/scenario-plan.json
+            c2ledger-engine bun kaggle/orchestrate_plan.mjs c2ledger/kaggle/out/scenario-plan.json
 
       - name: Verify real lab state and recovery
         run: |
