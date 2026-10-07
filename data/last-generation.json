@@ -1,37 +1,41 @@
 {
   "slot": {
-    "id": "reactive-evening",
+    "id": "reactive-midday",
     "kind": "reactive",
     "targetWords": [
       700,
       1200
     ],
     "categories": [
-      "insurance-claims",
-      "travel-refunds",
-      "consumer-rights",
-      "refunds"
+      "credit-debt",
+      "banking-fees",
+      "tax-money"
     ]
   },
   "provider": "github-copilot-cli",
   "topic": {
     "title": "Payment Processor Nuvei Must Implement Robust Merchant Screening Practices and Pay $4.85 Million to Settle FTC Charges that the Firm Facilitated Merchant Fraud",
-    "category": "consumer-rights"
+    "category": "credit-debt"
   },
   "slug": "nuvei-to-pay-485-million-in-ftc-settlement-over-merchant-fraud-allegations",
   "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/nuvei-to-pay-485-million-in-ftc-settlement-over-merchant-fraud-allegations.md",
   "evidence": [
     {
       "url": "https://www.ftc.gov/news-events/news/press-releases/2026/09/payment-processor-nuvei-must-implement-robust-merchant-screening-practices-pay-485-million-settle",
-      "sha256": "0b68d4ed57fb32ae20ee9fafe106405307b408e1fb6ef302d647c598043f3cde",
+      "sha256": "b303398821971ae385c8ea44c52e39daab7acdb84ecbb7a8fe6d31d5e07c079a",
       "official": true
     },
     {
-      "url": "https://consumer.ftc.gov/",
-      "sha256": "f2897a92a549e691d99e72768e41d1b41bfacd8cc0185746faf6cc1e00a1be9c",
+      "url": "https://www.consumerfinance.gov/consumer-tools/credit-reports-and-scores/",
+      "sha256": "2cfd245fb15f5e737935d3ed90d36e6977fcfa210792d3db2c1bff29a791cb49",
+      "official": true
+    },
+    {
+      "url": "https://www.consumerfinance.gov/consumer-tools/debt-collection/",
+      "sha256": "f732ab396be85d155d3a1dea9571d3ff066e5aed1660787280ed42a6840d2018",
       "official": true
     }
   ],
-  "words": 798,
-  "createdAt": "2026-10-06T23:26:41.212Z"
+  "words": 900,
+  "createdAt": "2026-10-07T17:25:23.098Z"
 }
