@@ -76,7 +76,7 @@ jobs:
 
       - name: Start C2Ledger v0.14.0 inside isolated lab
         run: |
-          docker run -d --rm --network c2ledger-kaggle-lab -p 3000:3000 --name c2ledger-engine \
+          docker run -d --network c2ledger-kaggle-lab --name c2ledger-engine \
             -e C2LEDGER_LOCAL_STATE_DIR=/var/lib/c2ledger \
             -e C2LEDGER_EVIDENCE_REQUIRED=true \
             -e C2LEDGER_ADMIN_TOKEN=admin-ci-token \
@@ -85,12 +85,18 @@ jobs:
             -e C2LEDGER_EXPECTED_VERSION=0.14.0 \
             -e C2LEDGER_RELEASE_ID=v0.14.0-kaggle-ci \
             -v c2ledger-kaggle-state:/var/lib/c2ledger \
+            -v "$PWD/c2ledger/kaggle/out:/app/kaggle/out" \
             c2ledger-engine:0.14.0
+          ready=0
           for i in $(seq 1 30); do
-            curl -fsS http://127.0.0.1:3000/health >/tmp/health.json && break
+            if docker exec c2ledger-engine bun -e 'const r=await fetch("http://127.0.0.1:3000/health"); if(!r.ok) process.exit(1); console.log(await r.text())' >/tmp/health.json 2>/dev/null; then
+              ready=1
+              break
+            fi
             sleep 1
           done
-          curl -fsS http://127.0.0.1:3000/api/kaggle/profile >/tmp/kaggle-profile.json
+          test "$ready" = "1"
+          docker exec c2ledger-engine bun -e 'const r=await fetch("http://127.0.0.1:3000/api/kaggle/profile"); if(!r.ok) process.exit(1); console.log(await r.text())' >/tmp/kaggle-profile.json
           node - <<'NODE'
           const fs=require("fs");
           const x=JSON.parse(fs.readFileSync("/tmp/kaggle-profile.json","utf8"));
@@ -100,10 +106,11 @@ jobs:
           NODE
 
       - name: Execute ML-generated plan on ephemeral machines
-        env:
-          C2LEDGER_ENGINE_URL: http://127.0.0.1:3000
-          C2LEDGER_ADMIN_TOKEN: admin-ci-token
-        run: node c2ledger/kaggle/orchestrate_plan.mjs c2ledger/kaggle/out/scenario-plan.json
+        run: |
+          docker exec \
+            -e C2LEDGER_ENGINE_URL=http://127.0.0.1:3000 \
+            -e C2LEDGER_ADMIN_TOKEN=admin-ci-token \
+            c2ledger-engine bun kaggle/orchestrate_plan.mjs kaggle/out/scenario-plan.json
 
       - name: Verify real lab state and recovery
         run: |
@@ -127,16 +134,22 @@ jobs:
 
       - name: Prove public target denial
         run: |
-          code=$(curl -sS -o /tmp/public-denied.json -w '%{http_code}' \
-            -X POST -H 'authorization: Bearer admin-ci-token' -H 'content-type: application/json' \
-            -d '{"target":"https://example.com","effect":"plant-marker","id":"must-block"}' \
-            http://127.0.0.1:3000/api/range/effect)
-          test "$code" = "400"
-          grep -q 'public/arbitrary hosts are not allowed' /tmp/public-denied.json
+          docker exec c2ledger-engine bun -e '
+            const r=await fetch("http://127.0.0.1:3000/api/range/effect",{
+              method:"POST",
+              headers:{authorization:"Bearer admin-ci-token","content-type":"application/json"},
+              body:JSON.stringify({target:"https://example.com",effect:"plant-marker",id:"must-block"})
+            });
+            const body=await r.text();
+            if(r.status!==400 || !body.includes("public/arbitrary hosts are not allowed")) {
+              console.error(r.status,body); process.exit(1);
+            }
+            console.log(body);
+          '
 
       - name: Verify complete Proof Gate
         run: |
-          curl -fsS http://127.0.0.1:3000/api/proof >/tmp/proof.json
+          docker exec c2ledger-engine bun -e 'const r=await fetch("http://127.0.0.1:3000/api/proof"); if(!r.ok) process.exit(1); console.log(await r.text())' >/tmp/proof.json
           node - <<'NODE'
           const fs=require("fs");
           const x=JSON.parse(fs.readFileSync("/tmp/proof.json","utf8"));
