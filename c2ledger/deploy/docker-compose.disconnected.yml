@@ -1,0 +1,46 @@
+services:
+  engine:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    environment:
+      PORT: "3000"
+      C2LEDGER_LOCAL_STATE_DIR: /var/lib/c2ledger
+      C2LEDGER_EVIDENCE_REQUIRED: "true"
+      C2LEDGER_ADMIN_TOKEN: ${C2LEDGER_ADMIN_TOKEN:?set C2LEDGER_ADMIN_TOKEN}
+      C2LEDGER_SENSOR_TOKEN: ${C2LEDGER_SENSOR_TOKEN:?set C2LEDGER_SENSOR_TOKEN}
+      C2LEDGER_EXPECTED_VERSION: "0.13.0"
+      C2LEDGER_RELEASE_ID: "v0.13.0-disconnected"
+    volumes:
+      - c2ledger-state:/var/lib/c2ledger
+    ports:
+      - "127.0.0.1:3000:3000"
+    networks: [mission]
+    read_only: true
+    tmpfs: [/tmp]
+    restart: unless-stopped
+
+  sensor:
+    build:
+      context: ..
+      dockerfile: sensor/Dockerfile
+    environment:
+      PORT: "3100"
+      C2LEDGER_ENGINE_URL: http://engine:3000
+      C2LEDGER_SENSOR_ID: sensor-compose-01
+      C2LEDGER_SENSOR_TOKEN: ${C2LEDGER_SENSOR_TOKEN:?set C2LEDGER_SENSOR_TOKEN}
+      C2LEDGER_SENSOR_INGEST_TOKEN: ${C2LEDGER_SENSOR_INGEST_TOKEN:?set C2LEDGER_SENSOR_INGEST_TOKEN}
+    ports:
+      - "127.0.0.1:3100:3100"
+    networks: [mission]
+    read_only: true
+    tmpfs: [/tmp]
+    depends_on: [engine]
+    restart: unless-stopped
+
+networks:
+  mission:
+    internal: true
+
+volumes:
+  c2ledger-state:
