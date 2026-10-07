@@ -1,41 +1,37 @@
 {
   "slot": {
-    "id": "pillar-pm",
-    "kind": "pillar",
+    "id": "reactive-evening",
+    "kind": "reactive",
     "targetWords": [
-      1500,
-      2600
+      700,
+      1200
     ],
     "categories": [
+      "insurance-claims",
       "travel-refunds",
-      "tax-money",
-      "warranties"
+      "consumer-rights",
+      "refunds"
     ]
   },
   "provider": "github-copilot-cli",
   "topic": {
-    "title": "Tax refund delayed: official tools and notices to check first",
-    "category": "tax-money"
+    "title": "Payment Processor Nuvei Must Implement Robust Merchant Screening Practices and Pay $4.85 Million to Settle FTC Charges that the Firm Facilitated Merchant Fraud",
+    "category": "consumer-rights"
   },
-  "slug": "tax-refund-delayed-official-tools-and-notices-to-check-first",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/tax-refund-delayed-official-tools-and-notices-to-check-first.md",
+  "slug": "nuvei-to-pay-485-million-in-ftc-settlement-over-merchant-fraud-allegations",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/nuvei-to-pay-485-million-in-ftc-settlement-over-merchant-fraud-allegations.md",
   "evidence": [
     {
-      "url": "https://www.irs.gov/refunds",
-      "sha256": "4e572c92623dc083cd2c4b746d6397680a32956db4ce1a335d0338a6f9b40c9c",
+      "url": "https://www.ftc.gov/news-events/news/press-releases/2026/09/payment-processor-nuvei-must-implement-robust-merchant-screening-practices-pay-485-million-settle",
+      "sha256": "f6731ded5ceb79f18060f6b5a902e14a1357806bd9f96e6d65c7be6bae482854",
       "official": true
     },
     {
-      "url": "https://www.irs.gov/refunds",
-      "sha256": "4e572c92623dc083cd2c4b746d6397680a32956db4ce1a335d0338a6f9b40c9c",
-      "official": true
-    },
-    {
-      "url": "https://www.usa.gov/unclaimed-money",
-      "sha256": "c0bee0b615aebfdf29ad85db8b8f851529813dd287bfff301ebc0c3837f04dd7",
+      "url": "https://consumer.ftc.gov/",
+      "sha256": "5eebb9edbbbd1391a1cb468ff37377fb07da66ce263cb32d70a2f93871a6f815",
       "official": true
     }
   ],
-  "words": 1661,
-  "createdAt": "2026-10-07T19:26:36.374Z"
+  "words": 913,
+  "createdAt": "2026-10-07T23:34:08.954Z"
 }
