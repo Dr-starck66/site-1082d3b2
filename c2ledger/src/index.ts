@@ -1162,16 +1162,31 @@ async function advanceWatcherCursor(chain:string,height:any){
 }
 async function probeOperationalIntegrity(){
  const id="probe-op-"+String(Bun.env.RAILWAY_DEPLOYMENT_ID||"local"),key="probes/"+id+".json";
- const client=s3Client();if(!client)return {status:"FAIL",reason:"state-store-unavailable"};
+ const client=s3Client();
+ if(!client&&!LOCAL_STATE_DIR)return {status:"FAIL",reason:"state-store-unavailable"};
  try{
   const tenant="probe-tenant",t="2026-01-01T00:00:00.000Z",details={x:1},prevHash="GENESIS";
   const h=await sha256Hex(JSON.stringify({tenantId:tenant,action:"PROBE",time:t,details,prevHash}));
   const incidentKey=await sha256Hex(JSON.stringify({chain:"ethereum",indicatorIds:["a","b"],sourceTenant:"probe"}));
   const payload={auditHash:h,incidentKey,cursor:{ethereum:"123"}};
-  await client.write(key,JSON.stringify(payload),{type:"application/json"});const read=JSON.parse(await client.file(key).text());await client.delete(key);
+  const body=JSON.stringify(payload);
+  let raw:string|null=null;
+  if(client){
+   await client.write(key,body,{type:"application/json"});
+   raw=await client.file(key).text();
+   await client.delete(key);
+  }else{
+   await localWrite(key,body);
+   raw=await localRead(key);
+   await localDelete(key);
+  }
+  const read=JSON.parse(raw||"{}");
   const ok=read.auditHash===h&&read.incidentKey===incidentKey&&BigInt(read.cursor.ethereum)===123n;
-  return {status:ok?"PASS":"FAIL",auditHashChain:ok,incidentDedup:ok,watcherCursor:ok,stateRoundTrip:ok};
- }catch(e:any){try{await client.delete(key)}catch{}return {status:"FAIL",reason:String(e?.message||e)}}
+  return {status:ok?"PASS":"FAIL",backend:client?"s3":"local-volume",auditHashChain:ok,incidentDedup:ok,watcherCursor:ok,stateRoundTrip:ok};
+ }catch(e:any){
+  try{if(client)await client.delete(key);else await localDelete(key)}catch{}
+  return {status:"FAIL",reason:String(e?.message||e)};
+ }
 }
 async function probeDefenceLayer(){
  const requiredBricks=["EVIDENCE_LEDGER","TARDIGRADE_OMEGA","RELEASE_CONTROL_PLANE","AUDIT_HASH_CHAIN","CONNECTOR_GUARD","ASTRA_HARNESS"];
