@@ -83,6 +83,7 @@ jobs:
             -e C2LEDGER_RANGE_TOKEN=range-ci-token \
             -e C2LEDGER_RANGE_ALLOWED_HOSTS=lab-edge,lab-ci,lab-data \
             -e C2LEDGER_EXPECTED_VERSION=0.14.0 \
+            -e C2LEDGER_EXPECTED_RULEPACK_HASH=982165065299a96ec5d4b9d07c168917c56c3bddd3ae901180f74aa1e53a51eb \
             -e C2LEDGER_RELEASE_ID=v0.14.0-kaggle-ci \
             -v c2ledger-kaggle-state:/var/lib/c2ledger \
             -v "$PWD/c2ledger/kaggle/out:/app/c2ledger/kaggle/out" \
