@@ -1,36 +1,41 @@
 {
   "slot": {
-    "id": "reactive-midday",
-    "kind": "reactive",
+    "id": "pillar-pm",
+    "kind": "pillar",
     "targetWords": [
-      700,
-      1200
+      1500,
+      2600
     ],
     "categories": [
-      "credit-debt",
-      "banking-fees",
-      "tax-money"
+      "travel-refunds",
+      "tax-money",
+      "warranties"
     ]
   },
   "provider": "github-copilot-cli",
   "topic": {
-    "title": "Payment Processor Nuvei Must Implement Robust Merchant Screening Practices and Pay $4.85 Million to Settle FTC Charges that the Firm Facilitated Merchant Fraud",
-    "category": "credit-debt"
+    "title": "Product warranty claim: preserve proof of purchase and written promises",
+    "category": "warranties"
   },
-  "slug": "nuvei-ftc-settlement-claim-what-consumers-canand-cantconfirm",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/nuvei-ftc-settlement-claim-what-consumers-canand-cantconfirm.md",
+  "slug": "how-to-build-a-strong-product-warranty-claim-file",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/how-to-build-a-strong-product-warranty-claim-file.md",
   "evidence": [
     {
-      "url": "https://www.consumerfinance.gov/consumer-tools/credit-reports-and-scores/",
-      "sha256": "2cfd245fb15f5e737935d3ed90d36e6977fcfa210792d3db2c1bff29a791cb49",
+      "url": "https://consumer.ftc.gov/articles/warranties",
+      "sha256": "fd0e6a6cacf5fe1ecac63b4ae1acd1d766fc72c0f65b3069c89f75baf9ef47e2",
       "official": true
     },
     {
-      "url": "https://www.consumerfinance.gov/consumer-tools/debt-collection/",
-      "sha256": "f732ab396be85d155d3a1dea9571d3ff066e5aed1660787280ed42a6840d2018",
+      "url": "https://www.ftc.gov/business-guidance/resources/businesspersons-guide-federal-warranty-law",
+      "sha256": "6fcaf107ff04c5adb1d8d907991165495816a00285a4fafb6ca2c75b002837c8",
+      "official": true
+    },
+    {
+      "url": "https://consumer.ftc.gov/articles/auto-warranties-and-auto-service-contracts",
+      "sha256": "371fd9dece6b4da5a4396ce11aad7d4798c18824f9460b00991e542dbf1305e1",
       "official": true
     }
   ],
-  "words": 899,
-  "createdAt": "2026-10-08T17:23:53.441Z"
+  "words": 1888,
+  "createdAt": "2026-10-08T19:21:51.581Z"
 }
