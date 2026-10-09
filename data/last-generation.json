@@ -1,41 +1,41 @@
 {
   "slot": {
-    "id": "reactive-midday",
-    "kind": "reactive",
+    "id": "pillar-pm",
+    "kind": "pillar",
     "targetWords": [
-      700,
-      1200
+      1500,
+      2600
     ],
     "categories": [
-      "credit-debt",
-      "banking-fees",
-      "tax-money"
+      "travel-refunds",
+      "tax-money",
+      "warranties"
     ]
   },
   "provider": "github-copilot-cli",
   "topic": {
-    "title": "Payment Processor Nuvei Must Implement Robust Merchant Screening Practices and Pay $4.85 Million to Settle FTC Charges that the Firm Facilitated Merchant Fraud",
-    "category": "credit-debt"
+    "title": "Product warranty claim: preserve proof of purchase and written promises",
+    "category": "warranties"
   },
-  "slug": "nuvei-to-pay-485-million-and-strengthen-merchant-screening-in-ftc-settlement",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/nuvei-to-pay-485-million-and-strengthen-merchant-screening-in-ftc-settlement.md",
+  "slug": "how-to-preserve-proof-and-written-promises-for-a-warranty-claim",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/how-to-preserve-proof-and-written-promises-for-a-warranty-claim.md",
   "evidence": [
     {
-      "url": "https://www.ftc.gov/news-events/news/press-releases/2026/09/payment-processor-nuvei-must-implement-robust-merchant-screening-practices-pay-485-million-settle",
-      "sha256": "b4daabaaebd4bf1fc7b9b5df4e42018334dcf7877c2cc0c5b0fa0b58b6bfc76d",
+      "url": "https://consumer.ftc.gov/articles/warranties",
+      "sha256": "fd0e6a6cacf5fe1ecac63b4ae1acd1d766fc72c0f65b3069c89f75baf9ef47e2",
       "official": true
     },
     {
-      "url": "https://www.consumerfinance.gov/consumer-tools/credit-reports-and-scores/",
-      "sha256": "2cfd245fb15f5e737935d3ed90d36e6977fcfa210792d3db2c1bff29a791cb49",
+      "url": "https://www.ftc.gov/business-guidance/resources/businesspersons-guide-federal-warranty-law",
+      "sha256": "6299348ee86faa5adbef4e4f6aeb4f0f20366b36260fda585888f072809910cc",
       "official": true
     },
     {
-      "url": "https://www.consumerfinance.gov/consumer-tools/debt-collection/",
-      "sha256": "f732ab396be85d155d3a1dea9571d3ff066e5aed1660787280ed42a6840d2018",
+      "url": "https://consumer.ftc.gov/articles/auto-warranties-and-auto-service-contracts",
+      "sha256": "371fd9dece6b4da5a4396ce11aad7d4798c18824f9460b00991e542dbf1305e1",
       "official": true
     }
   ],
-  "words": 832,
-  "createdAt": "2026-10-09T16:59:05.857Z"
+  "words": 1899,
+  "createdAt": "2026-10-09T18:55:16.112Z"
 }
