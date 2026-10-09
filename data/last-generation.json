@@ -1,41 +1,41 @@
 {
   "slot": {
-    "id": "pillar-am",
-    "kind": "pillar",
+    "id": "reactive-midday",
+    "kind": "reactive",
     "targetWords": [
-      1500,
-      2600
+      700,
+      1200
     ],
     "categories": [
-      "insurance-claims",
-      "refunds",
-      "credit-debt"
+      "credit-debt",
+      "banking-fees",
+      "tax-money"
     ]
   },
   "provider": "github-copilot-cli",
   "topic": {
-    "title": "Debt collector contacted you: how to verify the debt before paying",
+    "title": "Payment Processor Nuvei Must Implement Robust Merchant Screening Practices and Pay $4.85 Million to Settle FTC Charges that the Firm Facilitated Merchant Fraud",
     "category": "credit-debt"
   },
-  "slug": "a-debt-collector-contacted-you-how-to-verify-the-debt-before-paying",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/a-debt-collector-contacted-you-how-to-verify-the-debt-before-paying.md",
+  "slug": "nuvei-to-pay-485-million-and-strengthen-merchant-screening-in-ftc-settlement",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/nuvei-to-pay-485-million-and-strengthen-merchant-screening-in-ftc-settlement.md",
   "evidence": [
     {
-      "url": "https://www.consumerfinance.gov/consumer-tools/debt-collection/",
-      "sha256": "f732ab396be85d155d3a1dea9571d3ff066e5aed1660787280ed42a6840d2018",
-      "official": true
-    },
-    {
-      "url": "https://consumer.ftc.gov/articles/debt-collection-faqs",
-      "sha256": "c065a3554b6e3ed02fabc26a5d7a47ef7563f8766ad2549765fe859bdcbb99c7",
+      "url": "https://www.ftc.gov/news-events/news/press-releases/2026/09/payment-processor-nuvei-must-implement-robust-merchant-screening-practices-pay-485-million-settle",
+      "sha256": "b4daabaaebd4bf1fc7b9b5df4e42018334dcf7877c2cc0c5b0fa0b58b6bfc76d",
       "official": true
     },
     {
       "url": "https://www.consumerfinance.gov/consumer-tools/credit-reports-and-scores/",
       "sha256": "2cfd245fb15f5e737935d3ed90d36e6977fcfa210792d3db2c1bff29a791cb49",
       "official": true
+    },
+    {
+      "url": "https://www.consumerfinance.gov/consumer-tools/debt-collection/",
+      "sha256": "f732ab396be85d155d3a1dea9571d3ff066e5aed1660787280ed42a6840d2018",
+      "official": true
     }
   ],
-  "words": 1671,
-  "createdAt": "2026-10-09T02:21:00.194Z"
+  "words": 832,
+  "createdAt": "2026-10-09T16:59:05.857Z"
 }
