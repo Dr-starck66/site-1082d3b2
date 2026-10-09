@@ -1,41 +1,37 @@
 {
   "slot": {
-    "id": "pillar-pm",
-    "kind": "pillar",
+    "id": "reactive-evening",
+    "kind": "reactive",
     "targetWords": [
-      1500,
-      2600
+      700,
+      1200
     ],
     "categories": [
+      "insurance-claims",
       "travel-refunds",
-      "tax-money",
-      "warranties"
+      "consumer-rights",
+      "refunds"
     ]
   },
   "provider": "github-copilot-cli",
   "topic": {
-    "title": "Product warranty claim: preserve proof of purchase and written promises",
-    "category": "warranties"
+    "title": "Payment Processor Nuvei Must Implement Robust Merchant Screening Practices and Pay $4.85 Million to Settle FTC Charges that the Firm Facilitated Merchant Fraud",
+    "category": "consumer-rights"
   },
-  "slug": "how-to-preserve-proof-and-written-promises-for-a-warranty-claim",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/how-to-preserve-proof-and-written-promises-for-a-warranty-claim.md",
+  "slug": "ftc-says-nuvei-must-strengthen-merchant-screening-in-485-million-settlement",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-says-nuvei-must-strengthen-merchant-screening-in-485-million-settlement.md",
   "evidence": [
     {
-      "url": "https://consumer.ftc.gov/articles/warranties",
-      "sha256": "fd0e6a6cacf5fe1ecac63b4ae1acd1d766fc72c0f65b3069c89f75baf9ef47e2",
+      "url": "https://www.ftc.gov/news-events/news/press-releases/2026/09/payment-processor-nuvei-must-implement-robust-merchant-screening-practices-pay-485-million-settle",
+      "sha256": "b4daabaaebd4bf1fc7b9b5df4e42018334dcf7877c2cc0c5b0fa0b58b6bfc76d",
       "official": true
     },
     {
-      "url": "https://www.ftc.gov/business-guidance/resources/businesspersons-guide-federal-warranty-law",
-      "sha256": "6299348ee86faa5adbef4e4f6aeb4f0f20366b36260fda585888f072809910cc",
-      "official": true
-    },
-    {
-      "url": "https://consumer.ftc.gov/articles/auto-warranties-and-auto-service-contracts",
-      "sha256": "371fd9dece6b4da5a4396ce11aad7d4798c18824f9460b00991e542dbf1305e1",
+      "url": "https://consumer.ftc.gov/",
+      "sha256": "5eebb9edbbbd1391a1cb468ff37377fb07da66ce263cb32d70a2f93871a6f815",
       "official": true
     }
   ],
-  "words": 1899,
-  "createdAt": "2026-10-09T18:55:16.112Z"
+  "words": 795,
+  "createdAt": "2026-10-09T21:01:59.110Z"
 }
