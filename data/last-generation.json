@@ -1,24 +1,25 @@
 {
   "slot": {
-    "id": "reactive-midday",
+    "id": "reactive-evening",
     "kind": "reactive",
     "targetWords": [
       700,
       1200
     ],
     "categories": [
-      "credit-debt",
-      "banking-fees",
-      "tax-money"
+      "insurance-claims",
+      "travel-refunds",
+      "consumer-rights",
+      "refunds"
     ]
   },
   "provider": "github-copilot-cli",
   "topic": {
     "title": "Payment Processor Nuvei Must Implement Robust Merchant Screening Practices and Pay $4.85 Million to Settle FTC Charges that the Firm Facilitated Merchant Fraud",
-    "category": "credit-debt"
+    "category": "consumer-rights"
   },
-  "slug": "nuvei-to-pay-485-million-in-ftc-settlement-over-merchant-fraud-charges",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/nuvei-to-pay-485-million-in-ftc-settlement-over-merchant-fraud-charges.md",
+  "slug": "nuvei-settlement-puts-merchant-screening-in-focusbut-doesnt-promise-consumers-a-refund",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/nuvei-settlement-puts-merchant-screening-in-focusbut-doesnt-promise-consumers-a-refund.md",
   "evidence": [
     {
       "url": "https://www.ftc.gov/news-events/news/press-releases/2026/09/payment-processor-nuvei-must-implement-robust-merchant-screening-practices-pay-485-million-settle",
@@ -26,16 +27,11 @@
       "official": true
     },
     {
-      "url": "https://www.consumerfinance.gov/consumer-tools/credit-reports-and-scores/",
-      "sha256": "2cfd245fb15f5e737935d3ed90d36e6977fcfa210792d3db2c1bff29a791cb49",
-      "official": true
-    },
-    {
-      "url": "https://www.consumerfinance.gov/consumer-tools/debt-collection/",
-      "sha256": "f732ab396be85d155d3a1dea9571d3ff066e5aed1660787280ed42a6840d2018",
+      "url": "https://consumer.ftc.gov/",
+      "sha256": "5eebb9edbbbd1391a1cb468ff37377fb07da66ce263cb32d70a2f93871a6f815",
       "official": true
     }
   ],
-  "words": 837,
-  "createdAt": "2026-10-10T17:56:06.669Z"
+  "words": 843,
+  "createdAt": "2026-10-10T22:27:56.214Z"
 }
