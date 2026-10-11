@@ -1,41 +1,37 @@
 {
   "slot": {
-    "id": "reactive-midday",
+    "id": "reactive-evening",
     "kind": "reactive",
     "targetWords": [
       700,
       1200
     ],
     "categories": [
-      "credit-debt",
-      "banking-fees",
-      "tax-money"
+      "insurance-claims",
+      "travel-refunds",
+      "consumer-rights",
+      "refunds"
     ]
   },
   "provider": "github-copilot-cli",
   "topic": {
     "title": "Payment Processor Nuvei Must Implement Robust Merchant Screening Practices and Pay $4.85 Million to Settle FTC Charges that the Firm Facilitated Merchant Fraud",
-    "category": "credit-debt"
+    "category": "consumer-rights"
   },
-  "slug": "nuvei-to-pay-485-million-in-ftc-settlement-over-merchant-fraud-allegations",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/nuvei-to-pay-485-million-in-ftc-settlement-over-merchant-fraud-allegations.md",
+  "slug": "nuvei-to-pay-485-million-and-strengthen-merchant-screening-in-ftc-settlement",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/nuvei-to-pay-485-million-and-strengthen-merchant-screening-in-ftc-settlement.md",
   "evidence": [
     {
       "url": "https://www.ftc.gov/news-events/news/press-releases/2026/09/payment-processor-nuvei-must-implement-robust-merchant-screening-practices-pay-485-million-settle",
-      "sha256": "b4daabaaebd4bf1fc7b9b5df4e42018334dcf7877c2cc0c5b0fa0b58b6bfc76d",
+      "sha256": "1542a34caf2f2d7c9488141f60410b707694cef91d1f4a951a3999f78dabd0c8",
       "official": true
     },
     {
-      "url": "https://www.consumerfinance.gov/consumer-tools/credit-reports-and-scores/",
-      "sha256": "2cfd245fb15f5e737935d3ed90d36e6977fcfa210792d3db2c1bff29a791cb49",
-      "official": true
-    },
-    {
-      "url": "https://www.consumerfinance.gov/consumer-tools/debt-collection/",
-      "sha256": "f732ab396be85d155d3a1dea9571d3ff066e5aed1660787280ed42a6840d2018",
+      "url": "https://consumer.ftc.gov/",
+      "sha256": "5eebb9edbbbd1391a1cb468ff37377fb07da66ce263cb32d70a2f93871a6f815",
       "official": true
     }
   ],
-  "words": 862,
-  "createdAt": "2026-10-11T16:18:52.381Z"
+  "words": 824,
+  "createdAt": "2026-10-11T22:50:21.761Z"
 }
