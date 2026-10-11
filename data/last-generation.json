@@ -1,29 +1,33 @@
 {
   "slot": {
-    "id": "reactive-evening",
-    "kind": "reactive",
+    "id": "pillar-am",
+    "kind": "pillar",
     "targetWords": [
-      700,
-      1200
+      1500,
+      2600
     ],
     "categories": [
       "insurance-claims",
-      "travel-refunds",
-      "consumer-rights",
-      "refunds"
+      "refunds",
+      "credit-debt"
     ]
   },
   "provider": "github-copilot-cli",
   "topic": {
-    "title": "Payment Processor Nuvei Must Implement Robust Merchant Screening Practices and Pay $4.85 Million to Settle FTC Charges that the Firm Facilitated Merchant Fraud",
-    "category": "consumer-rights"
+    "title": "Subscription charge after cancellation: refund and dispute workflow",
+    "category": "refunds"
   },
-  "slug": "nuvei-settlement-puts-merchant-screening-in-focusbut-doesnt-promise-consumers-a-refund",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/nuvei-settlement-puts-merchant-screening-in-focusbut-doesnt-promise-consumers-a-refund.md",
+  "slug": "subscription-charge-after-cancellation-a-refund-and-dispute-workflow",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/subscription-charge-after-cancellation-a-refund-and-dispute-workflow.md",
   "evidence": [
     {
-      "url": "https://www.ftc.gov/news-events/news/press-releases/2026/09/payment-processor-nuvei-must-implement-robust-merchant-screening-practices-pay-485-million-settle",
-      "sha256": "b4daabaaebd4bf1fc7b9b5df4e42018334dcf7877c2cc0c5b0fa0b58b6bfc76d",
+      "url": "https://consumer.ftc.gov/articles/getting-and-out-free-trials-auto-renewals-and-negative-option-subscriptions",
+      "sha256": "4f0ef966968bf6aae9b12bf6ebc56fc332a6b354029add1ae56e2abc9c45d93b",
+      "official": true
+    },
+    {
+      "url": "https://www.consumerfinance.gov/consumer-tools/credit-cards/",
+      "sha256": "f3a2262436acf971aa3409f04f1aa3c67c7c6d74fe66526d18410a47ef257d05",
       "official": true
     },
     {
@@ -32,6 +36,6 @@
       "official": true
     }
   ],
-  "words": 843,
-  "createdAt": "2026-10-10T22:27:56.214Z"
+  "words": 1835,
+  "createdAt": "2026-10-11T01:06:03.946Z"
 }
