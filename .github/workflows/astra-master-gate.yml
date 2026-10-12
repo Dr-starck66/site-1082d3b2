@@ -13,6 +13,8 @@ jobs:
           node-version: '22'
       - name: Install dependencies only if lockfile exists
         run: if test -f package-lock.json; then npm ci --ignore-scripts; fi
+      - name: Run ASTRA core regression tests
+        run: node --test scripts/astra-master-gate.test.mjs
       - name: Audit applicable bricks in strict mode
         run: node scripts/astra-master-gate.mjs --task=code --strict
       - uses: actions/upload-artifact@v4
