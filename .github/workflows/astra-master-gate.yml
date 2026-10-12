@@ -1,0 +1,23 @@
+name: ASTRA MASTER GATE Omega
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  astra-master-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies only if lockfile exists
+        run: if test -f package-lock.json; then npm ci --ignore-scripts; fi
+      - name: Audit applicable bricks in strict mode
+        run: node scripts/astra-master-gate.mjs --task=code --strict
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: astra-master-site-1082d3b2
+          path: artifacts/astra-master-gate/report.json
+          if-no-files-found: error
