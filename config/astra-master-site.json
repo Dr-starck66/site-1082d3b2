@@ -1,0 +1,29 @@
+{
+  "schema": "astra-master-site/1",
+  "siteId": "site-1082d3b2",
+  "capabilities": [
+    "seo",
+    "editorial",
+    "runtime"
+  ],
+  "checks": {
+    "ASTRA_MASTER_GATE": [
+      {
+        "type": "command",
+        "run": "node --check scripts/astra-master-gate.mjs"
+      }
+    ],
+    "ASTRA_BRICK_PROOF_GATE": [
+      {
+        "type": "command",
+        "run": "node --test scripts/astra-master-gate.test.mjs"
+      }
+    ],
+    "ASTRA_AUTOMATION_EVIDENCE": [
+      {
+        "type": "command",
+        "run": "node --test scripts/astra-master-gate.test.mjs"
+      }
+    ]
+  }
+}
