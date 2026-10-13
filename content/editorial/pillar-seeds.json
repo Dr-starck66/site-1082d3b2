@@ -142,5 +142,203 @@
       "https://consumer.ftc.gov/articles/getting-and-out-free-trials-auto-renewals-and-negative-option-subscriptions",
       "https://www.consumerfinance.gov/consumer-tools/credit-cards/"
     ]
+  },
+  {
+    "title": "Claim adjuster estimate differs from repair quote: evidence to compare",
+    "category": "insurance-claims",
+    "keywords": [
+      "claim adjuster estimate differs from repair quote: evidence to compare"
+    ],
+    "sources": [
+      "https://content.naic.org/consumer/how-file-complaint",
+      "https://content.naic.org/consumer"
+    ]
+  },
+  {
+    "title": "Home insurance claim timeline: organize photographs, invoices and correspondence",
+    "category": "insurance-claims",
+    "keywords": [
+      "home insurance claim timeline: organize photographs, invoices and correspondence"
+    ],
+    "sources": [
+      "https://content.naic.org/consumer/how-file-complaint",
+      "https://content.naic.org/consumer"
+    ]
+  },
+  {
+    "title": "Auto insurance total loss offer: documents to request before accepting",
+    "category": "insurance-claims",
+    "keywords": [
+      "auto insurance total loss offer: documents to request before accepting"
+    ],
+    "sources": [
+      "https://content.naic.org/consumer/how-file-complaint",
+      "https://content.naic.org/consumer"
+    ]
+  },
+  {
+    "title": "Credit card dispute denied: how to document the next complaint",
+    "category": "refunds",
+    "keywords": [
+      "credit card dispute denied: how to document the next complaint"
+    ],
+    "sources": [
+      "https://www.consumerfinance.gov/consumer-tools/credit-cards/",
+      "https://consumer.ftc.gov/"
+    ]
+  },
+  {
+    "title": "Online order never delivered: build a merchant and card dispute file",
+    "category": "refunds",
+    "keywords": [
+      "online order never delivered: build a merchant and card dispute file"
+    ],
+    "sources": [
+      "https://consumer.ftc.gov/",
+      "https://www.consumerfinance.gov/consumer-tools/credit-cards/"
+    ]
+  },
+  {
+    "title": "Bank overdraft fee complaint: reconcile transactions and account disclosures",
+    "category": "banking-fees",
+    "keywords": [
+      "bank overdraft fee complaint: reconcile transactions and account disclosures"
+    ],
+    "sources": [
+      "https://www.consumerfinance.gov/consumer-tools/bank-accounts/",
+      "https://www.fdic.gov/resources/consumers/"
+    ]
+  },
+  {
+    "title": "Unauthorized debit card payment: create a chronological evidence record",
+    "category": "banking-fees",
+    "keywords": [
+      "unauthorized debit card payment: create a chronological evidence record"
+    ],
+    "sources": [
+      "https://www.consumerfinance.gov/consumer-tools/bank-accounts/",
+      "https://www.fdic.gov/resources/consumers/"
+    ]
+  },
+  {
+    "title": "Credit report mixed file: identify inaccurate accounts and document disputes",
+    "category": "credit-debt",
+    "keywords": [
+      "credit report mixed file: identify inaccurate accounts and document disputes"
+    ],
+    "sources": [
+      "https://www.consumerfinance.gov/consumer-tools/credit-reports-and-scores/",
+      "https://www.consumerfinance.gov/consumer-tools/debt-collection/"
+    ]
+  },
+  {
+    "title": "Debt collection on an old account: records to gather before responding",
+    "category": "credit-debt",
+    "keywords": [
+      "debt collection on an old account: records to gather before responding"
+    ],
+    "sources": [
+      "https://www.consumerfinance.gov/consumer-tools/debt-collection/",
+      "https://consumer.ftc.gov/"
+    ]
+  },
+  {
+    "title": "Flight cancelled after rebooking: trace payment and refund requests",
+    "category": "travel-refunds",
+    "keywords": [
+      "flight cancelled after rebooking: trace payment and refund requests"
+    ],
+    "sources": [
+      "https://www.transportation.gov/individuals/aviation-consumer-protection/refunds",
+      "https://www.transportation.gov/airconsumer/latest-news"
+    ]
+  },
+  {
+    "title": "Airline baggage fees and service changes: preserve receipts and itinerary",
+    "category": "travel-refunds",
+    "keywords": [
+      "airline baggage fees and service changes: preserve receipts and itinerary"
+    ],
+    "sources": [
+      "https://www.transportation.gov/individuals/aviation-consumer-protection/refunds",
+      "https://www.transportation.gov/airconsumer/latest-news"
+    ]
+  },
+  {
+    "title": "Airfare credit versus refund: questions to verify with the airline",
+    "category": "travel-refunds",
+    "keywords": [
+      "airfare credit versus refund: questions to verify with the airline"
+    ],
+    "sources": [
+      "https://www.transportation.gov/individuals/aviation-consumer-protection/refunds",
+      "https://www.transportation.gov/airconsumer/latest-news"
+    ]
+  },
+  {
+    "title": "IRS refund status mismatch: check account records before contacting anyone",
+    "category": "tax-money",
+    "keywords": [
+      "irs refund status mismatch: check account records before contacting anyone"
+    ],
+    "sources": [
+      "https://www.irs.gov/refunds",
+      "https://www.usa.gov/unclaimed-money"
+    ]
+  },
+  {
+    "title": "Unclaimed property notice: how to verify the agency and avoid impostors",
+    "category": "tax-money",
+    "keywords": [
+      "unclaimed property notice: how to verify the agency and avoid impostors"
+    ],
+    "sources": [
+      "https://www.usa.gov/unclaimed-money",
+      "https://www.irs.gov/refunds"
+    ]
+  },
+  {
+    "title": "Tax refund phishing email: evidence and official channels to verify",
+    "category": "tax-money",
+    "keywords": [
+      "tax refund phishing email: evidence and official channels to verify"
+    ],
+    "sources": [
+      "https://www.irs.gov/refunds",
+      "https://www.usa.gov/unclaimed-money"
+    ]
+  },
+  {
+    "title": "Manufacturer warranty versus store return policy: document the distinction",
+    "category": "warranties",
+    "keywords": [
+      "manufacturer warranty versus store return policy: document the distinction"
+    ],
+    "sources": [
+      "https://consumer.ftc.gov/articles/warranties",
+      "https://consumer.ftc.gov/articles/auto-warranties-and-auto-service-contracts"
+    ]
+  },
+  {
+    "title": "Auto service contract repair rejected: check exclusions and written terms",
+    "category": "warranties",
+    "keywords": [
+      "auto service contract repair rejected: check exclusions and written terms"
+    ],
+    "sources": [
+      "https://consumer.ftc.gov/articles/auto-warranties-and-auto-service-contracts",
+      "https://consumer.ftc.gov/articles/warranties"
+    ]
+  },
+  {
+    "title": "Warranty repair delayed: build a record of dates, service requests and promises",
+    "category": "warranties",
+    "keywords": [
+      "warranty repair delayed: build a record of dates, service requests and promises"
+    ],
+    "sources": [
+      "https://consumer.ftc.gov/articles/warranties",
+      "https://consumer.ftc.gov/articles/auto-warranties-and-auto-service-contracts"
+    ]
   }
 ]
