@@ -1,41 +1,37 @@
 {
   "slot": {
-    "id": "reactive-midday",
+    "id": "reactive-evening",
     "kind": "reactive",
     "targetWords": [
       700,
       1200
     ],
     "categories": [
-      "credit-debt",
-      "banking-fees",
-      "tax-money"
+      "insurance-claims",
+      "travel-refunds",
+      "consumer-rights",
+      "refunds"
     ]
   },
   "provider": "github-copilot-cli",
   "topic": {
     "title": "Payment Processor Nuvei Must Implement Robust Merchant Screening Practices and Pay $4.85 Million to Settle FTC Charges that the Firm Facilitated Merchant Fraud",
-    "category": "credit-debt"
+    "category": "consumer-rights"
   },
-  "slug": "nuvei-to-pay-485-million-and-tighten-merchant-screening-in-ftc-settlement",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/nuvei-to-pay-485-million-and-tighten-merchant-screening-in-ftc-settlement.md",
+  "slug": "nuvei-to-pay-485-million-in-ftc-settlement-over-merchant-fraud-charges",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/nuvei-to-pay-485-million-in-ftc-settlement-over-merchant-fraud-charges.md",
   "evidence": [
     {
       "url": "https://www.ftc.gov/news-events/news/press-releases/2026/09/payment-processor-nuvei-must-implement-robust-merchant-screening-practices-pay-485-million-settle",
-      "sha256": "65cbfd2bfce86b038e1e2dfa22a7f36e3f2894b1f6f33420a17d71af4466a195",
+      "sha256": "106bc4584b5440cdd279044a9af3280b79f71700abb5346ace2cbef9733d23e1",
       "official": true
     },
     {
-      "url": "https://www.consumerfinance.gov/consumer-tools/credit-reports-and-scores/",
-      "sha256": "2cfd245fb15f5e737935d3ed90d36e6977fcfa210792d3db2c1bff29a791cb49",
-      "official": true
-    },
-    {
-      "url": "https://www.consumerfinance.gov/consumer-tools/debt-collection/",
-      "sha256": "f732ab396be85d155d3a1dea9571d3ff066e5aed1660787280ed42a6840d2018",
+      "url": "https://consumer.ftc.gov/",
+      "sha256": "cec59efc0ca01a31d67766ed12dad33dfc0498c2278fd0f3b06d878091df5613",
       "official": true
     }
   ],
-  "words": 834,
-  "createdAt": "2026-10-13T17:34:43.560Z"
+  "words": 830,
+  "createdAt": "2026-10-13T21:21:52.976Z"
 }
