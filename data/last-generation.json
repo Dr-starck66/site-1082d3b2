@@ -1,36 +1,41 @@
 {
   "slot": {
-    "id": "reactive-morning",
+    "id": "reactive-midday",
     "kind": "reactive",
     "targetWords": [
       700,
       1200
     ],
     "categories": [
-      "refunds",
-      "consumer-rights",
-      "banking-fees"
+      "credit-debt",
+      "banking-fees",
+      "tax-money"
     ]
   },
   "provider": "github-copilot-cli",
   "topic": {
     "title": "Payment Processor Nuvei Must Implement Robust Merchant Screening Practices and Pay $4.85 Million to Settle FTC Charges that the Firm Facilitated Merchant Fraud",
-    "category": "consumer-rights"
+    "category": "credit-debt"
   },
-  "slug": "nuvei-to-pay-485-million-and-strengthen-merchant-screening-in-ftc-settlement",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/nuvei-to-pay-485-million-and-strengthen-merchant-screening-in-ftc-settlement.md",
+  "slug": "nuvei-to-pay-485-million-in-ftc-settlement-over-merchant-fraud-claims",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/nuvei-to-pay-485-million-in-ftc-settlement-over-merchant-fraud-claims.md",
   "evidence": [
     {
       "url": "https://www.ftc.gov/news-events/news/press-releases/2026/09/payment-processor-nuvei-must-implement-robust-merchant-screening-practices-pay-485-million-settle",
-      "sha256": "3daacbfefc6523ace8fe3119f5f6607468b2908ac603c4846ff75b7c2afb92fe",
+      "sha256": "6b45e797c3636e18e615e4b7efa93208123bee02ca9e7edcec343112e018973a",
       "official": true
     },
     {
-      "url": "https://consumer.ftc.gov/",
-      "sha256": "cec59efc0ca01a31d67766ed12dad33dfc0498c2278fd0f3b06d878091df5613",
+      "url": "https://www.consumerfinance.gov/consumer-tools/credit-reports-and-scores/",
+      "sha256": "2cfd245fb15f5e737935d3ed90d36e6977fcfa210792d3db2c1bff29a791cb49",
+      "official": true
+    },
+    {
+      "url": "https://www.consumerfinance.gov/consumer-tools/debt-collection/",
+      "sha256": "f732ab396be85d155d3a1dea9571d3ff066e5aed1660787280ed42a6840d2018",
       "official": true
     }
   ],
-  "words": 790,
-  "createdAt": "2026-10-15T14:58:33.547Z"
+  "words": 915,
+  "createdAt": "2026-10-15T17:50:33.662Z"
 }
