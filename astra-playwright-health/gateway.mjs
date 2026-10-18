@@ -1,6 +1,6 @@
 // ASTRA visual health gateway: verify Chromium evidence; do not change the legacy boot script.
 import {createServer} from 'node:http';
-import {readFileSync} from 'node:fs';
+import {spawn} from 'node:child_process';
 const PREFIX='ASTRA_DIRECT_VISUAL_GATE ';
 const CLOSE_ERROR='The browser context is shared between clients and cannot be closed.';
 export function classifyLog(log, seenAt=Date.now(), now=Date.now()) {
@@ -40,16 +40,40 @@ export function classifyLog(log, seenAt=Date.now(), now=Date.now()) {
     warnings:errors.some(e=>String(e.error||'').includes(CLOSE_ERROR))?['SHARED_CONTEXT_CLEANUP_UNSUPPORTED']:[],
     reasons,viewports,scope:'RENDERED_VISUAL_ONLY',scoreAccuracyVerified:false};
 }
-export function startGateway({path=process.env.ASTRA_VISUAL_LOG||'/tmp/astra-visual.log',port=Number(process.env.PORT||8080)}={}){
- let signature='',observed=Date.now();
+export function startGateway({port=Number(process.env.PORT||8080),startChildren=true}={}){
+ let signature='',observed=Date.now(),log='',bootAlive=!startChildren,mcpAlive=!startChildren;
+ const children=[];
+ if(startChildren){
+   const mcp=spawn(process.execPath,['/app/cli.js','--headless','--browser','chromium','--no-sandbox','--port','8931','--host','127.0.0.1'],{stdio:['ignore','pipe','pipe']});
+   mcpAlive=true;children.push(mcp);
+   mcp.on('error',error=>{mcpAlive=false;console.error('ASTRA_MCP_SPAWN_FAILED',error.message)});
+   mcp.on('exit',(code)=>{mcpAlive=false;console.error('ASTRA_MCP_EXIT',code)});
+   mcp.stdout.on('data',chunk=>process.stdout.write(chunk));
+   mcp.stderr.on('data',chunk=>process.stderr.write(chunk));
+   const boot=spawn(process.execPath,['-e','eval(Buffer.from(process.env.ASTRA_BOOT_B64,"base64").toString())'],{
+     env:{...process.env,PORT:'8181'},stdio:['ignore','pipe','pipe']});
+   bootAlive=true;children.push(boot);
+   let partial='';
+   const ingest=(chunk)=>{
+     partial+=chunk.toString('utf8');
+     const lines=partial.split(/\r?\n/);partial=lines.pop()||'';
+     for(const line of lines){if(line.includes(PREFIX))log=(log+line+'\n').slice(-1024*1024)}
+   };
+   boot.stdout.on('data',ingest);
+   boot.stderr.on('data',ingest);
+   boot.on('error',error=>{bootAlive=false;console.error('ASTRA_BOOT_SPAWN_FAILED',error.message)});
+   boot.on('exit',code=>{bootAlive=false;console.error('ASTRA_BOOT_EXIT',code)});
+ }
+ process.once('SIGTERM',()=>{for(const child of children)child.kill('SIGTERM');process.exit(0)});
+
  const srv=createServer((req,res)=>{
    res.setHeader('content-type','application/json');
    res.setHeader('cache-control','no-store');
    if(req.method!=='GET'||!['/health','/last'].includes(req.url)){res.writeHead(404).end('{}');return}
-   let raw='';try{raw=readFileSync(path,'utf8')}catch{}
+   const raw=log;
    const last=raw.split(/\r?\n/).filter(x=>x.includes(PREFIX)&&x.includes('"phase":"done"')).at(-1)||'';
    if(last&&last!==signature){signature=last;observed=Date.now()}
-   const v=classifyLog(raw,observed);res.writeHead(v.ok?200:503).end(JSON.stringify(v));
+   const v=classifyLog(raw,observed);if(!bootAlive)v.reasons=[...(v.reasons||[]),'BOOT_PROCESS_NOT_RUNNING'];if(!mcpAlive)v.reasons=[...(v.reasons||[]),'MCP_PROCESS_NOT_RUNNING'];v.ok=v.ok&&bootAlive&&mcpAlive;res.writeHead(v.ok?200:503).end(JSON.stringify(v));
  });
  srv.listen(port,'0.0.0.0',()=>console.log('ASTRA_VISUAL_GATE_LISTEN',port));return srv;
 }
