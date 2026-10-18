@@ -15,3 +15,23 @@ export const prompts={
  repair:`Tu es Ω Repair. Retourne uniquement les fichiers à remplacer ou ajouter pour corriger l’audit et les validations serveur. JSON uniquement: {files:[{path,content}],summary}. Ne renvoie pas les fichiers inchangés. Si ASTRA DESIGN INTELLIGENCE Ω est FAIL/PARTIAL, corrige les défauts démontrés sans dégrader les contrats fonctionnels.\n\n${DESIGN_GENERATION_CONTRACT}`,
  verify:`Tu es Ω Verify² indépendant. Vérifie spec, fichiers, checks locaux, validation serveur et audit. JSON uniquement: {verdict:"PASS|PARTIAL|FAIL",summary,blockingIssues:[...],verificationWeaknesses:[...]}. Un élément non vérifié reste UNVERIFIED ou PARTIAL, jamais PASS par supposition. Un FAIL du gate ASTRA DESIGN INTELLIGENCE Ω interdit un verdict PASS.`
 };
+
+// ASTRA CRAWL Ω inheritance for NEW and REPAIRED website-capable agents.
+// This is a generation contract, not evidence of runtime wiring in old deployments.
+export const ASTRA_CRAWL_GENERATION_CONTRACT = [
+  "ASTRA CRAWL Ω — contrat global obligatoire pour toute lecture de page HTML publique.",
+  "Si ce projet extrait des pages HTTP(S), employer les lecteurs directs sûrs existants en priorité, puis le service ASTRA CRAWLER OMEGA déjà hébergé en cas d'échec réseau.",
+  "Cible vérifiée: https://astra-crawler-omega-prod-production.up.railway.app/api/crawl (POST JSON url,maxPages:1,maxDepth:0).",
+  "Ne jamais ajouter Firecrawl, sa clé, ses crédits ou un serveur de crawl doublon. Ne faire aucun appel payant implicite.",
+  "Ne jamais crawler hôtes privés/loopback ou robots interdits, ni contourner explicitement les réponses 401/403/404/429.",
+  "Un crawl distant apporte des signaux SEO partiels (title/meta/H1/liens déclarés), pas une preuve de HTML complet.",
+  "En cas de données partielles, ne jamais inférer le nombre de mots, schémas, liens ou images absents; marquer PARTIAL et ne pas déclencher de corrections automatiques.",
+  "Les API spécialisées, archives historiques, RDAP, Search Console, GitHub, plateformes et authentification conservent leur protocole; ne pas les détourner vers le crawler HTML.",
+  "L'agent doit inclure des tests: succès direct, échec de transport et secours ASTRA réel/mocks, erreur HTTP explicite, cible privée, robots, absence de preuve.",
+  "Ne déclarer l'agent raccordé qu'après test exécutable du chemin de bascule et vérification du déploiement réellement publié."
+].join("\n");
+
+for(const role of ['reverseArchitect','architect','frontend','backend','ops','adversary','evolveSpec','improve','repair','verify']){
+  if(typeof prompts[role]!=='string')throw Error('ASTRA_CRAWL_ROLE_MISSING '+role);
+  prompts[role] += "\n\n" + ASTRA_CRAWL_GENERATION_CONTRACT;
+}
