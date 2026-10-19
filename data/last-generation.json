@@ -17,12 +17,12 @@
     "title": "Payment Processor Nuvei Must Implement Robust Merchant Screening Practices and Pay $4.85 Million to Settle FTC Charges that the Firm Facilitated Merchant Fraud",
     "category": "credit-debt"
   },
-  "slug": "ftc-settlement-puts-nuveis-merchant-screening-under-scrutiny",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-settlement-puts-nuveis-merchant-screening-under-scrutiny.md",
+  "slug": "nuvei-to-pay-485-million-in-ftc-settlement-over-alleged-merchant-fraud",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/nuvei-to-pay-485-million-in-ftc-settlement-over-alleged-merchant-fraud.md",
   "evidence": [
     {
       "url": "https://www.ftc.gov/news-events/news/press-releases/2026/09/payment-processor-nuvei-must-implement-robust-merchant-screening-practices-pay-485-million-settle",
-      "sha256": "6b45e797c3636e18e615e4b7efa93208123bee02ca9e7edcec343112e018973a",
+      "sha256": "02425d9e796bb68b6ae5616eeba86f80b8174c9cc953fd987fbef4e1ec201aab",
       "official": true
     },
     {
@@ -36,6 +36,6 @@
       "official": true
     }
   ],
-  "words": 954,
-  "createdAt": "2026-10-18T16:41:04.350Z"
+  "words": 880,
+  "createdAt": "2026-10-19T16:58:45.266Z"
 }
