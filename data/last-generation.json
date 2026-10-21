@@ -1,37 +1,41 @@
 {
   "slot": {
-    "id": "reactive-evening",
+    "id": "reactive-midday",
     "kind": "reactive",
     "targetWords": [
       700,
       1200
     ],
     "categories": [
-      "insurance-claims",
-      "travel-refunds",
-      "consumer-rights",
-      "refunds"
+      "credit-debt",
+      "banking-fees",
+      "tax-money"
     ]
   },
   "provider": "github-copilot-cli",
   "topic": {
     "title": "Payment Processor Nuvei Must Implement Robust Merchant Screening Practices and Pay $4.85 Million to Settle FTC Charges that the Firm Facilitated Merchant Fraud",
-    "category": "consumer-rights"
+    "category": "credit-debt"
   },
-  "slug": "nuvei-to-pay-485-million-in-ftc-merchant-fraud-settlement",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/nuvei-to-pay-485-million-in-ftc-merchant-fraud-settlement.md",
+  "slug": "ftc-says-nuvei-will-pay-485-million-and-strengthen-merchant-screening",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-says-nuvei-will-pay-485-million-and-strengthen-merchant-screening.md",
   "evidence": [
     {
       "url": "https://www.ftc.gov/news-events/news/press-releases/2026/09/payment-processor-nuvei-must-implement-robust-merchant-screening-practices-pay-485-million-settle",
-      "sha256": "a5b4faa8577d403897eb00e5e493e95aa45b471d0c4b07a21314c6773b2e4d42",
+      "sha256": "02425d9e796bb68b6ae5616eeba86f80b8174c9cc953fd987fbef4e1ec201aab",
       "official": true
     },
     {
-      "url": "https://consumer.ftc.gov/",
-      "sha256": "202502beef95ccc7c6f0d15e7861d564390d8fe0d0857699a94e32611f3c2a00",
+      "url": "https://www.consumerfinance.gov/consumer-tools/credit-reports-and-scores/",
+      "sha256": "00ae8616b374d73e9203b0fcb142477bd6dac5aca25e53c596e510813286ec7d",
+      "official": true
+    },
+    {
+      "url": "https://www.consumerfinance.gov/consumer-tools/debt-collection/",
+      "sha256": "fff076ae8b7ab3df1184d7dbf3d1400bf013fa687396d89a38dc4efb63147340",
       "official": true
     }
   ],
-  "words": 828,
-  "createdAt": "2026-10-20T22:15:53.361Z"
+  "words": 790,
+  "createdAt": "2026-10-21T15:12:07.834Z"
 }
