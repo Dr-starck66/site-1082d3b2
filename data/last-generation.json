@@ -1,22 +1,21 @@
 {
   "slot": {
-    "id": "reactive-evening",
+    "id": "reactive-midday",
     "kind": "reactive",
     "targetWords": [
       700,
       1200
     ],
     "categories": [
-      "insurance-claims",
-      "travel-refunds",
-      "consumer-rights",
-      "refunds"
+      "credit-debt",
+      "banking-fees",
+      "tax-money"
     ]
   },
   "provider": "github-copilot-cli",
   "topic": {
     "title": "Court Permanently Shuts Down Illegal Debt Relief Operation Following FTC Allegation That Scheme’s Operators Impersonated Government and Business Entities",
-    "category": "consumer-rights"
+    "category": "credit-debt"
   },
   "slug": "court-permanently-bans-operators-of-alleged-debt-relief-scheme",
   "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/court-permanently-bans-operators-of-alleged-debt-relief-scheme.md",
@@ -27,11 +26,16 @@
       "official": true
     },
     {
-      "url": "https://consumer.ftc.gov/",
-      "sha256": "da476e9673769cd9e82996d39bff3623f5d9503d36c0393804e080787b1ca2ea",
+      "url": "https://www.consumerfinance.gov/consumer-tools/credit-reports-and-scores/",
+      "sha256": "625b2ba843f8aed9f4eb6e0061686edfef0f299df470193231deefa31de12162",
+      "official": true
+    },
+    {
+      "url": "https://www.consumerfinance.gov/consumer-tools/debt-collection/",
+      "sha256": "41127b16202ed1f4c35c5456c556c8a61b61b0a77d10b3ac2617e1649218db85",
       "official": true
     }
   ],
-  "words": 782,
-  "createdAt": "2026-10-22T22:16:51.477Z"
+  "words": 992,
+  "createdAt": "2026-10-23T15:01:11.731Z"
 }
