@@ -1,41 +1,37 @@
 {
   "slot": {
-    "id": "reactive-midday",
+    "id": "reactive-evening",
     "kind": "reactive",
     "targetWords": [
       700,
       1200
     ],
     "categories": [
-      "credit-debt",
-      "banking-fees",
-      "tax-money"
+      "insurance-claims",
+      "travel-refunds",
+      "consumer-rights",
+      "refunds"
     ]
   },
   "provider": "github-copilot-cli",
   "topic": {
     "title": "Court Permanently Shuts Down Illegal Debt Relief Operation Following FTC Allegation That Scheme’s Operators Impersonated Government and Business Entities",
-    "category": "credit-debt"
+    "category": "consumer-rights"
   },
-  "slug": "court-permanently-shuts-down-debt-relief-operation-accused-of-impersonation",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/court-permanently-shuts-down-debt-relief-operation-accused-of-impersonation.md",
+  "slug": "court-permanently-bans-operators-of-alleged-debt-relief-scheme",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/court-permanently-bans-operators-of-alleged-debt-relief-scheme.md",
   "evidence": [
     {
       "url": "https://www.ftc.gov/news-events/news/press-releases/2026/10/court-permanently-shuts-down-illegal-debt-relief-operation-following-ftc-allegation-schemes",
-      "sha256": "c8c052c61226b5b5dc74549682c0fc73fb0e3c613830daa335166c2c6596adb1",
+      "sha256": "27ce2bfde05ffa333826018d83bedccb19092ba02cde6631abf40e2991ec62a5",
       "official": true
     },
     {
-      "url": "https://www.consumerfinance.gov/consumer-tools/credit-reports-and-scores/",
-      "sha256": "625b2ba843f8aed9f4eb6e0061686edfef0f299df470193231deefa31de12162",
-      "official": true
-    },
-    {
-      "url": "https://www.consumerfinance.gov/consumer-tools/debt-collection/",
-      "sha256": "41127b16202ed1f4c35c5456c556c8a61b61b0a77d10b3ac2617e1649218db85",
+      "url": "https://consumer.ftc.gov/",
+      "sha256": "7ef215f55c79c59fe529c102a6884e0bf5b7f9e0a86ce8490caa5f1a6f80f658",
       "official": true
     }
   ],
-  "words": 932,
-  "createdAt": "2026-10-23T17:55:43.082Z"
+  "words": 843,
+  "createdAt": "2026-10-23T22:04:37.481Z"
 }
