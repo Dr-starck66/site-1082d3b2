@@ -1,29 +1,28 @@
 {
   "slot": {
-    "id": "reactive-evening",
+    "id": "reactive-morning",
     "kind": "reactive",
     "targetWords": [
       700,
       1200
     ],
     "categories": [
-      "insurance-claims",
-      "travel-refunds",
+      "refunds",
       "consumer-rights",
-      "refunds"
+      "banking-fees"
     ]
   },
   "provider": "github-copilot-cli",
   "topic": {
-    "title": "Court Permanently Shuts Down Illegal Debt Relief Operation Following FTC Allegation That Scheme’s Operators Impersonated Government and Business Entities",
+    "title": "Payment Processor Nuvei Must Implement Robust Merchant Screening Practices and Pay $4.85 Million to Settle FTC Charges that the Firm Facilitated Merchant Fraud",
     "category": "consumer-rights"
   },
-  "slug": "court-permanently-bans-operators-of-alleged-debt-relief-scheme",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/court-permanently-bans-operators-of-alleged-debt-relief-scheme.md",
+  "slug": "nuvei-to-pay-485-million-and-strengthen-merchant-screening-in-ftc-settlement",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/nuvei-to-pay-485-million-and-strengthen-merchant-screening-in-ftc-settlement.md",
   "evidence": [
     {
-      "url": "https://www.ftc.gov/news-events/news/press-releases/2026/10/court-permanently-shuts-down-illegal-debt-relief-operation-following-ftc-allegation-schemes",
-      "sha256": "27ce2bfde05ffa333826018d83bedccb19092ba02cde6631abf40e2991ec62a5",
+      "url": "https://www.ftc.gov/news-events/news/press-releases/2026/09/payment-processor-nuvei-must-implement-robust-merchant-screening-practices-pay-485-million-settle",
+      "sha256": "2de4ca06c6d991775768f96dec9b9596afa5bb422262eff336c7ad2f457f2091",
       "official": true
     },
     {
@@ -32,6 +31,6 @@
       "official": true
     }
   ],
-  "words": 843,
-  "createdAt": "2026-10-23T22:04:37.481Z"
+  "words": 884,
+  "createdAt": "2026-10-24T14:00:08.362Z"
 }
