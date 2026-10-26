@@ -1,54 +1,49 @@
 ---
 title: "Nuvei to Pay $4.85 Million in FTC Settlement Over Merchant Fraud Charges"
-description: "The FTC says Nuvei will pay $4.85 million and strengthen merchant screening after allegations it processed payments for deceptive businesses."
+description: "The FTC says Nuvei will pay $4.85 million and strengthen merchant screening. Here’s what the settlement means—and what consumers should check first."
 category: "consumer-rights"
-published: "2026-10-24T21:34:42.477Z"
-modified: "2026-10-24T21:34:42.538Z"
+published: "2026-10-26T21:06:43.573Z"
+modified: "2026-10-26T21:06:43.648Z"
 author: "Refund Money Now Desk"
 status: "published"
 content_type: "reactive"
-source_hash: "91357daed11114bbf7fe38f1ff86cf03e758bec1c35d5b71f28b3f2003981b04-7ef215f55c79c59fe529c102a6884e0bf5b7f9e0a86ce8490caa5f1a6f80f658"
+source_hash: "afc57f4a08cd10f97045f688c4df746e300c2102f2df5f8ca45c3be8d610dcb8-3e7bd9d73ec7781fe8ddd27960f9307206f30923219f8edfcaa7b71071cb8611"
 sources: ["https://www.ftc.gov/news-events/news/press-releases/2026/09/payment-processor-nuvei-must-implement-robust-merchant-screening-practices-pay-485-million-settle", "https://consumer.ftc.gov/"]
 ---
-The Federal Trade Commission says payment processor Nuvei will pay $4.85 million and adopt stronger merchant-screening practices to settle charges that it facilitated merchant fraud. The agency alleges Nuvei and its subsidiaries opened and maintained payment-processing accounts for merchants they knew or should have known were engaged in deception, including tech-support scams that took millions of dollars from consumers. [S1]
+A payment processor’s role in a transaction can be easy to overlook—until a charge is tied to a scam. The Federal Trade Commission says global processor Nuvei will pay $4.85 million to settle charges that it facilitated merchant fraud, including by processing payments for merchants it knew or should have known were deceiving consumers. The agency also says Nuvei must implement robust merchant-screening practices. [S1]
 
-For consumers, the announcement is about the companies that help merchants accept payments—not a notice that individual customers will receive money. The supplied FTC announcement does not say that consumers will get refunds from this settlement, explain how to claim one, or identify which transactions or customers were affected. [S1]
+The announcement is about the processor and its merchant accounts, not a newly announced refund program for individual customers. For consumers who suspect they paid a deceptive business, the practical question is what the charge was for and what steps are available to report it—not whether the settlement itself guarantees money back. [S1][S2]
 
 ## What changed
 
-The FTC announced the settlement on September 4, 2026. Under the agreement described in the announcement, Nuvei must implement robust merchant-screening practices and pay $4.85 million to resolve the FTC’s charges. [S1]
+The FTC announced the settlement on September 4, 2026. Its complaint alleges that Canada-based Nuvei Corporation and subsidiaries opened and maintained payment-processing accounts for merchants engaged in deception, even though Nuvei knew or should have known about the activity. The announcement specifically points to tech-support scams that took millions of dollars from consumers. These are allegations resolved through a settlement; the supplied announcement does not describe a trial finding. [S1]
 
-The complaint alleges that Nuvei and its subsidiaries processed payments for merchants involved in deceptive activity, including tech-support scams. The FTC’s wording—“knew or should have known”—describes the agency’s allegation; the supplied announcement does not provide enough detail to assess the evidence against individual merchants or the processor. [S1]
+Under the settlement announced by the FTC, Nuvei will pay $4.85 million and must put robust merchant-screening practices in place. The stated focus is on how the processor screens merchants, rather than on a change to consumer payment rules or a new individual application process. The announcement excerpt does not provide operational details about the screening requirements or say when a consumer could expect those practices to take effect. [S1]
 
-That distinction matters. The news is an enforcement action over the processor’s role in serving merchants, not an announcement that Nuvei itself sold tech support to every person affected. The FTC’s extract identifies tech-support scams as one example of the alleged merchant activity, but does not name the merchants or describe particular consumers’ losses. [S1]
-
-The announcement also does not spell out the screening requirements in practical detail. “Robust merchant screening” is the FTC’s description of what Nuvei must implement; the supplied text does not specify particular checks, monitoring schedules, or a compliance deadline. Consumers should avoid treating the headline as a complete description of the settlement’s terms. [S1]
+That distinction matters. The agency’s action addresses alleged conduct by a company that processed payments for merchants; it does not, based on the information supplied here, identify a particular consumer’s transaction or determine whether that person qualifies for reimbursement. It also does not say that every Nuvei-processed payment involved fraud. [S1]
 
 ## What this means for consumers
 
-If you are trying to connect a payment or suspected scam to this case, start with what you can verify: the transaction date, amount, seller or service involved, and any receipt, email, or account record you still have. The announcement does not list merchants, transaction dates, or a process for determining whether a particular charge is connected to the FTC’s allegations. [S1]
+If a payment looks suspicious, start with the transaction itself. Find the date, amount, and merchant name on your statement or receipt, then compare them with what you remember buying. A processor’s name may not tell you which business actually sold the product or service, so look for order confirmations, emails, texts, and any account page connected to the purchase. This is a way to organize the facts; it is not proof that a charge is fraudulent.
 
-A useful decision path is to separate three questions: Was there a payment you do not recognize? Did you pay a business that you now suspect misled you? And is there evidence linking that business to this FTC case? The announcement supports the broader allegation about Nuvei’s merchant accounts, but does not answer those individual questions for consumers. [S1]
+If the purchase involved a caller or online contact claiming to provide tech support, write down what was promised, what service was actually provided, and how the payment was requested. The FTC’s announcement identifies tech-support scams among the deceptive activity alleged in this case, but it does not say that every tech-support purchase—or every payment processed by Nuvei—is a scam. [S1]
 
-If you think you encountered a scam, the FTC’s consumer site provides a way to report fraud. Keep your report grounded in the details you can document, rather than assuming that the Nuvei settlement establishes what happened in your own transaction. [S2]
+If you believe you were deceived, use the records you gathered when you contact the company shown on the transaction or the financial institution used to pay. Ask what options they can explain for that specific payment, and keep notes of when you contacted them and what they said. The supplied sources do not establish a deadline, guarantee a reversal, or specify what remedy applies to any one consumer, so do not assume an outcome based on the Nuvei settlement alone. [S1]
 
-Do not pay anyone who contacts you claiming they can secure money from this settlement unless you can independently verify the claim. The supplied FTC announcement does not describe a consumer payout program or name an administrator to contact. Use the FTC announcement itself—not an unsolicited message—as the reference point for what the agency has actually announced. [S1]
+You can also report suspected fraud through the FTC’s consumer site, which lists a “Report Fraud” option. A report is a way to alert the agency; the materials supplied here do not promise that filing one will recover money or resolve an individual dispute. [S2]
 
-The settlement may be relevant to consumers concerned about how payment processors screen the businesses they serve. But it does not, on the evidence supplied, establish that every merchant using Nuvei was deceptive, that a particular consumer’s loss is covered, or that a customer will recover money. Those conclusions would require information beyond the announcement. [S1]
+A useful decision path is: if you recognize the purchase and the amount matches, keep the receipt and monitor for any further unexpected charges; if the merchant or purpose is unclear, gather the transaction records and ask the relevant company to identify it; if you believe the seller misrepresented the service, document what happened, ask about payment options, and consider making an FTC report. These steps help separate an unfamiliar billing label from a suspected scam without treating the settlement as a personal refund notice.
 
 ## What to verify before you act
 
-Before making a decision, check:
-
-- **The transaction:** Confirm the amount, date, and business or service connected to the payment in your own records.
-- **The connection to this case:** Look for a reliable source naming the merchant or explaining which transactions are covered. The FTC extract supplied here names no merchants. [S1]
-- **Any claimed payout:** Verify whether the FTC has announced a consumer refund process. The supplied announcement describes a payment by Nuvei to settle charges, but does not provide consumer refund instructions. [S1]
-- **The settlement terms:** Check the FTC’s full announcement or related case materials for details not included in the supplied extract, such as the specific screening obligations or any consumer-facing process. The available text does not state those details. [S1]
-
-If you cannot confirm a connection, do not treat the settlement as proof that your payment qualifies for anything. If you believe you were scammed, the FTC lists fraud reporting as a consumer action; include the facts you can substantiate and keep a copy of your records. [S2]
+- **The charge:** Confirm the date, amount, and merchant descriptor against receipts and account records before disputing or reporting it.
+- **The seller:** Check which business sold the service and whether the processor name differs from the seller name on your records.
+- **The claim:** Write down what the seller promised and what you received. The FTC announcement concerns allegations involving deceptive merchants, including tech-support scams; it does not establish that any specific purchase was deceptive. [S1]
+- **The next step:** Ask the company or financial institution connected to your payment what options apply to your transaction. Do not treat the $4.85 million settlement as a consumer payout or assume a refund is available; the supplied announcement describes no consumer claims process. [S1]
+- **Reporting:** If you suspect fraud, the FTC consumer site provides a Report Fraud option. Keep a copy of your records and any report confirmation. [S2]
 
 ## Related reading
 
+- [Nuvei to Pay $4.85 Million in FTC Settlement Over Merchant Fraud Screening](/article/nuvei-to-pay-485-million-in-ftc-settlement-over-merchant-fraud-screening)
 - [Nuvei to Pay $4.85 Million in FTC Merchant-Fraud Settlement](/article/nuvei-to-pay-485-million-in-ftc-merchant-fraud-settlement)
 - [Nuvei to Pay $4.85 Million and Strengthen Merchant Screening in FTC Settlement](/article/nuvei-to-pay-485-million-and-strengthen-merchant-screening-in-ftc-settlement)
-- [FTC Settlement Requires Nuvei to Tighten Merchant Screening and Pay $4.85 Million](/article/ftc-settlement-requires-nuvei-to-tighten-merchant-screening-and-pay-485-million)
