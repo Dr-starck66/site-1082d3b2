@@ -1,41 +1,37 @@
 {
   "slot": {
-    "id": "reactive-midday",
+    "id": "reactive-evening",
     "kind": "reactive",
     "targetWords": [
       700,
       1200
     ],
     "categories": [
-      "credit-debt",
-      "banking-fees",
-      "tax-money"
+      "insurance-claims",
+      "travel-refunds",
+      "consumer-rights",
+      "refunds"
     ]
   },
   "provider": "github-copilot-cli",
   "topic": {
-    "title": "FTC and States Take Action Against Toast Inc. over Hidden and Unauthorized Fees, Deceptive Subscription and Cancellation Practices and Other Unlawful Conduct",
-    "category": "credit-debt"
+    "title": "FTC Highlights Efforts to Combat Imposter Scams and Protect Consumers",
+    "category": "consumer-rights"
   },
-  "slug": "ftc-and-states-sue-toast-over-alleged-fees-and-subscription-practices",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-and-states-sue-toast-over-alleged-fees-and-subscription-practices.md",
+  "slug": "ftc-reports-19-imposter-websites-stopped-and-more-than-80-million-in-consumer-redress",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-reports-19-imposter-websites-stopped-and-more-than-80-million-in-consumer-redress.md",
   "evidence": [
     {
-      "url": "https://www.ftc.gov/news-events/news/press-releases/2026/10/ftc-states-take-action-against-toast-inc-over-hidden-unauthorized-fees-deceptive-subscription",
-      "sha256": "27c90bd9b623f6143764a511357b1b91ee67c2a7e3d630237deb9c55296273e3",
+      "url": "https://www.ftc.gov/news-events/news/press-releases/2026/10/ftc-highlights-efforts-combat-imposter-scams-protect-consumers",
+      "sha256": "bd8fb95b299d9fc0ab5074a58dec036d060325e8d1185113307cb1401900f81f",
       "official": true
     },
     {
-      "url": "https://www.consumerfinance.gov/consumer-tools/credit-reports-and-scores/",
-      "sha256": "625b2ba843f8aed9f4eb6e0061686edfef0f299df470193231deefa31de12162",
-      "official": true
-    },
-    {
-      "url": "https://www.consumerfinance.gov/consumer-tools/debt-collection/",
-      "sha256": "41127b16202ed1f4c35c5456c556c8a61b61b0a77d10b3ac2617e1649218db85",
+      "url": "https://consumer.ftc.gov/",
+      "sha256": "b4e69c318fde9f8e197a585ee10930cca75d3a188f76d0d14af642263a9f6be5",
       "official": true
     }
   ],
-  "words": 979,
-  "createdAt": "2026-10-29T16:54:21.861Z"
+  "words": 917,
+  "createdAt": "2026-10-29T21:14:54.042Z"
 }
