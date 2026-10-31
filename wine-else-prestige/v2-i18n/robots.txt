@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://else.wine/sitemap.xml
+Sitemap: https://else.wine/sitemap-i18n.xml
