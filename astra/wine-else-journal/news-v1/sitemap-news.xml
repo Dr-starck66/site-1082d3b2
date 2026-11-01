@@ -1,6 +1,36 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
-<url><loc>https://else.wine/blog/occitanie-2026-wine-harvest-rebound/</loc><news:news><news:publication><news:name>WINE ELSE Journal</news:name><news:language>en</news:language></news:publication><news:publication_date>2026-11-01T07:42:51.776Z</news:publication_date><news:title>Languedoc-Roussillon’s 2026 Harvest Forecast Rebounds 19.6%: What the Numbers Really Say</news:title></news:news></url>
-<url><loc>https://else.wine/blog/bordeaux-wine-exports-2026-us-market/</loc><news:news><news:publication><news:name>WINE ELSE Journal</news:name><news:language>en</news:language></news:publication><news:publication_date>2026-11-01T07:42:51.776Z</news:publication_date><news:title>Bordeaux Wine Exports Fall in Value: Why US Buyers Should Read Beyond the Headline</news:title></news:news></url>
-<url><loc>https://else.wine/blog/bulk-wine-trade-2026-shift/</loc><news:news><news:publication><news:name>WINE ELSE Journal</news:name><news:language>en</news:language></news:publication><news:publication_date>2026-11-01T07:42:51.776Z</news:publication_date><news:title>Global Bulk Wine Trade Contracted in H1 2026 — and the Nuance Matters for Exporters</news:title></news:news></url>
+  <url>
+    <loc>https://else.wine/blog/bordeaux-wine-exports-2026-us-market/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>WINE ELSE Journal</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-11-01T07:42:51.776Z</news:publication_date>
+      <news:title>Bordeaux Wine Exports Fall in Value: Why US Buyers Should Read Beyond the Headline</news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://else.wine/blog/bulk-wine-trade-2026-shift/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>WINE ELSE Journal</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-11-01T07:42:51.776Z</news:publication_date>
+      <news:title>Global Bulk Wine Trade Contracted in H1 2026 — and the Nuance Matters for Exporters</news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://else.wine/blog/occitanie-2026-wine-harvest-rebound/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>WINE ELSE Journal</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-11-01T07:42:51.776Z</news:publication_date>
+      <news:title>Languedoc-Roussillon’s 2026 Harvest Forecast Rebounds 19.6%: What the Numbers Really Say</news:title>
+    </news:news>
+  </url>
 </urlset>
