@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://freehotels.info/sitemap.xml
+Sitemap: https://freehotels.info/sitemap-editorial.xml
+Sitemap: https://freehotels.info/sitemap-news.xml
