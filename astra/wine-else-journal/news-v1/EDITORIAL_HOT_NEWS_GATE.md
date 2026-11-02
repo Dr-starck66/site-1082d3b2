@@ -1,5 +1,13 @@
 # ASTRA HOT NEWS GATE Ω — WINE ELSE Journal
 
+## 0. Publish-first evergreen fallback (effective 2 November 2026)
+
+**Operating requirement:** each 09:00, 14:00 and 19:00 Europe/Paris editorial run should publish a useful, non-duplicate article if the authenticated GitHub/Vercel publishing tools are available. First investigate strong recent wine news; if it fails the *breaking-news-only* tests, switch promptly to evergreen educational/search-intent content. The strict, dated primary-source and internal 80/100 breaking-news score below apply to **NewsArticle only**. They do **not** prohibit evergreen content.
+
+**Evergreen standard:** clear search intent, distinctive practical answer, factual and non-deceptive information grounded in reliable sources where needed, accessible HTML, accurate image attribution and rights, self canonical, relevant internal inbound/outbound links, Article JSON-LD, and indexing in **sitemap-journal.xml only**. Do not add to Google News sitemap or invent freshness. Prefer documented stable topics (AOP/IGP definitions, grape guide, label reading, practical wine buying) and no invented statistics, prices or company statements. Lack of a second news source, absence of a breaking event, or missing external HTTP test **must not block evergreen publication** if GitHub source, Vercel route stage and promotion are verified. Mark HTTP as UNVERIFIED, do not call it PASS.
+
+**Failure and correction:** no false claims of live publication when GitHub or Vercel did not confirm the operation. Do not compromise image rights, factual claims, or historic URLs. When a technical tool fails, retry or isolate the blocker within the same run; do not replace real publication with a report-only task by default.
+
 **Mission:** operate a specialized international wine newsroom at `https://else.wine/blog/`, with original, timely journalism useful to both wine enthusiasts and professional buyers. This is an **internal editorial decision policy**, not a ranking factor certified by Google. Never promise Google News or Discover coverage.
 
 ## 1. Hard eligibility gate — fail closed
