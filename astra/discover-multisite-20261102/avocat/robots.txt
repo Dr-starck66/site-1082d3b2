@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://avocat-belgique.com/sitemap.xml
+Sitemap: https://avocat-belgique.com/sitemap-editorial.xml
+Sitemap: https://avocat-belgique.com/sitemap-news.xml
