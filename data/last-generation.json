@@ -18,20 +18,20 @@
     "title": "FTC Highlights Efforts to Combat Imposter Scams and Protect Consumers",
     "category": "consumer-rights"
   },
-  "slug": "ftc-cites-imposter-scam-enforcement-and-warns-consumers-about-fake-officials",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-cites-imposter-scam-enforcement-and-warns-consumers-about-fake-officials.md",
+  "slug": "ftc-reports-imposter-scam-crackdown-urges-consumers-to-spot-fake-officials-and-ads",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-reports-imposter-scam-crackdown-urges-consumers-to-spot-fake-officials-and-ads.md",
   "evidence": [
     {
       "url": "https://www.ftc.gov/news-events/news/press-releases/2026/10/ftc-highlights-efforts-combat-imposter-scams-protect-consumers",
-      "sha256": "907a80a6c746c1316bb13b3fd6a45af02526f2a731bfbcf74174b600cc9d76f3",
+      "sha256": "9628dd21bd5550527f0495b07240f110ecc28832bfab4b291bc843e2510183a0",
       "official": true
     },
     {
       "url": "https://consumer.ftc.gov/",
-      "sha256": "aa014c33d31730a067ca686eba62d0aca33a0b81c509ad532b2bed924025129f",
+      "sha256": "b7697a470be9f74f260d3c47e3c5095cfbf148bf74edc5f6427112cad2455025",
       "official": true
     }
   ],
-  "words": 774,
-  "createdAt": "2026-11-01T22:45:48.058Z"
+  "words": 838,
+  "createdAt": "2026-11-02T22:24:17.667Z"
 }
