@@ -1,0 +1,824 @@
+{
+  "source": "authorized-vercel-web-fetch",
+  "collectedAt": "2026-11-04T18:14:29.931Z",
+  "responses": [
+    {
+      "url": "https://freehotels.info/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/",
+      "h1": "Find the right hotel. Pay less.",
+      "bodySha256": "3bba7c0d84243b5553f2e0850e94ecdce06c4199b6759b39e4df5492cf4888ea"
+    },
+    {
+      "url": "https://freehotels.info/de/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/de/",
+      "h1": "Hotel-Guides für Deutschland",
+      "bodySha256": "d99dc3ce9701449003a8ec7680d18e38b3b2073108860d6312717ab025916610"
+    },
+    {
+      "url": "https://freehotels.info/fr/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/fr/",
+      "h1": "Guides hôtels &amp; voyages",
+      "bodySha256": "fbaf19e1d7a559021211d12f785da51bb0459e5ec9ac8f3b9698bb39c0b15551"
+    },
+    {
+      "url": "https://freehotels.info/de/berlin/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/de/berlin/",
+      "h1": "Günstige Hotels in Berlin",
+      "bodySha256": "c656ac4ec8879f1be68237b04c3a85b42560c2a9e7219d678d12149c0c9f0fba"
+    },
+    {
+      "url": "https://freehotels.info/de/frankfurt/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/de/frankfurt/",
+      "h1": "Günstige Hotels in Frankfurt",
+      "bodySha256": "9542eab5c4e50ec6108a718beaf89ede7cb2cac9ba29dff29591965003daadce"
+    },
+    {
+      "url": "https://freehotels.info/de/koeln/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/de/koeln/",
+      "h1": "Günstige Hotels in Köln",
+      "bodySha256": "57627eec45d199a458aac1b0551781847ef1230dd9e91f1342d9fdf3ff7fd44f"
+    },
+    {
+      "url": "https://freehotels.info/de/hannover/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/de/hannover/",
+      "h1": "Günstige Hotels in Hannover",
+      "bodySha256": "0e36a33288685034f72f162cce7b6041e35a5a7bd20c44c4fd443b53e65c71cd"
+    },
+    {
+      "url": "https://freehotels.info/de/hamburg/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/de/hamburg/",
+      "h1": "Günstige Hotels in Hamburg",
+      "bodySha256": "6b1a7f312e567e61282ceab327ad2912ead1753f3a4cf6675414c840f089afe8"
+    },
+    {
+      "url": "https://freehotels.info/de/muenchen/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/de/muenchen/",
+      "h1": "Günstige Hotels in München",
+      "bodySha256": "efaf996bbfcc3761868263dd8623a0803f19f5f9106f58791a667be5d995dc50"
+    },
+    {
+      "url": "https://freehotels.info/de/duesseldorf/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/de/duesseldorf/",
+      "h1": "Günstige Hotels in Düsseldorf",
+      "bodySha256": "007d61b6fdbb79d8a79640cef6ee2f03730f2094554e4aef3281fe4cf6dc7d33"
+    },
+    {
+      "url": "https://freehotels.info/de/berlin/kostenlos-parken/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/de/berlin/kostenlos-parken/",
+      "h1": "Hotels in Berlin mit kostenlosem Parkplatz",
+      "bodySha256": "2760edbb53cabd5f4ef2acefd8280e9ef1c50e1bec2e6d69b3b814589a93fa3c"
+    },
+    {
+      "url": "https://freehotels.info/de/frankfurt/flughafen-shuttle/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/de/frankfurt/flughafen-shuttle/",
+      "h1": "Hotels am Flughafen Frankfurt mit Shuttle",
+      "bodySha256": "ef8d80f8778b7e587f68a0d2d25c793e6e2d8a93cf01fed4ab7cbf336e6722da"
+    },
+    {
+      "url": "https://freehotels.info/de/hotels/fruehstueck-inklusive/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/de/hotels/fruehstueck-inklusive/",
+      "h1": "Hotels mit Frühstück inklusive",
+      "bodySha256": "15d66e7d3b058185fa3fa2545f9dd5f6137ee5d79aa9f64d1d66fd864dc65714"
+    },
+    {
+      "url": "https://freehotels.info/fr/paris/hotel-pas-cher/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/fr/paris/hotel-pas-cher/",
+      "h1": "Hôtel pas cher à Paris",
+      "bodySha256": "281777fdc259ac2f8dc24775bf1de81b66284e7a2d7d8f970ec5e0ffe26cd8b4"
+    },
+    {
+      "url": "https://freehotels.info/fr/nice/hotel-pas-cher/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/fr/nice/hotel-pas-cher/",
+      "h1": "Hôtel pas cher à Nice",
+      "bodySha256": "c38d79daacd9117d90b45ceba15efeaf047568652d9e7746bb442f850e6e31e3"
+    },
+    {
+      "url": "https://freehotels.info/fr/annecy/hotel-pas-cher/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/fr/annecy/hotel-pas-cher/",
+      "h1": "Hôtel pas cher à Annecy",
+      "bodySha256": "03170e7d3859a08b770e558d9addce9c12f98b36613132acfb0b048e3a56f452"
+    },
+    {
+      "url": "https://freehotels.info/fr/marseille/hotel-pas-cher/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/fr/marseille/hotel-pas-cher/",
+      "h1": "Hôtel pas cher à Marseille",
+      "bodySha256": "9a4c8fc2fe389830757b7e86def579c350168e434f10f2ff7a5e40e1ee40caa9"
+    },
+    {
+      "url": "https://freehotels.info/fr/lyon/hotel-pas-cher/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/fr/lyon/hotel-pas-cher/",
+      "h1": "Hôtel pas cher à Lyon",
+      "bodySha256": "3f8d2d56236092333b6d8f699ddf14c4160cc392c071f46e292ef2d9227ad2a4"
+    },
+    {
+      "url": "https://freehotels.info/fr/londres/hotel-pas-cher/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/fr/londres/hotel-pas-cher/",
+      "h1": "Hôtel pas cher à Londres",
+      "bodySha256": "a8041bba0ca13fbe6ae425986a1ed35dbf190cbd9b70a8d86ef39dedf861aa48"
+    },
+    {
+      "url": "https://freehotels.info/fr/barcelone/hotel-pas-cher/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/fr/barcelone/hotel-pas-cher/",
+      "h1": "Hôtel pas cher à Barcelone",
+      "bodySha256": "8f4b289edef340f37920bf3f80020c40f1862b8806e9168eae1851953bf8896e"
+    },
+    {
+      "url": "https://freehotels.info/fr/voyage/all-inclusive-pas-cher/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/fr/voyage/all-inclusive-pas-cher/",
+      "h1": "Voyage all inclusive pas cher",
+      "bodySha256": "a55533ac67e0d2e840db53702ba588b444ba718bc003f01bbb5d195d1c618e44"
+    },
+    {
+      "url": "https://freehotels.info/fr/voyage/derniere-minute/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/fr/voyage/derniere-minute/",
+      "h1": "Voyage dernière minute pas cher",
+      "bodySha256": "018849dd26c01cceef924c9b955e4b1e1fecb0e34460a7544d11a7d8c84cfcf9"
+    },
+    {
+      "url": "https://freehotels.info/fr/voyage/europe-pas-cher/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/fr/voyage/europe-pas-cher/",
+      "h1": "Voyage pas cher en Europe",
+      "bodySha256": "b04d4ee6a72d4cd7332d3df5a11afb7918204a60d999d2f6854592a6fef33328"
+    },
+    {
+      "url": "https://freehotels.info/de/reise/aktuell/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "8c8782ef0ca0ecde41630947aea68fe0841bf071",
+      "canonical": "https://freehotels.info/de/reise/aktuell/",
+      "h1": "Reiseideen, die du wirklich planen kannst",
+      "bodySha256": "161f4dbc5137b48628a940f44946619474f3b7ceb1a1222062050b20d33765d7"
+    },
+    {
+      "url": "https://freehotels.info/de/reise/berlin-weihnachtsmaerkte-2026-hotels/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "8c8782ef0ca0ecde41630947aea68fe0841bf071",
+      "canonical": "https://freehotels.info/de/reise/berlin-weihnachtsmaerkte-2026-hotels/",
+      "h1": "Berlin-Weihnachtsmärkte 2026: Die ersten starten am 6. November – wo übernachten?",
+      "bodySha256": "0fc51e9fb23edb5d0fd7bda041c5b07419c523fb57d9c8344a1c778b58a15ff0"
+    },
+    {
+      "url": "https://freehotels.info/fr/voyage/actualites/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "e2198ac3d97e0f6153646e3faed63ae43480a836",
+      "canonical": "https://freehotels.info/fr/voyage/actualites/",
+      "h1": "Quand partir et où dormir ?",
+      "bodySha256": "b2d6401cd026020f5b3653b2daf76bd25c33b6e8e3af6d266988dd5b7e576f90"
+    },
+    {
+      "url": "https://freehotels.info/fr/voyage/actualites/marche-noel-strasbourg-2026-ou-dormir/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "d801b8c24593762a65c6ba8fb27440d351081266",
+      "canonical": "https://freehotels.info/fr/voyage/actualites/marche-noel-strasbourg-2026-ou-dormir/",
+      "h1": "Marché de Noël de Strasbourg 2026 : où dormir pour profiter des illuminations ?",
+      "bodySha256": "2c565ddc7ec7c37f2f0e28180a46272e3375cc72b61791a3216a82dc92ab9b03"
+    },
+    {
+      "url": "https://freehotels.info/fr/voyage/actualites/noel-colmar-2026-dates-quartiers-hotels/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "d801b8c24593762a65c6ba8fb27440d351081266",
+      "canonical": "https://freehotels.info/fr/voyage/actualites/noel-colmar-2026-dates-quartiers-hotels/",
+      "h1": "Marchés de Noël de Colmar 2026 : dates à vérifier et meilleurs quartiers où dormir",
+      "bodySha256": "30c00939834bc985b8c2b424be0b2c7676bd3939d81ab74dce026ad2505e951d"
+    },
+    {
+      "url": "https://freehotels.info/fr/voyage/actualites/fete-des-lumieres-lyon-2026-dates-quartiers-hotels/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "d801b8c24593762a65c6ba8fb27440d351081266",
+      "canonical": "https://freehotels.info/fr/voyage/actualites/fete-des-lumieres-lyon-2026-dates-quartiers-hotels/",
+      "h1": "Fête des Lumières 2026 à Lyon : dates officielles et quartiers où dormir",
+      "bodySha256": "599f55934df9e3c57e5e968a96cee168623fb3ce09d7cdb4e6402a4e28570bd8"
+    },
+    {
+      "url": "https://freehotels.info/fr/voyage/actualites/bruxelles-plaisirs-hiver-2026-ou-dormir/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "d801b8c24593762a65c6ba8fb27440d351081266",
+      "canonical": "https://freehotels.info/fr/voyage/actualites/bruxelles-plaisirs-hiver-2026-ou-dormir/",
+      "h1": "Plaisirs d'Hiver Bruxelles 2026 : dates officielles et quartiers où dormir",
+      "bodySha256": "c5f2f86d015600b3019cca10e9fb711fff7a406dffd0bc9dda84ce270f2b0331"
+    },
+    {
+      "url": "https://freehotels.info/calculateur",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "e2198ac3d97e0f6153646e3faed63ae43480a836",
+      "canonical": "https://freehotels.info/calculateur",
+      "h1": "Quel hôtel vous coûte vraiment le moins cher ?",
+      "bodySha256": "285101145e5223c167f13c4bd88964fa440cd83c70d918c30a75707a4625bf66"
+    },
+    {
+      "url": "https://freehotels.info/en/tools/hotel-total-cost/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "e2198ac3d97e0f6153646e3faed63ae43480a836",
+      "canonical": "https://freehotels.info/en/tools/hotel-total-cost/",
+      "h1": "Which hotel actually costs you less?",
+      "bodySha256": "0f864cb437f4756a7a854d90575b714a3e6eff0d90eb96987c8af126b50fedec"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/",
+      "h1": "Find the right hotel. Pay less.",
+      "bodySha256": "3bba7c0d84243b5553f2e0850e94ecdce06c4199b6759b39e4df5492cf4888ea"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/de/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/de/",
+      "h1": "Hotel-Guides für Deutschland",
+      "bodySha256": "d99dc3ce9701449003a8ec7680d18e38b3b2073108860d6312717ab025916610"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/fr/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/fr/",
+      "h1": "Guides hôtels &amp; voyages",
+      "bodySha256": "fbaf19e1d7a559021211d12f785da51bb0459e5ec9ac8f3b9698bb39c0b15551"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/de/berlin/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/de/berlin/",
+      "h1": "Günstige Hotels in Berlin",
+      "bodySha256": "c656ac4ec8879f1be68237b04c3a85b42560c2a9e7219d678d12149c0c9f0fba"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/de/frankfurt/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/de/frankfurt/",
+      "h1": "Günstige Hotels in Frankfurt",
+      "bodySha256": "9542eab5c4e50ec6108a718beaf89ede7cb2cac9ba29dff29591965003daadce"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/de/koeln/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/de/koeln/",
+      "h1": "Günstige Hotels in Köln",
+      "bodySha256": "57627eec45d199a458aac1b0551781847ef1230dd9e91f1342d9fdf3ff7fd44f"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/de/hannover/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/de/hannover/",
+      "h1": "Günstige Hotels in Hannover",
+      "bodySha256": "0e36a33288685034f72f162cce7b6041e35a5a7bd20c44c4fd443b53e65c71cd"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/de/hamburg/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/de/hamburg/",
+      "h1": "Günstige Hotels in Hamburg",
+      "bodySha256": "6b1a7f312e567e61282ceab327ad2912ead1753f3a4cf6675414c840f089afe8"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/de/muenchen/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/de/muenchen/",
+      "h1": "Günstige Hotels in München",
+      "bodySha256": "efaf996bbfcc3761868263dd8623a0803f19f5f9106f58791a667be5d995dc50"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/de/duesseldorf/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/de/duesseldorf/",
+      "h1": "Günstige Hotels in Düsseldorf",
+      "bodySha256": "007d61b6fdbb79d8a79640cef6ee2f03730f2094554e4aef3281fe4cf6dc7d33"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/de/berlin/kostenlos-parken/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/de/berlin/kostenlos-parken/",
+      "h1": "Hotels in Berlin mit kostenlosem Parkplatz",
+      "bodySha256": "2760edbb53cabd5f4ef2acefd8280e9ef1c50e1bec2e6d69b3b814589a93fa3c"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/de/frankfurt/flughafen-shuttle/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/de/frankfurt/flughafen-shuttle/",
+      "h1": "Hotels am Flughafen Frankfurt mit Shuttle",
+      "bodySha256": "ef8d80f8778b7e587f68a0d2d25c793e6e2d8a93cf01fed4ab7cbf336e6722da"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/de/hotels/fruehstueck-inklusive/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/de/hotels/fruehstueck-inklusive/",
+      "h1": "Hotels mit Frühstück inklusive",
+      "bodySha256": "15d66e7d3b058185fa3fa2545f9dd5f6137ee5d79aa9f64d1d66fd864dc65714"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/fr/paris/hotel-pas-cher/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/fr/paris/hotel-pas-cher/",
+      "h1": "Hôtel pas cher à Paris",
+      "bodySha256": "281777fdc259ac2f8dc24775bf1de81b66284e7a2d7d8f970ec5e0ffe26cd8b4"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/fr/nice/hotel-pas-cher/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/fr/nice/hotel-pas-cher/",
+      "h1": "Hôtel pas cher à Nice",
+      "bodySha256": "c38d79daacd9117d90b45ceba15efeaf047568652d9e7746bb442f850e6e31e3"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/fr/annecy/hotel-pas-cher/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/fr/annecy/hotel-pas-cher/",
+      "h1": "Hôtel pas cher à Annecy",
+      "bodySha256": "03170e7d3859a08b770e558d9addce9c12f98b36613132acfb0b048e3a56f452"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/fr/marseille/hotel-pas-cher/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/fr/marseille/hotel-pas-cher/",
+      "h1": "Hôtel pas cher à Marseille",
+      "bodySha256": "9a4c8fc2fe389830757b7e86def579c350168e434f10f2ff7a5e40e1ee40caa9"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/fr/lyon/hotel-pas-cher/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/fr/lyon/hotel-pas-cher/",
+      "h1": "Hôtel pas cher à Lyon",
+      "bodySha256": "3f8d2d56236092333b6d8f699ddf14c4160cc392c071f46e292ef2d9227ad2a4"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/fr/londres/hotel-pas-cher/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/fr/londres/hotel-pas-cher/",
+      "h1": "Hôtel pas cher à Londres",
+      "bodySha256": "a8041bba0ca13fbe6ae425986a1ed35dbf190cbd9b70a8d86ef39dedf861aa48"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/fr/barcelone/hotel-pas-cher/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/fr/barcelone/hotel-pas-cher/",
+      "h1": "Hôtel pas cher à Barcelone",
+      "bodySha256": "8f4b289edef340f37920bf3f80020c40f1862b8806e9168eae1851953bf8896e"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/fr/voyage/all-inclusive-pas-cher/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/fr/voyage/all-inclusive-pas-cher/",
+      "h1": "Voyage all inclusive pas cher",
+      "bodySha256": "a55533ac67e0d2e840db53702ba588b444ba718bc003f01bbb5d195d1c618e44"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/fr/voyage/derniere-minute/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/fr/voyage/derniere-minute/",
+      "h1": "Voyage dernière minute pas cher",
+      "bodySha256": "018849dd26c01cceef924c9b955e4b1e1fecb0e34460a7544d11a7d8c84cfcf9"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/fr/voyage/europe-pas-cher/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "canonical": "https://freehotels.info/fr/voyage/europe-pas-cher/",
+      "h1": "Voyage pas cher en Europe",
+      "bodySha256": "b04d4ee6a72d4cd7332d3df5a11afb7918204a60d999d2f6854592a6fef33328"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/de/reise/aktuell/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "8c8782ef0ca0ecde41630947aea68fe0841bf071",
+      "canonical": "https://freehotels.info/de/reise/aktuell/",
+      "h1": "Reiseideen, die du wirklich planen kannst",
+      "bodySha256": "161f4dbc5137b48628a940f44946619474f3b7ceb1a1222062050b20d33765d7"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/de/reise/berlin-weihnachtsmaerkte-2026-hotels/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "8c8782ef0ca0ecde41630947aea68fe0841bf071",
+      "canonical": "https://freehotels.info/de/reise/berlin-weihnachtsmaerkte-2026-hotels/",
+      "h1": "Berlin-Weihnachtsmärkte 2026: Die ersten starten am 6. November – wo übernachten?",
+      "bodySha256": "0fc51e9fb23edb5d0fd7bda041c5b07419c523fb57d9c8344a1c778b58a15ff0"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/fr/voyage/actualites/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": "https://freehotels.info/fr/voyage/actualites/",
+      "h1": "Quand partir et où dormir ?",
+      "bodySha256": "1b08ea0820531fe1b96e716be30b424d1b9ad46d8cf85e0f2395f020a3b0cd37"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/fr/voyage/actualites/marche-noel-strasbourg-2026-ou-dormir/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "d801b8c24593762a65c6ba8fb27440d351081266",
+      "canonical": "https://freehotels.info/fr/voyage/actualites/marche-noel-strasbourg-2026-ou-dormir/",
+      "h1": "Marché de Noël de Strasbourg 2026 : où dormir pour profiter des illuminations ?",
+      "bodySha256": "2c565ddc7ec7c37f2f0e28180a46272e3375cc72b61791a3216a82dc92ab9b03"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/fr/voyage/actualites/noel-colmar-2026-dates-quartiers-hotels/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "d801b8c24593762a65c6ba8fb27440d351081266",
+      "canonical": "https://freehotels.info/fr/voyage/actualites/noel-colmar-2026-dates-quartiers-hotels/",
+      "h1": "Marchés de Noël de Colmar 2026 : dates à vérifier et meilleurs quartiers où dormir",
+      "bodySha256": "30c00939834bc985b8c2b424be0b2c7676bd3939d81ab74dce026ad2505e951d"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/fr/voyage/actualites/fete-des-lumieres-lyon-2026-dates-quartiers-hotels/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "d801b8c24593762a65c6ba8fb27440d351081266",
+      "canonical": "https://freehotels.info/fr/voyage/actualites/fete-des-lumieres-lyon-2026-dates-quartiers-hotels/",
+      "h1": "Fête des Lumières 2026 à Lyon : dates officielles et quartiers où dormir",
+      "bodySha256": "599f55934df9e3c57e5e968a96cee168623fb3ce09d7cdb4e6402a4e28570bd8"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/fr/voyage/actualites/bruxelles-plaisirs-hiver-2026-ou-dormir/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "d801b8c24593762a65c6ba8fb27440d351081266",
+      "canonical": "https://freehotels.info/fr/voyage/actualites/bruxelles-plaisirs-hiver-2026-ou-dormir/",
+      "h1": "Plaisirs d'Hiver Bruxelles 2026 : dates officielles et quartiers où dormir",
+      "bodySha256": "c5f2f86d015600b3019cca10e9fb711fff7a406dffd0bc9dda84ce270f2b0331"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/calculateur",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "e2198ac3d97e0f6153646e3faed63ae43480a836",
+      "canonical": "https://freehotels.info/calculateur",
+      "h1": "Quel hôtel vous coûte vraiment le moins cher ?",
+      "bodySha256": "285101145e5223c167f13c4bd88964fa440cd83c70d918c30a75707a4625bf66"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/en/tools/hotel-total-cost/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "e2198ac3d97e0f6153646e3faed63ae43480a836",
+      "canonical": "https://freehotels.info/en/tools/hotel-total-cost/",
+      "h1": "Which hotel actually costs you less?",
+      "bodySha256": "0f864cb437f4756a7a854d90575b714a3e6eff0d90eb96987c8af126b50fedec"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/en/hotels-with-indoor-pools/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": "https://freehotels.info/en/hotels-with-indoor-pools/",
+      "h1": "Hotels With Indoor Pools: How to Find a Real, Usable Pool",
+      "bodySha256": "d61f1ce2b821d44b9f178d7c9d1cbc1cf1da0026bf712d5db5a3905ec0822daf"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/en/pigeon-forge-hotels-with-indoor-pools/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": "https://freehotels.info/en/pigeon-forge-hotels-with-indoor-pools/",
+      "h1": "Pigeon Forge Hotels With Indoor Pools: A Practical 2026 Guide",
+      "bodySha256": "61aa9e94245726dc37587d0e048552bbf14b2cc1a3946d5b2286f5f9e627298e"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/en/gatlinburg-hotels-with-indoor-pools/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": "https://freehotels.info/en/gatlinburg-hotels-with-indoor-pools/",
+      "h1": "Gatlinburg Hotels With Indoor Pools: Downtown or Mountain Views?",
+      "bodySha256": "524937c99914f7d2fa083ec0754ac6d96e8c86344c7ca9b25a7f5405c5e41b2a"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/en/branson-hotels-with-indoor-pools/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": "https://freehotels.info/en/branson-hotels-with-indoor-pools/",
+      "h1": "Branson Hotels With Indoor Pools: Compare More Than Pool Photos",
+      "bodySha256": "e3002a6a8e7174a742f22670ebadb82da140ad0c07a89709330a86933437689b"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/en/las-vegas-hotels-with-indoor-pools/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": "https://freehotels.info/en/las-vegas-hotels-with-indoor-pools/",
+      "h1": "Las Vegas Hotels With Indoor Pools: Don&#39;t Confuse Them With Spas",
+      "bodySha256": "3c3f9e12ea7e5140ac4e54f348415a58da240f9fe9c13476b15d7e5f4a027351"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/guides/en/bahamas-luxury-resort-real-cost-2026/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": "https://freehotels.info/guides/en/bahamas-luxury-resort-real-cost-2026/",
+      "h1": "Bahamas luxury resorts: what a Nassau or Paradise Island hotel really costs in 2026",
+      "bodySha256": "843378ba7c1d758813a1276de4a6a8571ec9a5ab1237f19b4567a5521f01fea5"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/guides/en/chile-patagonia-luxury-lodge-insurance-2026/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": "https://freehotels.info/guides/en/chile-patagonia-luxury-lodge-insurance-2026/",
+      "h1": "Chile Patagonia luxury lodges: comparing Torres del Paine hotel costs and travel insurance",
+      "bodySha256": "41044ab8f4f905890ec9778c5d08755e9bbbb03f8c787847bfa43ea51136d26f"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/en/myrtle-beach-hotels-with-indoor-pools/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": "https://freehotels.info/en/myrtle-beach-hotels-with-indoor-pools/",
+      "h1": "Myrtle Beach hotels with indoor pools: check the enclosure before you book",
+      "bodySha256": "7e45dbf2e1632b94270ababb3ace205fdc706ccbd8b5189ce0b12d41371f0c67"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/en/ocean-city-md-hotels-with-indoor-pools/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": "https://freehotels.info/en/ocean-city-md-hotels-with-indoor-pools/",
+      "h1": "Ocean City MD hotels with indoor pools: compare the Boardwalk with the north end",
+      "bodySha256": "a88eac26a2ffcdaa725628677dd15382db541b7ea0273a3f60c37c18ac596681"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/en/virginia-beach-hotels-with-indoor-pools/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": "https://freehotels.info/en/virginia-beach-hotels-with-indoor-pools/",
+      "h1": "Virginia Beach hotels with indoor pools: compare the Oceanfront and your real itinerary",
+      "bodySha256": "81dd0a2d1f8e275b5696225f767982b0ed787aa2819a030d7f4a2bec98947585"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/en/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": "https://freehotels.info/en/",
+      "h1": "Choose the hotel. Check the whole stay.",
+      "bodySha256": "6df21355a1cfdbfab69a474ee21f73ee6da37345a340d1d8c154f8f853e57100"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/feed-editorial.xml",
+      "status": 200,
+      "contentType": "application/rss+xml; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": null,
+      "h1": null,
+      "bodySha256": "35ab899ce1d200e647296477da6ea6619b4aa4d8ad2785e10aeb0528056c2de3"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/ocean-city-md-hotels-with-indoor-pools-pool-check.svg",
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": null,
+      "h1": null,
+      "bodySha256": "f6fb833b94cc3d2dcb68b3d16afe9dd245d7d41640b6442f3c36736af2d828c2"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/patagonia-cost-components.svg",
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": null,
+      "h1": null,
+      "bodySha256": "08f01497f786c1688ff57428b7a7aac167fa379dab0daa1ff0e096a5e04c9ca1"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/bahamas-stay-comparison.svg",
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": null,
+      "h1": null,
+      "bodySha256": "3dc9655e5922eb68543794939f514fbe6a1b8df7436631978e97d1b4cea47486"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/virginia-beach-hotels-with-indoor-pools-pool-check.svg",
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": null,
+      "h1": null,
+      "bodySha256": "e5db9bdc5fbe40401e89f0fe9aec66e21f257c0d7a97c766db3d803b93e1b3ed"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/virginia-beach-hotels-with-indoor-pools-cost-map.svg",
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": null,
+      "h1": null,
+      "bodySha256": "a4220c852c56efa588a342d7e11c9fa23acd47eb8c31e6d5fbc63ce82487cf8e"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/las-vegas-hotels-with-indoor-pools-cost-map.svg",
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": null,
+      "h1": null,
+      "bodySha256": "f8e77a7e64ea8e5bc6973767ddb763d3e3358f9d9bcaed8146f75ab522601b57"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/myrtle-beach-hotels-with-indoor-pools-cost-map.svg",
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": null,
+      "h1": null,
+      "bodySha256": "6639d16a86d3a12ec67f5530e3a066ff7033713a5411bac0ef8838e95806c1f3"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/branson-hotels-with-indoor-pools-pool-check.svg",
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": null,
+      "h1": null,
+      "bodySha256": "d2549ace71caab8ec74632a321bb2dd563b0c5b1c8aa1d5c124165e37df374e9"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/ocean-city-md-hotels-with-indoor-pools-cost-map.svg",
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": null,
+      "h1": null,
+      "bodySha256": "6c757df2716ccfce15190a075591034ad70e3fc56f71d1cb0bb4a7dc379aeb11"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/bahamas-cost-components.svg",
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": null,
+      "h1": null,
+      "bodySha256": "7ee1b90f1d4e615088742f86d896b0e5880dd31f6be5c04aba427d29618b6385"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/gatlinburg-hotels-with-indoor-pools-cost-map.svg",
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": null,
+      "h1": null,
+      "bodySha256": "7f883652d6441e70f36662938eee41f1655f79015d71bf9ef69db39b06004b72"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/patagonia-stay-comparison.svg",
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": null,
+      "h1": null,
+      "bodySha256": "bb2efd0a2fa8e9125d559438b06482615a27b98d548bcce6c7fae8d3a7218289"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/hotels-with-indoor-pools-pool-check.svg",
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": null,
+      "h1": null,
+      "bodySha256": "f30291161d25c578a272cf6d91ba3e6423fcb7a4a35f56c0b3958bac9f646fa4"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/las-vegas-hotels-with-indoor-pools-pool-check.svg",
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": null,
+      "h1": null,
+      "bodySha256": "2a330d16c5e3867ed35458b36783d37ac644c6afba08ec746092e19d07461824"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/myrtle-beach-hotels-with-indoor-pools-pool-check.svg",
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": null,
+      "h1": null,
+      "bodySha256": "d3d6ed744f3ac298041fa287473756c7f7e5d0ea789323d6e9a9660f4424f9ae"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/hotels-with-indoor-pools-cost-map.svg",
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": null,
+      "h1": null,
+      "bodySha256": "0c22c52f727828ba14f85d619b847092ce672aa30ad18c08fb5b61b09dd83d11"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/pigeon-forge-hotels-with-indoor-pools-cost-map.svg",
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": null,
+      "h1": null,
+      "bodySha256": "ab80b805fb24ad3517b210bd34171cf55442237ea89ab27f10439946c6dcb3b5"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/branson-hotels-with-indoor-pools-cost-map.svg",
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": null,
+      "h1": null,
+      "bodySha256": "971461697339439cfdd6bbf522613196c41c69ca5f919e64ece7b066e2738f0f"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/gatlinburg-hotels-with-indoor-pools-pool-check.svg",
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": null,
+      "h1": null,
+      "bodySha256": "3680106b169015a83e6803fd28cde95d0156245ba2d2d164b0432ad7ceff3e3d"
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/pigeon-forge-hotels-with-indoor-pools-pool-check.svg",
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "canonical": null,
+      "h1": null,
+      "bodySha256": "9db46ede6049f25567b67588d4fa023e54275daf04a376cf27a0c18edc21dd7d"
+    }
+  ]
+}

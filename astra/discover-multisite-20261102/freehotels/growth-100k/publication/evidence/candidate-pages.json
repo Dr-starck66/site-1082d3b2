@@ -1,0 +1,436 @@
+{
+  "checkedAt": "2026-11-04T18:14:46.858Z",
+  "passed": 10,
+  "inlineAssetsPassed": 20,
+  "renderedMediaPassed": 30,
+  "pages": [
+    {
+      "path": "/en/hotels-with-indoor-pools/",
+      "httpStatus": 200,
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "pass": true
+    },
+    {
+      "path": "/en/pigeon-forge-hotels-with-indoor-pools/",
+      "httpStatus": 200,
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "pass": true
+    },
+    {
+      "path": "/en/gatlinburg-hotels-with-indoor-pools/",
+      "httpStatus": 200,
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "pass": true
+    },
+    {
+      "path": "/en/branson-hotels-with-indoor-pools/",
+      "httpStatus": 200,
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "pass": true
+    },
+    {
+      "path": "/en/las-vegas-hotels-with-indoor-pools/",
+      "httpStatus": 200,
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "pass": true
+    },
+    {
+      "path": "/guides/en/bahamas-luxury-resort-real-cost-2026/",
+      "httpStatus": 200,
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "pass": true
+    },
+    {
+      "path": "/guides/en/chile-patagonia-luxury-lodge-insurance-2026/",
+      "httpStatus": 200,
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "pass": true
+    },
+    {
+      "path": "/en/myrtle-beach-hotels-with-indoor-pools/",
+      "httpStatus": 200,
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "pass": true
+    },
+    {
+      "path": "/en/ocean-city-md-hotels-with-indoor-pools/",
+      "httpStatus": 200,
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "pass": true
+    },
+    {
+      "path": "/en/virginia-beach-hotels-with-indoor-pools/",
+      "httpStatus": 200,
+      "sourceSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+      "pass": true
+    }
+  ],
+  "inlineAssets": [
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/ocean-city-md-hotels-with-indoor-pools-pool-check.svg",
+      "pass": true
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/patagonia-cost-components.svg",
+      "pass": true
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/bahamas-stay-comparison.svg",
+      "pass": true
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/virginia-beach-hotels-with-indoor-pools-pool-check.svg",
+      "pass": true
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/virginia-beach-hotels-with-indoor-pools-cost-map.svg",
+      "pass": true
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/las-vegas-hotels-with-indoor-pools-cost-map.svg",
+      "pass": true
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/myrtle-beach-hotels-with-indoor-pools-cost-map.svg",
+      "pass": true
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/branson-hotels-with-indoor-pools-pool-check.svg",
+      "pass": true
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/ocean-city-md-hotels-with-indoor-pools-cost-map.svg",
+      "pass": true
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/bahamas-cost-components.svg",
+      "pass": true
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/gatlinburg-hotels-with-indoor-pools-cost-map.svg",
+      "pass": true
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/patagonia-stay-comparison.svg",
+      "pass": true
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/hotels-with-indoor-pools-pool-check.svg",
+      "pass": true
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/las-vegas-hotels-with-indoor-pools-pool-check.svg",
+      "pass": true
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/myrtle-beach-hotels-with-indoor-pools-pool-check.svg",
+      "pass": true
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/hotels-with-indoor-pools-cost-map.svg",
+      "pass": true
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/pigeon-forge-hotels-with-indoor-pools-cost-map.svg",
+      "pass": true
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/branson-hotels-with-indoor-pools-cost-map.svg",
+      "pass": true
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/gatlinburg-hotels-with-indoor-pools-pool-check.svg",
+      "pass": true
+    },
+    {
+      "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/pigeon-forge-hotels-with-indoor-pools-pool-check.svg",
+      "pass": true
+    }
+  ],
+  "renderedMedia": {
+    "source": "real-chrome-cua-render",
+    "collectedAt": "2026-11-04T18:13:54.605Z",
+    "pages": [
+      {
+        "at": "2026-11-04T18:11:34.491Z",
+        "images": [
+          {
+            "alt": "Myrtle Beach, photographed in August 2013. Archive destination view, not evidence that a particular water amenity is enclosed or operating. Resized for display.",
+            "complete": true,
+            "height": 608,
+            "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c9/Myrtle_Beach_SC.jpg/1280px-Myrtle_Beach_SC.jpg?utm_campaign=index&utm_content=thumbnail&utm_source=commons.wikimedia.org",
+            "width": 1280
+          },
+          {
+            "alt": "Check the facility type, guest access and current closures.",
+            "complete": true,
+            "height": 900,
+            "src": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/myrtle-beach-hotels-with-indoor-pools-pool-check.svg",
+            "width": 1600
+          },
+          {
+            "alt": "Compare the complete stay cost, journeys and usable pool time.",
+            "complete": true,
+            "height": 900,
+            "src": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/myrtle-beach-hotels-with-indoor-pools-cost-map.svg",
+            "width": 1600
+          }
+        ],
+        "title": "Myrtle Beach Hotels With Indoor Pools: Winter Swimming, Enclosures and Resort Checks | FreeHotels.info",
+        "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/en/myrtle-beach-hotels-with-indoor-pools/"
+      },
+      {
+        "at": "2026-11-04T18:11:53.738Z",
+        "images": [
+          {
+            "alt": "The Ocean City, Maryland Boardwalk in August 2009. Archive location photograph; current facilities and seasonal notices are checked separately. Resized for display.",
+            "complete": true,
+            "height": 850,
+            "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d6/Ocean_City_MD_Boardwalk_August_2009_1.jpg/1280px-Ocean_City_MD_Boardwalk_August_2009_1.jpg?utm_campaign=index&utm_content=thumbnail&utm_source=commons.wikimedia.org",
+            "width": 1280
+          },
+          {
+            "alt": "Check the facility type, guest access and current closures.",
+            "complete": true,
+            "height": 900,
+            "src": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/ocean-city-md-hotels-with-indoor-pools-pool-check.svg",
+            "width": 1600
+          },
+          {
+            "alt": "Compare the complete stay cost, journeys and usable pool time.",
+            "complete": true,
+            "height": 900,
+            "src": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/ocean-city-md-hotels-with-indoor-pools-cost-map.svg",
+            "width": 1600
+          }
+        ],
+        "title": "Ocean City MD Hotels With Indoor Pools: Boardwalk vs North Ocean City | FreeHotels.info",
+        "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/en/ocean-city-md-hotels-with-indoor-pools/"
+      },
+      {
+        "at": "2026-11-04T18:13:38.526Z",
+        "images": [
+          {
+            "alt": "The beach in Virginia Beach, photographed in May 2021. Archive destination photograph; room views and pool access must be checked for each booking. Resized for display.",
+            "complete": true,
+            "height": 542,
+            "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/66/The_beach_in_Virginia_Beach%2C_VA.jpg/1280px-The_beach_in_Virginia_Beach%2C_VA.jpg?utm_campaign=index&utm_content=thumbnail&utm_source=commons.wikimedia.org",
+            "width": 1280
+          },
+          {
+            "alt": "Check the facility type, guest access and current closures.",
+            "complete": true,
+            "height": 900,
+            "src": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/virginia-beach-hotels-with-indoor-pools-pool-check.svg",
+            "width": 1600
+          },
+          {
+            "alt": "Compare the complete stay cost, journeys and usable pool time.",
+            "complete": true,
+            "height": 900,
+            "src": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/virginia-beach-hotels-with-indoor-pools-cost-map.svg",
+            "width": 1600
+          }
+        ],
+        "title": "Virginia Beach Hotels With Indoor Pools: Oceanfront Options and Booking Checks | FreeHotels.info",
+        "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/en/virginia-beach-hotels-with-indoor-pools/"
+      },
+      {
+        "at": "2026-11-04T18:12:10.593Z",
+        "images": [
+          {
+            "alt": "Indoor pool at the Greenbrier, photographed in 1981. Historical illustration of an enclosed pool; this property is not reviewed in this guide. Resized archive photograph.",
+            "complete": true,
+            "height": 827,
+            "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/00/Greenbrier_Hotel.5.4.jpg/1280px-Greenbrier_Hotel.5.4.jpg?utm_campaign=index&utm_content=thumbnail&utm_source=commons.wikimedia.org",
+            "width": 1280
+          },
+          {
+            "alt": "Original editorial diagram for United States: indoor pool eligibility and guest access questions",
+            "complete": true,
+            "height": 900,
+            "src": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/hotels-with-indoor-pools-pool-check.svg",
+            "width": 1600
+          },
+          {
+            "alt": "Original editorial diagram for United States: a practical hotel booking decision and total cost flow",
+            "complete": true,
+            "height": 900,
+            "src": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/hotels-with-indoor-pools-cost-map.svg",
+            "width": 1600
+          }
+        ],
+        "title": "Hotels With Indoor Pools in the USA: 2026 Booking Guide | FreeHotels.info",
+        "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/en/hotels-with-indoor-pools/"
+      },
+      {
+        "at": "2026-11-04T18:13:41.014Z",
+        "images": [
+          {
+            "alt": "Pigeon Forge and Mount Le Conte, photographed in 2009. Destination archive view, not a photograph of a recommended hotel pool. Resized for display.",
+            "complete": true,
+            "height": 960,
+            "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1e/Pigeonforgeandmountleconte.jpg/1280px-Pigeonforgeandmountleconte.jpg?utm_campaign=index&utm_content=thumbnail&utm_source=commons.wikimedia.org",
+            "width": 1280
+          },
+          {
+            "alt": "Original editorial diagram for Pigeon Forge, Tennessee: indoor pool eligibility and guest access questions",
+            "complete": true,
+            "height": 900,
+            "src": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/pigeon-forge-hotels-with-indoor-pools-pool-check.svg",
+            "width": 1600
+          },
+          {
+            "alt": "Original editorial diagram for Pigeon Forge, Tennessee: a practical hotel booking decision and total cost flow",
+            "complete": true,
+            "height": 900,
+            "src": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/pigeon-forge-hotels-with-indoor-pools-cost-map.svg",
+            "width": 1600
+          }
+        ],
+        "title": "Pigeon Forge Hotels With Indoor Pools: Real Options, Parkway Locations and Booking Checks | FreeHotels.info",
+        "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/en/pigeon-forge-hotels-with-indoor-pools/"
+      },
+      {
+        "at": "2026-11-04T18:12:16.022Z",
+        "images": [
+          {
+            "alt": "Downtown Gatlinburg in July 2023. Archive destination view; individual indoor-pool claims are documented in the hotel sources. Resized for display.",
+            "complete": true,
+            "height": 703,
+            "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/29/GatlinburgAerial.jpg/1280px-GatlinburgAerial.jpg?utm_campaign=index&utm_content=thumbnail&utm_source=commons.wikimedia.org",
+            "width": 1280
+          },
+          {
+            "alt": "Original editorial diagram for Gatlinburg, Tennessee: indoor pool eligibility and guest access questions",
+            "complete": true,
+            "height": 900,
+            "src": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/gatlinburg-hotels-with-indoor-pools-pool-check.svg",
+            "width": 1600
+          },
+          {
+            "alt": "Original editorial diagram for Gatlinburg, Tennessee: a practical hotel booking decision and total cost flow",
+            "complete": true,
+            "height": 900,
+            "src": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/gatlinburg-hotels-with-indoor-pools-cost-map.svg",
+            "width": 1600
+          }
+        ],
+        "title": "Gatlinburg Hotels With Indoor Pools: Downtown vs Hillside, Verified Options | FreeHotels.info",
+        "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/en/gatlinburg-hotels-with-indoor-pools/"
+      },
+      {
+        "at": "2026-11-04T18:12:18.483Z",
+        "images": [
+          {
+            "alt": "Downtown Branson in March 2019. Archive destination photograph, not a view of a recommended property’s pool. Resized for display.",
+            "complete": true,
+            "height": 854,
+            "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1c/Downtown_Branson_Missouri.jpg/1280px-Downtown_Branson_Missouri.jpg?utm_campaign=index&utm_content=thumbnail&utm_source=commons.wikimedia.org",
+            "width": 1280
+          },
+          {
+            "alt": "Original editorial diagram for Branson, Missouri: indoor pool eligibility and guest access questions",
+            "complete": true,
+            "height": 900,
+            "src": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/branson-hotels-with-indoor-pools-pool-check.svg",
+            "width": 1600
+          },
+          {
+            "alt": "Original editorial diagram for Branson, Missouri: a practical hotel booking decision and total cost flow",
+            "complete": true,
+            "height": 900,
+            "src": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/branson-hotels-with-indoor-pools-cost-map.svg",
+            "width": 1600
+          }
+        ],
+        "title": "Branson Hotels With Indoor Pools: Theater Access, Family Hotels and Verified Amenities | FreeHotels.info",
+        "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/en/branson-hotels-with-indoor-pools/"
+      },
+      {
+        "at": "2026-11-04T18:13:27.873Z",
+        "images": [
+          {
+            "alt": "The Las Vegas Strip viewed from the STRAT in July 2025. Archive destination view; a resort skyline does not establish an indoor swimming-pool amenity. Resized for display.",
+            "complete": true,
+            "height": 880,
+            "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/84/Vegas_Strip_viewed_from_the_STRAT.jpg/1280px-Vegas_Strip_viewed_from_the_STRAT.jpg?utm_campaign=index&utm_content=thumbnail&utm_source=commons.wikimedia.org",
+            "width": 1280
+          },
+          {
+            "alt": "Original editorial diagram for Las Vegas, Nevada: indoor pool eligibility and guest access questions",
+            "complete": true,
+            "height": 900,
+            "src": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/las-vegas-hotels-with-indoor-pools-pool-check.svg",
+            "width": 1600
+          },
+          {
+            "alt": "Original editorial diagram for Las Vegas, Nevada: a practical hotel booking decision and total cost flow",
+            "complete": true,
+            "height": 900,
+            "src": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/las-vegas-hotels-with-indoor-pools-cost-map.svg",
+            "width": 1600
+          }
+        ],
+        "title": "Las Vegas Hotels With Indoor Pools: True Swimming Pools vs Casino Spas | FreeHotels.info",
+        "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/en/las-vegas-hotels-with-indoor-pools/"
+      },
+      {
+        "at": "2026-11-04T18:13:06.177Z",
+        "images": [
+          {
+            "alt": "Astronaut photograph of Nassau from the ISS, 2010. Archive geographic context, not a photograph or endorsement of a named hotel. Resized thumbnail; display crop follows the layout.",
+            "complete": true,
+            "height": 2891,
+            "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/Nassau%2C_The_Bahamas.jpg/1920px-Nassau%2C_The_Bahamas.jpg?utm_campaign=index&utm_content=thumbnail&utm_source=commons.wikimedia.org",
+            "width": 1920
+          },
+          {
+            "alt": "The different charge categories to check in a Bahamas hotel quote.",
+            "complete": true,
+            "height": 900,
+            "src": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/bahamas-cost-components.svg",
+            "width": 1600
+          },
+          {
+            "alt": "Compare the actual Nassau-area base and its transport requirements.",
+            "complete": true,
+            "height": 900,
+            "src": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/bahamas-stay-comparison.svg",
+            "width": 1600
+          }
+        ],
+        "title": "Bahamas Luxury Resorts: Real Nassau Hotel Costs, Fees and Travel Insurance (2026) | FreeHotels.info",
+        "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/guides/en/bahamas-luxury-resort-real-cost-2026/"
+      },
+      {
+        "at": "2026-11-04T18:13:08.938Z",
+        "images": [
+          {
+            "alt": "Torres del Paine National Park, photographed in February 2017. Archive landscape image, not a view from or photograph of a named lodge. Resized for display.",
+            "complete": true,
+            "height": 853,
+            "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Las_torres_del_Paine.jpg/1280px-Las_torres_del_Paine.jpg",
+            "width": 1280
+          },
+          {
+            "alt": "Park access, accommodation and excursion reservations must be checked separately.",
+            "complete": true,
+            "height": 900,
+            "src": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/patagonia-cost-components.svg",
+            "width": 1600
+          },
+          {
+            "alt": "Compare nights, transfers, excursions and park access for your actual itinerary.",
+            "complete": true,
+            "height": 900,
+            "src": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/astra-assets/hotel-guides-20261104/patagonia-stay-comparison.svg",
+            "width": 1600
+          }
+        ],
+        "title": "Chile Patagonia Luxury Lodges: Hotel Costs, Insurance and Torres del Paine (2026) | FreeHotels.info",
+        "url": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app/guides/en/chile-patagonia-luxury-lodge-insurance-2026/"
+      }
+    ]
+  }
+}

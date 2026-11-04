@@ -1,0 +1,54 @@
+{
+  "verified": true,
+  "source": "authorized-host-connector",
+  "provider": "vercel",
+  "projectId": "prj_CRcKh820D2Sm3h9eFS2SkdNtPVcA",
+  "canonicalHost": "freehotels.info",
+  "checkedAt": "2026-11-04T18:14:08.923Z",
+  "observed": {
+    "result": {
+      "domains": [
+        {
+          "name": "www.freehotels.info",
+          "apexName": "freehotels.info",
+          "projectId": "prj_CRcKh820D2Sm3h9eFS2SkdNtPVcA",
+          "redirect": "freehotels.info",
+          "redirectStatusCode": 308,
+          "gitBranch": null,
+          "customEnvironmentId": null,
+          "updatedAt": 1793610629328,
+          "createdAt": 1793610453408,
+          "verified": true
+        },
+        {
+          "name": "freehotels.info",
+          "apexName": "freehotels.info",
+          "projectId": "prj_CRcKh820D2Sm3h9eFS2SkdNtPVcA",
+          "redirect": null,
+          "redirectStatusCode": null,
+          "gitBranch": null,
+          "customEnvironmentId": null,
+          "updatedAt": 1793610627425,
+          "createdAt": 1793610436363,
+          "verified": true
+        },
+        {
+          "name": "freehotels-info.vercel.app",
+          "apexName": "vercel.app",
+          "projectId": "prj_CRcKh820D2Sm3h9eFS2SkdNtPVcA",
+          "redirect": null,
+          "gitBranch": null,
+          "customEnvironmentId": null,
+          "updatedAt": 1789623010102,
+          "createdAt": 1789623010102,
+          "verified": true
+        }
+      ],
+      "pagination": {
+        "count": 3,
+        "next": null,
+        "prev": 1793610453408
+      }
+    }
+  }
+}

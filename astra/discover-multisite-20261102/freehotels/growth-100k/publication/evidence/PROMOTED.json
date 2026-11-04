@@ -1,0 +1,18 @@
+{
+  "success": true,
+  "versionId": "8bac7e9b-ab34-4246-b811-9049564472fa",
+  "toolConfirmedAt": "2026-11-04T18:15:17.631Z",
+  "liveVerifiedAt": "2026-11-04T18:17:55.727Z",
+  "providerResult": {
+    "result": {
+      "version": {
+        "id": "8bac7e9b-ab34-4246-b811-9049564472fa",
+        "s3Key": "f4f9a11ea4057e5e",
+        "createdBy": "",
+        "lastModified": 1793816117257,
+        "ruleCount": 14,
+        "alias": "freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app"
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "status": "PASS_PRODUCTION",
+  "siteId": "freehotels",
+  "candidateSha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+  "proof": [
+    "COMPLETED_GREEN_CANDIDATE",
+    "PUBLIC_SHA_MATCH",
+    "HTTP_CANONICAL_ROUTES_VERIFIED"
+  ],
+  "preflight": {
+    "status": "PASS_PREFLIGHT",
+    "routeCount": 32
+  },
+  "publicAudit": {
+    "status": "PASS_PUBLIC_ROUTES",
+    "routeCount": 32
+  }
+}

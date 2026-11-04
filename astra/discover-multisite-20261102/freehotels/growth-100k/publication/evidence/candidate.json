@@ -1,0 +1,244 @@
+{
+  "sha": "da06415d4d7c4e5c26d3259f56a3cb3d5339133a",
+  "versionId": "8bac7e9b-ab34-4246-b811-9049564472fa",
+  "manifest": {
+    "siteId": "freehotels",
+    "canonicalUrl": "https://freehotels.info",
+    "previewUrl": "https://freehotels-info-f9b0fa-routes-ced-starcks-projects.vercel.app",
+    "provider": "vercel",
+    "projectId": "prj_CRcKh820D2Sm3h9eFS2SkdNtPVcA",
+    "addedCostEur": 0,
+    "newScheduledTasks": 0,
+    "dnsChangeRequested": false,
+    "routeInventory": {
+      "complete": true,
+      "evidence": "Isolated additive route release: complete currently served inventory from 23 base sitemap URLs plus 9 supplemental editorial URLs, all 32 measured on canonical and staging hosts; full existing provider routes retained. The 217-route source-archive migration is separate and remains partially unpublished; this release neither removes nor claims to restore those pre-existing missing URLs."
+    },
+    "routes": [
+      {
+        "path": "/",
+        "expectedStatus": 200,
+        "contains": "Find the right hotel. Pay less.",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/de/",
+        "expectedStatus": 200,
+        "contains": "Hotel-Guides für Deutschland",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/fr/",
+        "expectedStatus": 200,
+        "contains": "Guides hôtels &amp; voyages",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/de/berlin/",
+        "expectedStatus": 200,
+        "contains": "Günstige Hotels in Berlin",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/de/frankfurt/",
+        "expectedStatus": 200,
+        "contains": "Günstige Hotels in Frankfurt",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/de/koeln/",
+        "expectedStatus": 200,
+        "contains": "Günstige Hotels in Köln",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/de/hannover/",
+        "expectedStatus": 200,
+        "contains": "Günstige Hotels in Hannover",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/de/hamburg/",
+        "expectedStatus": 200,
+        "contains": "Günstige Hotels in Hamburg",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/de/muenchen/",
+        "expectedStatus": 200,
+        "contains": "Günstige Hotels in München",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/de/duesseldorf/",
+        "expectedStatus": 200,
+        "contains": "Günstige Hotels in Düsseldorf",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/de/berlin/kostenlos-parken/",
+        "expectedStatus": 200,
+        "contains": "Hotels in Berlin mit kostenlosem Parkplatz",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/de/frankfurt/flughafen-shuttle/",
+        "expectedStatus": 200,
+        "contains": "Hotels am Flughafen Frankfurt mit Shuttle",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/de/hotels/fruehstueck-inklusive/",
+        "expectedStatus": 200,
+        "contains": "Hotels mit Frühstück inklusive",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/fr/paris/hotel-pas-cher/",
+        "expectedStatus": 200,
+        "contains": "Hôtel pas cher à Paris",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/fr/nice/hotel-pas-cher/",
+        "expectedStatus": 200,
+        "contains": "Hôtel pas cher à Nice",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/fr/annecy/hotel-pas-cher/",
+        "expectedStatus": 200,
+        "contains": "Hôtel pas cher à Annecy",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/fr/marseille/hotel-pas-cher/",
+        "expectedStatus": 200,
+        "contains": "Hôtel pas cher à Marseille",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/fr/lyon/hotel-pas-cher/",
+        "expectedStatus": 200,
+        "contains": "Hôtel pas cher à Lyon",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/fr/londres/hotel-pas-cher/",
+        "expectedStatus": 200,
+        "contains": "Hôtel pas cher à Londres",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/fr/barcelone/hotel-pas-cher/",
+        "expectedStatus": 200,
+        "contains": "Hôtel pas cher à Barcelone",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/fr/voyage/all-inclusive-pas-cher/",
+        "expectedStatus": 200,
+        "contains": "Voyage all inclusive pas cher",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/fr/voyage/derniere-minute/",
+        "expectedStatus": 200,
+        "contains": "Voyage dernière minute pas cher",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/fr/voyage/europe-pas-cher/",
+        "expectedStatus": 200,
+        "contains": "Voyage pas cher en Europe",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/de/reise/aktuell/",
+        "expectedStatus": 200,
+        "contains": "Reiseideen, die du wirklich planen kannst",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/de/reise/berlin-weihnachtsmaerkte-2026-hotels/",
+        "expectedStatus": 200,
+        "contains": "Berlin-Weihnachtsmärkte 2026: Die ersten starten am 6. November – wo übernachten?",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/fr/voyage/actualites/",
+        "expectedStatus": 200,
+        "contains": "Quand partir et où dormir ?",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/fr/voyage/actualites/marche-noel-strasbourg-2026-ou-dormir/",
+        "expectedStatus": 200,
+        "contains": "Marché de Noël de Strasbourg 2026 : où dormir pour profiter des illuminations ?",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/fr/voyage/actualites/noel-colmar-2026-dates-quartiers-hotels/",
+        "expectedStatus": 200,
+        "contains": "Marchés de Noël de Colmar 2026 : dates à vérifier et meilleurs quartiers où dormir",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/fr/voyage/actualites/fete-des-lumieres-lyon-2026-dates-quartiers-hotels/",
+        "expectedStatus": 200,
+        "contains": "Fête des Lumières 2026 à Lyon : dates officielles et quartiers où dormir",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/fr/voyage/actualites/bruxelles-plaisirs-hiver-2026-ou-dormir/",
+        "expectedStatus": 200,
+        "contains": "Plaisirs d'Hiver Bruxelles 2026 : dates officielles et quartiers où dormir",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/calculateur",
+        "expectedStatus": 200,
+        "contains": "Quel hôtel vous coûte vraiment le moins cher ?",
+        "requireCanonical": true,
+        "indexable": true
+      },
+      {
+        "path": "/en/tools/hotel-total-cost/",
+        "expectedStatus": 200,
+        "contains": "Which hotel actually costs you less?",
+        "requireCanonical": true,
+        "indexable": true
+      }
+    ]
+  }
+}
