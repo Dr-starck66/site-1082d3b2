@@ -1,0 +1,50 @@
+{
+  "schema": "astra-freehotels-growth/1",
+  "primaryKpi": {
+    "metric": "human_sessions_rolling_30_days",
+    "target": 100000,
+    "currentVerified": null,
+    "status": "UNVERIFIED"
+  },
+  "milestones": [
+    1000,
+    5000,
+    10000,
+    25000,
+    50000,
+    100000,
+    250000,
+    500000
+  ],
+  "measurement": {
+    "gsc": "sc-domain:freehotels.info",
+    "gscAccess": "last_3_available_days_only",
+    "totalTraffic": "UNVERIFIED",
+    "vercelWebAnalytics": "not_enabled",
+    "searchEstimatesAreVisits": false,
+    "requestLogsAreSessions": false,
+    "syntheticChecksAreHumanTraffic": false
+  },
+  "keywords": {
+    "provider": "Ubersuggest",
+    "freeReportsUsed": 3,
+    "freeReportsLimit": 3,
+    "volume": null,
+    "seoDifficulty": null,
+    "action": "Retry only after quota reset; never infer SD<=10"
+  },
+  "editorial": {
+    "dailyTarget": 3,
+    "scheduleOwner": "6ae5fe6216e0819197eddcfe2786a44e",
+    "timezone": "Europe/Paris",
+    "reuseOnly": true,
+    "googleDiscover": "UNVERIFIED",
+    "googleNews": "UNVERIFIED"
+  },
+  "deployment": {
+    "preserveLegacyUrls": true,
+    "dnsChange": false,
+    "requiresIndependentPublicVerification": true
+  },
+  "priority": "Obtain a free, authorized rolling 30-day session measurement; publish useful search content with measured demand"
+}
