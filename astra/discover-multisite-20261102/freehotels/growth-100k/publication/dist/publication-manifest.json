@@ -1,0 +1,104 @@
+{
+  "schema": "astra-freehotels-article-release/1",
+  "builtAt": "2026-11-04T18:05:06.848Z",
+  "sourceHashes": {
+    "build.mjs": "33468dcad13a632a9030416f0a8b52dd5cc469468a2572f1a07091d7a067ce32",
+    "publication.test.mjs": "716093dd086e0f4c3ae30da3deed66f2f8c49c79f2e32bef96db37cd20fe55d4",
+    "source/existing-guides.json": "572cf090c78d94b47d5ba64ea67e8d58a2b9ca5975494afe744f89b51e0a734a",
+    "source/new-guides.mjs": "ebe8d6825ee0f40aaf2e40a32549ba575f298481ffb06e85a9a46e052a37cfe2",
+    "source/images.mjs": "d36059bbd75e2eecea912ff206f0c8e10c5aee9a8e70a83c1085a03ded051c00",
+    "source/fr-actualites-index.html": "b2d6401cd026020f5b3653b2daf76bd25c33b6e8e3af6d266988dd5b7e576f90",
+    "source/sitemap-editorial.xml": "9fb670bf50832604ce3227f6d3330fc0fec86255254568be9a2135f3bd1a7068"
+  },
+  "articles": [
+    {
+      "path": "/en/hotels-with-indoor-pools/",
+      "file": "hotels-with-indoor-pools.html",
+      "title": "Hotels With Indoor Pools: How to Find a Real, Usable Pool"
+    },
+    {
+      "path": "/en/pigeon-forge-hotels-with-indoor-pools/",
+      "file": "pigeon-forge-hotels-with-indoor-pools.html",
+      "title": "Pigeon Forge Hotels With Indoor Pools: A Practical 2026 Guide"
+    },
+    {
+      "path": "/en/gatlinburg-hotels-with-indoor-pools/",
+      "file": "gatlinburg-hotels-with-indoor-pools.html",
+      "title": "Gatlinburg Hotels With Indoor Pools: Downtown or Mountain Views?"
+    },
+    {
+      "path": "/en/branson-hotels-with-indoor-pools/",
+      "file": "branson-hotels-with-indoor-pools.html",
+      "title": "Branson Hotels With Indoor Pools: Compare More Than Pool Photos"
+    },
+    {
+      "path": "/en/las-vegas-hotels-with-indoor-pools/",
+      "file": "las-vegas-hotels-with-indoor-pools.html",
+      "title": "Las Vegas Hotels With Indoor Pools: Don't Confuse Them With Spas"
+    },
+    {
+      "path": "/guides/en/bahamas-luxury-resort-real-cost-2026/",
+      "file": "bahamas-luxury-resort-real-cost-2026.html",
+      "title": "Bahamas luxury resorts: what a Nassau or Paradise Island hotel really costs in 2026"
+    },
+    {
+      "path": "/guides/en/chile-patagonia-luxury-lodge-insurance-2026/",
+      "file": "chile-patagonia-luxury-lodge-insurance-2026.html",
+      "title": "Chile Patagonia luxury lodges: comparing Torres del Paine hotel costs and travel insurance"
+    },
+    {
+      "path": "/en/myrtle-beach-hotels-with-indoor-pools/",
+      "file": "myrtle-beach-hotels-with-indoor-pools.html",
+      "title": "Myrtle Beach hotels with indoor pools: check the enclosure before you book"
+    },
+    {
+      "path": "/en/ocean-city-md-hotels-with-indoor-pools/",
+      "file": "ocean-city-md-hotels-with-indoor-pools.html",
+      "title": "Ocean City MD hotels with indoor pools: compare the Boardwalk with the north end"
+    },
+    {
+      "path": "/en/virginia-beach-hotels-with-indoor-pools/",
+      "file": "virginia-beach-hotels-with-indoor-pools.html",
+      "title": "Virginia Beach hotels with indoor pools: compare the Oceanfront and your real itinerary"
+    }
+  ],
+  "hub": "/en/",
+  "newOriginalArticles": [
+    "/en/myrtle-beach-hotels-with-indoor-pools/",
+    "/en/ocean-city-md-hotels-with-indoor-pools/",
+    "/en/virginia-beach-hotels-with-indoor-pools/"
+  ],
+  "reusedExistingArticles": [
+    "/en/hotels-with-indoor-pools/",
+    "/en/pigeon-forge-hotels-with-indoor-pools/",
+    "/en/gatlinburg-hotels-with-indoor-pools/",
+    "/en/branson-hotels-with-indoor-pools/",
+    "/en/las-vegas-hotels-with-indoor-pools/",
+    "/guides/en/bahamas-luxury-resort-real-cost-2026/",
+    "/guides/en/chile-patagonia-luxury-lodge-insurance-2026/"
+  ],
+  "htmlFiles": [
+    "hotels-with-indoor-pools.html",
+    "pigeon-forge-hotels-with-indoor-pools.html",
+    "gatlinburg-hotels-with-indoor-pools.html",
+    "branson-hotels-with-indoor-pools.html",
+    "las-vegas-hotels-with-indoor-pools.html",
+    "bahamas-luxury-resort-real-cost-2026.html",
+    "chile-patagonia-luxury-lodge-insurance-2026.html",
+    "myrtle-beach-hotels-with-indoor-pools.html",
+    "ocean-city-md-hotels-with-indoor-pools.html",
+    "virginia-beach-hotels-with-indoor-pools.html"
+  ],
+  "additionalCostEur": 0,
+  "traffic30Days": null,
+  "rankingGuarantee": false,
+  "keywordMetrics": {
+    "volume": null,
+    "seoDifficulty": null,
+    "reason": "Existing free Ubersuggest report quota exhausted"
+  },
+  "legacySourceSitemapCount": 217,
+  "currentPublicSitemapCount": 32,
+  "scope": "Isolated additive publication on existing serving Vercel project; historical restoration remains separate",
+  "newNewsArticles": 0
+}

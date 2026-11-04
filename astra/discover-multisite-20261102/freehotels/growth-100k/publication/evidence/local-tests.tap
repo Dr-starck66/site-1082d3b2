@@ -1,0 +1,46 @@
+TAP version 13
+# Subtest: ten substantive articles with distinct identities; only three are newly written
+ok 1 - ten substantive articles with distinct identities; only three are newly written
+  ---
+  duration_ms: 21.492481
+  type: 'test'
+  ...
+# Subtest: each built page has its own canonical and H1, an Article schema and an indexable robots directive
+ok 2 - each built page has its own canonical and H1, an Article schema and an indexable robots directive
+  ---
+  duration_ms: 2.952632
+  type: 'test'
+  ...
+# Subtest: licensed large photos and two distinct in-body diagrams per article
+ok 3 - licensed large photos and two distinct in-body diagrams per article
+  ---
+  duration_ms: 2.20621
+  type: 'test'
+  ...
+# Subtest: no new guide is orphaned; all internal navigation targets are published or in this release
+ok 4 - no new guide is orphaned; all internal navigation targets are published or in this release
+  ---
+  duration_ms: 4.550055
+  type: 'test'
+  ...
+# Subtest: editorial sitemap preserves all nine old URLs and adds eleven; no invented metrics or News claim
+ok 5 - editorial sitemap preserves all nine old URLs and adds eleven; no invented metrics or News claim
+  ---
+  duration_ms: 0.380903
+  type: 'test'
+  ...
+# Subtest: new coastal guides preserve the important property distinctions and separate closure notices
+ok 6 - new coastal guides preserve the important property distinctions and separate closure notices
+  ---
+  duration_ms: 1.084512
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 171.635247
