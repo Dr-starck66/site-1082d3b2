@@ -1,0 +1,9 @@
+{
+  "name": "astra-freehotels-growth",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test source/cost-core.test.mjs",
+    "build": "node --test source/cost-core.test.mjs && node build.mjs"
+  }
+}

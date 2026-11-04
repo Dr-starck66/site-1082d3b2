@@ -1,0 +1,170 @@
+{
+  "schema": "astra-freehotels-publication-receipt/1",
+  "recordedAt": "2026-11-04T16:59:07.110Z",
+  "missionStatus": "PARTIAL",
+  "publicToolsStatus": "PASS",
+  "publicUrls": [
+    "https://freehotels.info/calculateur",
+    "https://freehotels.info/en/tools/hotel-total-cost/"
+  ],
+  "sourceCommit": "e2198ac3d97e0f6153646e3faed63ae43480a836",
+  "sourceRepository": "Dr-starck66/site-1082d3b2",
+  "sourceBranch": "astra/freehotels-growth-100k-20261104",
+  "routeVersion": "c5f7aa6d-14d8-4e74-986a-4844ddaa8133",
+  "routeCount": 9,
+  "previewDeployment": "dpl_AXwb36q2YJ2Vp54auaAzshXdno99",
+  "tests": {
+    "nodeCore": {
+      "passed": 4,
+      "failed": 0
+    },
+    "browserJsParsing": "PASS",
+    "cloudBrowserFrench": {
+      "status": "PASS",
+      "quoteA": 903,
+      "quoteB": 600,
+      "difference": 303,
+      "sharedLinkReload": 903,
+      "negativeInputRejected": true,
+      "resetVerified": true
+    },
+    "cloudBrowserEnglish": {
+      "status": "PASS",
+      "nightlyRate": 125.5,
+      "nights": 2,
+      "total": 251
+    },
+    "publicBrowser": {
+      "status": "PASS",
+      "quoteA": 315,
+      "quoteB": 330,
+      "difference": 15
+    },
+    "localPlaywright": {
+      "status": "FAIL",
+      "reason": "Chromium executable unavailable; tests then executed in the authorized cloud browser"
+    },
+    "appConsole": "Only browser-extension errors observed in last five error entries; no whole-session clean-console claim",
+    "mobileRendering": {
+      "status": "UNVERIFIED",
+      "reason": "Local Chromium unavailable; external screenshot service free credits exhausted"
+    }
+  },
+  "httpChecks": [
+    {
+      "path": "/calculateur",
+      "status": 200,
+      "title": "Calculateur du vrai prix d’un hôtel : comparez deux séjours | FreeHotels.info",
+      "contentType": "text/html; charset=utf-8",
+      "htmlLength": 27823,
+      "containsCalculatorLink": true
+    },
+    {
+      "path": "/en/tools/hotel-total-cost/",
+      "status": 200,
+      "title": "Hotel Total Cost Calculator: Compare Two Stays With Every Fee | FreeHotels.info",
+      "contentType": "text/html; charset=utf-8",
+      "htmlLength": 26323,
+      "containsCalculatorLink": true
+    },
+    {
+      "path": "/fr/voyage/actualites/",
+      "status": 200,
+      "title": "Voyages, fêtes et hôtels : idées de séjours 2026 | FreeHotels.info",
+      "contentType": "text/html; charset=utf-8",
+      "htmlLength": 8058,
+      "containsCalculatorLink": true
+    },
+    {
+      "path": "/sitemap-editorial.xml",
+      "status": 200,
+      "contentType": "application/xml; charset=utf-8",
+      "htmlLength": 1139,
+      "containsCalculatorLink": false
+    },
+    {
+      "path": "/sitemap.xml",
+      "status": 200,
+      "contentType": "application/xml",
+      "htmlLength": 1605,
+      "containsCalculatorLink": false
+    },
+    {
+      "path": "/fr/voyage/europe-pas-cher/",
+      "status": 200,
+      "title": "Voyage pas cher en Europe : destinations et méthode budget | FreeHotels.info",
+      "contentType": "text/html; charset=utf-8",
+      "htmlLength": 8527,
+      "containsCalculatorLink": false
+    },
+    {
+      "path": "/de/berlin/",
+      "status": 200,
+      "title": "Günstige Hotels in Berlin: Lage, Preise & Spartipps | FreeHotels.info",
+      "contentType": "text/html; charset=utf-8",
+      "htmlLength": 8426,
+      "containsCalculatorLink": false
+    }
+  ],
+  "legacy": {
+    "sitemapUrlCountBefore": 23,
+    "sitemapUrlCountAfter": 23,
+    "otherOriginalRouteDestinationsPreserved": 5,
+    "editorialUrlsBefore": 7,
+    "editorialUrlsAfter": 9,
+    "fullLegacyPageAudit": "PARTIAL; samples and full sitemap preserved, not all routes individually crawled"
+  },
+  "measurement": {
+    "humanSessionsLast30Days": null,
+    "status": "UNVERIFIED",
+    "gscPeriod": {
+      "from": "2026-10-30",
+      "to": "2026-11-01"
+    },
+    "gscReturnedPages": [
+      {
+        "path": "/",
+        "clicks": 0,
+        "impressions": 5
+      },
+      {
+        "path": "/fr/",
+        "clicks": 0,
+        "impressions": 5
+      },
+      {
+        "path": "/en/",
+        "clicks": 0,
+        "impressions": 5
+      }
+    ],
+    "note": "Page rows are not total site sessions and must not be summed into a visit count",
+    "vercelWebAnalytics": "not_enabled",
+    "ubersuggest": {
+      "freeReportsUsed": 3,
+      "freeReportsLimit": 3,
+      "keywordVolume": null,
+      "seoDifficulty": null
+    },
+    "activationAccess": {
+      "vercelBrowser": "Sign-in required; no new sign-in or paid option activated",
+      "gscWizard": "Account info and GA4 property requests returned INVALID_ARGUMENT"
+    }
+  },
+  "automation": {
+    "id": "6ae5fe6216e0819197eddcfe2786a44e",
+    "status": "PASS_CONFIGURATION_UPDATED",
+    "timesEuropeParis": [
+      "09:00",
+      "14:00",
+      "19:00"
+    ],
+    "newTaskCreated": false,
+    "dailyEditorialTarget": 3,
+    "threeDailyPublicationsExecution": "UNVERIFIED"
+  },
+  "googleDiscover": "UNVERIFIED",
+  "googleNews": "UNVERIFIED",
+  "additionalSpendingEur": 0,
+  "nextPriority": "Obtain authorized zero-cost 30-day human session measurement and continue existing editorial task without losing calculator routes"
+}
