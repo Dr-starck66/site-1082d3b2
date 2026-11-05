@@ -1,0 +1,40 @@
+{
+  "schema": "astra-publication-receipt/1",
+  "site": "WINE ELSE",
+  "date": "2026-11-05",
+  "publishedAt": "2026-11-05T12:43:03.460Z",
+  "canonical": "https://else.wine/blog/guides/carignan-vs-cinsault-languedoc-wine-guide/",
+  "articleType": "Article",
+  "source": {
+    "repository": "Dr-starck66/site-1082d3b2",
+    "branch": "astra/wine-else-journal-news-20261101",
+    "articleCommit": "01f3197f01dc39c35b5389a3b2469f48551b7fc9",
+    "indexCommit": "5dca4ff7efe16839008a971fb547918f668c7b2a",
+    "sitemapCommit": "51c8511f253ba7508ae337b18b9250a14efe34b1",
+    "productionSourceSha": "51c8511f253ba7508ae337b18b9250a14efe34b1"
+  },
+  "production": {
+    "projectId": "prj_nz0WKLOMvAXRpTguyN9h2wHFRrjM",
+    "routeVersion": "afae5795-11c9-4c22-af03-f05ab9ee89e8",
+    "ruleCount": 49,
+    "liveVersionVerified": true
+  },
+  "publicAudit": {
+    "contentRetrieved": true,
+    "canonicalVerified": true,
+    "robots": "index,follow,max-image-preview:large",
+    "imagesInHtml": 3,
+    "imageBinaryLoadVerified": false,
+    "archiveSitemapCount": 26,
+    "newsSitemapCount": 0,
+    "hubLinksNewArticle": true,
+    "olderArticleStillPublic": true,
+    "buyerBriefStillPublic": true,
+    "httpNumericStatus": "UNVERIFIED",
+    "googleDiscover": "UNVERIFIED",
+    "googleNews": "NOT_APPLICABLE_EVERGREEN",
+    "organicSessions": "UNVERIFIED"
+  },
+  "status": "PASS_PUBLIC_HTML_PARTIAL_IMAGE_BINARY",
+  "notes": "Source, LIVE route, independent public HTML and sitemap verified. Browser image binary load and exact numeric HTTP status not independently measured. No old route modified outside three intended rewrites."
+}
