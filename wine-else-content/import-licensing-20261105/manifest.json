@@ -1,0 +1,49 @@
+{
+  "project": "WINE ELSE",
+  "topic": "US wine importer licensing / compliance",
+  "created": "2026-11-05",
+  "article_count": 5,
+  "language": "en-US",
+  "planned_live_host": "insights.else.wine",
+  "deployment_status": "BLOCKED_403_VERCEL",
+  "seo_metrics": {
+    "cpc": "UNVERIFIED_DAILY_QUOTA",
+    "search_volume": "UNVERIFIED_DAILY_QUOTA",
+    "seo_difficulty": "UNVERIFIED_DAILY_QUOTA"
+  },
+  "rich_results": {
+    "schema": [
+      "BlogPosting",
+      "BreadcrumbList"
+    ],
+    "eligibility": "UNVERIFIED_UNTIL_LIVE",
+    "appearance": "NOT_GUARANTEED"
+  },
+  "urls": [
+    {
+      "title": "Wine Import License USA: Federal Permits, State Rules and a 2026 Buyer Checklist",
+      "planned_url": "https://insights.else.wine/trade/wine-import-license-usa-2026/",
+      "repo_path": "wine-else-content/import-licensing-20261105/trade/wine-import-license-usa-2026/index.html"
+    },
+    {
+      "title": "TTB Wine Importer Basic Permit: Application Preparation for US Buyers",
+      "planned_url": "https://insights.else.wine/trade/ttb-wine-importer-basic-permit-guide/",
+      "repo_path": "wine-else-content/import-licensing-20261105/trade/ttb-wine-importer-basic-permit-guide/index.html"
+    },
+    {
+      "title": "Imported French Wine COLA: US Label Approval Checklist Before Shipping",
+      "planned_url": "https://insights.else.wine/trade/imported-french-wine-cola-label-approval/",
+      "repo_path": "wine-else-content/import-licensing-20261105/trade/imported-french-wine-cola-label-approval/index.html"
+    },
+    {
+      "title": "FDA Prior Notice for Wine Imports: Registration and Shipment Checklist",
+      "planned_url": "https://insights.else.wine/trade/fda-prior-notice-wine-imports/",
+      "repo_path": "wine-else-content/import-licensing-20261105/trade/fda-prior-notice-wine-imports/index.html"
+    },
+    {
+      "title": "Wine Import License Cost in the USA: Fees, Duties and the True First-Order Budget",
+      "planned_url": "https://insights.else.wine/trade/wine-import-license-cost-usa/",
+      "repo_path": "wine-else-content/import-licensing-20261105/trade/wine-import-license-cost-usa/index.html"
+    }
+  ]
+}
