@@ -1,37 +1,41 @@
 {
   "slot": {
-    "id": "reactive-evening",
+    "id": "reactive-midday",
     "kind": "reactive",
     "targetWords": [
       700,
       1200
     ],
     "categories": [
-      "insurance-claims",
-      "travel-refunds",
-      "consumer-rights",
-      "refunds"
+      "credit-debt",
+      "banking-fees",
+      "tax-money"
     ]
   },
   "provider": "github-copilot-cli",
   "topic": {
     "title": "FTC Highlights Efforts to Combat Imposter Scams and Protect Consumers",
-    "category": "consumer-rights"
+    "category": "credit-debt"
   },
-  "slug": "ftc-highlights-imposter-scam-enforcement-what-consumers-should-know",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-highlights-imposter-scam-enforcement-what-consumers-should-know.md",
+  "slug": "ftc-says-it-shut-down-19-imposter-websites-as-scams-keep-costing-consumers",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-says-it-shut-down-19-imposter-websites-as-scams-keep-costing-consumers.md",
   "evidence": [
     {
       "url": "https://www.ftc.gov/news-events/news/press-releases/2026/10/ftc-highlights-efforts-combat-imposter-scams-protect-consumers",
-      "sha256": "4af9ca01efcc94a52cb4914f1708e5ddb5676803f4656da526cb17ccbd4ad2eb",
+      "sha256": "6bfff8373b56ffb7d9a973a810c7a3c1d93df359f098c884f04e74a4ab7b90d9",
       "official": true
     },
     {
-      "url": "https://consumer.ftc.gov/",
-      "sha256": "fb9a0e3293107d71b342964cbbc1f056c57c3eb8d3fb5e2ba27599ccb8add1df",
+      "url": "https://www.consumerfinance.gov/consumer-tools/credit-reports-and-scores/",
+      "sha256": "ff92fcde3a29fec7556ee915b8417094785e8bc5e6472ce3614f16a02502fef6",
+      "official": true
+    },
+    {
+      "url": "https://www.consumerfinance.gov/consumer-tools/debt-collection/",
+      "sha256": "41127b16202ed1f4c35c5456c556c8a61b61b0a77d10b3ac2617e1649218db85",
       "official": true
     }
   ],
-  "words": 787,
-  "createdAt": "2026-11-03T23:57:39.545Z"
+  "words": 784,
+  "createdAt": "2026-11-05T17:59:08.181Z"
 }
