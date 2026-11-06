@@ -18,12 +18,12 @@
     "title": "FTC Highlights Efforts to Combat Imposter Scams and Protect Consumers",
     "category": "consumer-rights"
   },
-  "slug": "ftc-says-it-removed-19-imposter-websites-as-enforcement-continues",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-says-it-removed-19-imposter-websites-as-enforcement-continues.md",
+  "slug": "ftc-reports-new-action-against-imposter-scams-but-consumers-still-need-to-spot-the-warning",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-reports-new-action-against-imposter-scams-but-consumers-still-need-to-spot-the-warning.md",
   "evidence": [
     {
       "url": "https://www.ftc.gov/news-events/news/press-releases/2026/10/ftc-highlights-efforts-combat-imposter-scams-protect-consumers",
-      "sha256": "6bfff8373b56ffb7d9a973a810c7a3c1d93df359f098c884f04e74a4ab7b90d9",
+      "sha256": "0af0f7d52b1123990e0a26d74120b0f3ff9f4c9f92788ffdd241236de6353ac1",
       "official": true
     },
     {
@@ -32,6 +32,6 @@
       "official": true
     }
   ],
-  "words": 787,
-  "createdAt": "2026-11-06T21:38:09.587Z"
+  "words": 721,
+  "createdAt": "2026-11-06T23:43:30.369Z"
 }
