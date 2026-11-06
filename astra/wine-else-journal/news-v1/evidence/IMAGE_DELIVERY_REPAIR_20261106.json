@@ -1,0 +1,73 @@
+{
+  "date": "2026-11-06",
+  "kind": "repair-not-new-publication",
+  "unchangedDatePublished": true,
+  "media": [
+    {
+      "article": "https://else.wine/blog/guides/blanquette-vs-cremant-de-limoux-sparkling-wine/",
+      "oldUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Vignoble%20de%20Limoux.jpg?width=1280",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Vignoble_de_Limoux.jpg",
+      "file": "wine-c41627046349.webp",
+      "width": 1280,
+      "height": 794,
+      "bytes": 143240,
+      "sha256": "586dd5033a44c448a8def0d19bc7a5ebaff7408a971fa1a95c484ba99efda069",
+      "http": 200
+    },
+    {
+      "article": "https://else.wine/blog/guides/blanquette-vs-cremant-de-limoux-sparkling-wine/",
+      "oldUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Blanquette%20de%20Limoux%20glass.jpg?width=1456",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/0/09/Blanquette_de_Limoux_glass.jpg",
+      "file": "wine-55581ec632f8.webp",
+      "width": 1241,
+      "height": 1800,
+      "bytes": 104892,
+      "sha256": "1e5c1582e164ccc6125a554f83e2f2c030cb4cd0f4ddd9cef6ceb155795e60ad",
+      "http": 200
+    },
+    {
+      "article": "https://else.wine/blog/guides/blanquette-vs-cremant-de-limoux-sparkling-wine/",
+      "oldUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Cr%C3%A9mant%20de%20Limoux%201531%20bottle.jpg?width=1452",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/5/57/Cr%C3%A9mant_de_Limoux_1531_bottle.jpg",
+      "file": "wine-954ae1f0e8d1.webp",
+      "width": 1091,
+      "height": 1800,
+      "bytes": 184276,
+      "sha256": "2374974a074567a23398485b462847ae7ee018c960b656a1a1b05a44a653e79d",
+      "http": 200
+    },
+    {
+      "article": "https://else.wine/blog/guides/corbieres-vs-minervois-wine-guide/",
+      "oldUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Vineyard%20in%20French%20wine%20region%20of%20Montbrun-des-Corbieres.jpg?width=1600",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f6/Vineyard_in_French_wine_region_of_Montbrun-des-Corbieres.jpg",
+      "file": "wine-dbafa10c43e6.webp",
+      "width": 1600,
+      "height": 1200,
+      "bytes": 405700,
+      "sha256": "daf0cdb82b92b2366502d37d5da4d4ec96a990842e4182c496c858e6ca9eb85e",
+      "http": 200
+    },
+    {
+      "article": "https://else.wine/blog/guides/corbieres-vs-minervois-wine-guide/",
+      "oldUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Vigne%20Minervois.jpg?width=1280",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Vigne_Minervois.jpg",
+      "file": "wine-8f9adbbbbe4c.webp",
+      "width": 1600,
+      "height": 1200,
+      "bytes": 240092,
+      "sha256": "32e689b60ac66758923043e0f90ee984ec0cf150f3f02e5da89ed49e648f3a15",
+      "http": 200
+    },
+    {
+      "article": "https://else.wine/blog/guides/corbieres-vs-minervois-wine-guide/",
+      "oldUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Minervois%20Gobelet%20trained%20Vineyards%20in%20January.jpg?width=1280",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/6/6c/Minervois_Gobelet_trained_Vineyards_in_January.jpg",
+      "file": "wine-fb64e6dc5e9b.webp",
+      "width": 1600,
+      "height": 1067,
+      "bytes": 194466,
+      "sha256": "1d11ad441450eb52a10641de079a9473e2b815cac9e70fcc0698713e52607355",
+      "http": 200
+    }
+  ]
+}
