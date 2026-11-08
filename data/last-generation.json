@@ -1,24 +1,25 @@
 {
   "slot": {
-    "id": "reactive-midday",
+    "id": "reactive-evening",
     "kind": "reactive",
     "targetWords": [
       700,
       1200
     ],
     "categories": [
-      "credit-debt",
-      "banking-fees",
-      "tax-money"
+      "insurance-claims",
+      "travel-refunds",
+      "consumer-rights",
+      "refunds"
     ]
   },
   "provider": "github-copilot-cli",
   "topic": {
     "title": "FTC Highlights Efforts to Combat Imposter Scams and Protect Consumers",
-    "category": "credit-debt"
+    "category": "consumer-rights"
   },
-  "slug": "ftc-reports-new-actions-against-imposter-scams-how-consumers-can-check-a-claim",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-reports-new-actions-against-imposter-scams-how-consumers-can-check-a-claim.md",
+  "slug": "ftc-reports-new-steps-against-imposter-scams-what-consumers-should-know",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-reports-new-steps-against-imposter-scams-what-consumers-should-know.md",
   "evidence": [
     {
       "url": "https://www.ftc.gov/news-events/news/press-releases/2026/10/ftc-highlights-efforts-combat-imposter-scams-protect-consumers",
@@ -26,16 +27,11 @@
       "official": true
     },
     {
-      "url": "https://www.consumerfinance.gov/consumer-tools/credit-reports-and-scores/",
-      "sha256": "ff92fcde3a29fec7556ee915b8417094785e8bc5e6472ce3614f16a02502fef6",
-      "official": true
-    },
-    {
-      "url": "https://www.consumerfinance.gov/consumer-tools/debt-collection/",
-      "sha256": "41127b16202ed1f4c35c5456c556c8a61b61b0a77d10b3ac2617e1649218db85",
+      "url": "https://consumer.ftc.gov/",
+      "sha256": "d589255530a9363227045252acbc386031dd3fda163d8e65451dcde08294c46b",
       "official": true
     }
   ],
-  "words": 880,
-  "createdAt": "2026-11-08T16:39:13.508Z"
+  "words": 796,
+  "createdAt": "2026-11-08T22:50:38.336Z"
 }
