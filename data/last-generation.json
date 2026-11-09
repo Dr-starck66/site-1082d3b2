@@ -18,20 +18,20 @@
     "title": "FTC Highlights Efforts to Combat Imposter Scams and Protect Consumers",
     "category": "consumer-rights"
   },
-  "slug": "ftc-reports-new-steps-against-imposter-scams-what-consumers-should-know",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-reports-new-steps-against-imposter-scams-what-consumers-should-know.md",
+  "slug": "ftc-reports-new-steps-against-imposter-scams-how-to-check-a-suspicious-contact",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-reports-new-steps-against-imposter-scams-how-to-check-a-suspicious-contact.md",
   "evidence": [
     {
       "url": "https://www.ftc.gov/news-events/news/press-releases/2026/10/ftc-highlights-efforts-combat-imposter-scams-protect-consumers",
-      "sha256": "d423ffde727fc1e5106ec07a19a86e50ed8953c8b15fe856f7948d980dc414cd",
+      "sha256": "5c3e24980ecaf7f34c095c7f4446f70a5821f53b478d8b889404c7de081a9ad2",
       "official": true
     },
     {
       "url": "https://consumer.ftc.gov/",
-      "sha256": "d589255530a9363227045252acbc386031dd3fda163d8e65451dcde08294c46b",
+      "sha256": "cd6403cdd7a733e46e87a945555f8bb8ae75fad303f724223f0c95f7e5a8ae66",
       "official": true
     }
   ],
-  "words": 796,
-  "createdAt": "2026-11-08T22:50:38.336Z"
+  "words": 773,
+  "createdAt": "2026-11-09T23:04:40.017Z"
 }
