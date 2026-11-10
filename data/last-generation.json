@@ -1,37 +1,41 @@
 {
   "slot": {
-    "id": "reactive-evening",
+    "id": "reactive-midday",
     "kind": "reactive",
     "targetWords": [
       700,
       1200
     ],
     "categories": [
-      "insurance-claims",
-      "travel-refunds",
-      "consumer-rights",
-      "refunds"
+      "credit-debt",
+      "banking-fees",
+      "tax-money"
     ]
   },
   "provider": "github-copilot-cli",
   "topic": {
     "title": "FTC Highlights Efforts to Combat Imposter Scams and Protect Consumers",
-    "category": "consumer-rights"
+    "category": "credit-debt"
   },
-  "slug": "ftc-reports-new-steps-against-imposter-scams-how-to-check-a-suspicious-contact",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-reports-new-steps-against-imposter-scams-how-to-check-a-suspicious-contact.md",
+  "slug": "ftc-says-it-removed-19-imposter-sites-as-consumer-losses-reach-billions",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-says-it-removed-19-imposter-sites-as-consumer-losses-reach-billions.md",
   "evidence": [
     {
       "url": "https://www.ftc.gov/news-events/news/press-releases/2026/10/ftc-highlights-efforts-combat-imposter-scams-protect-consumers",
-      "sha256": "5c3e24980ecaf7f34c095c7f4446f70a5821f53b478d8b889404c7de081a9ad2",
+      "sha256": "d6fea801cfe9765a65f5d31a6169ffe171ddd7e0207fd04041d30c72123331f4",
       "official": true
     },
     {
-      "url": "https://consumer.ftc.gov/",
-      "sha256": "cd6403cdd7a733e46e87a945555f8bb8ae75fad303f724223f0c95f7e5a8ae66",
+      "url": "https://www.consumerfinance.gov/consumer-tools/credit-reports-and-scores/",
+      "sha256": "ff92fcde3a29fec7556ee915b8417094785e8bc5e6472ce3614f16a02502fef6",
+      "official": true
+    },
+    {
+      "url": "https://www.consumerfinance.gov/consumer-tools/debt-collection/",
+      "sha256": "41127b16202ed1f4c35c5456c556c8a61b61b0a77d10b3ac2617e1649218db85",
       "official": true
     }
   ],
-  "words": 773,
-  "createdAt": "2026-11-09T23:04:40.017Z"
+  "words": 737,
+  "createdAt": "2026-11-10T17:45:26.527Z"
 }
