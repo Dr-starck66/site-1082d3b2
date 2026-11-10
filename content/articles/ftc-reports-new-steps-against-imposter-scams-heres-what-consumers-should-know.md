@@ -1,48 +1,55 @@
 ---
 title: "FTC Reports New Steps Against Imposter Scams. Here’s What Consumers Should Know"
-description: "The FTC says it removed 19 websites impersonating the agency and secured more than $80 million in redress. Here’s what that means for consumers."
+description: "The FTC says it removed 19 agency-imposter websites and secured more than $80 million in consumer redress. Here’s how to assess suspicious requests."
 category: "consumer-rights"
-published: "2026-11-03T21:51:48.672Z"
-modified: "2026-11-03T21:51:48.846Z"
+published: "2026-11-10T21:52:05.980Z"
+modified: "2026-11-10T21:52:06.065Z"
 author: "Refund Money Now Desk"
 status: "published"
 content_type: "reactive"
-source_hash: "4af9ca01efcc94a52cb4914f1708e5ddb5676803f4656da526cb17ccbd4ad2eb-fb9a0e3293107d71b342964cbbc1f056c57c3eb8d3fb5e2ba27599ccb8add1df"
+source_hash: "9d095740d784da6624bfa901d252acfec37915bcca1739f171dc0fa29a474085-4b5a3a2589262f22ef80ba6c2d88e9a867df1693b37434f06257eebcc6ebfbe4"
 sources: ["https://www.ftc.gov/news-events/news/press-releases/2026/10/ftc-highlights-efforts-combat-imposter-scams-protect-consumers", "https://consumer.ftc.gov/"]
 ---
-The Federal Trade Commission says it has removed 19 websites impersonating the agency and taken enforcement actions that resulted in more than $80 million in consumer redress since its Impersonation Rule took effect in 2024. The agency also says imposter scams have been the most-reported fraud category over the past several years, with consumers reporting billions of dollars in losses. Those are reported losses—not a promise that a person who was scammed will receive money back. [S1]
-
-For consumers, the announcement is a reminder that a convincing official-looking website, call, message or advertisement is not proof of who is behind it. The FTC’s consumer advice gives a particularly clear test for claims made in the agency’s name: it says the FTC will not threaten you, demand that you transfer money to “protect it,” or tell you to withdraw cash or buy gold and hand it over. [S2]
-
 ## What changed
 
-In an October 29 announcement, the FTC highlighted its work against impersonation scams, including the removal of 19 websites posing as the FTC and enforcement actions that produced more than $80 million in consumer redress since the agency’s Impersonation Rule went into effect in 2024. The announcement describes ongoing efforts; it does not say that every impersonation report leads to enforcement or that every affected consumer qualifies for redress. [S1]
+The Federal Trade Commission says it has removed 19 websites impersonating the agency and taken enforcement actions that resulted in more than $80 million in consumer redress since its Impersonation Rule took effect in 2024. The agency highlighted the efforts in an October 29, 2026, announcement about its work against impersonation scams. [S1]
 
-The risk extends beyond someone pretending to be a federal agency. The FTC’s consumer advice warns that scammers also impersonate well-known businesses and government agencies in ads appearing in social-media feeds, search results and shopping platforms. A separate October 26 alert describes scammers posing as charities and telling people they have won a charity-sponsored sweepstakes, sometimes drawing on the fact that the person has donated to that charity. [S2]
+That figure describes the results of FTC enforcement actions; it does not establish that every person who has encountered an impostor is eligible for money. The announcement extract does not give details about who qualified for redress, how it was distributed, or whether any new refund process is open. [S1]
+
+The FTC said imposter scams have been the top reported fraud category over the past several years, with consumers reporting billions of dollars in losses. That signals the scale of reports, not a prediction about an individual’s risk or proof that every reported loss was caused by the same kind of scam. [S1]
+
+The agency’s consumer advice points to a practical warning sign: someone claiming to be from the FTC who threatens you, says you must transfer money to “protect it,” or tells you to withdraw cash or buy gold and give it to someone is a scammer, according to the FTC. [S2]
 
 ## What this means for consumers
 
-Treat a demand for urgent payment as a reason to pause, especially if the person claims to be from the FTC and says you must move money, withdraw cash or buy gold. The FTC says those instructions are a scam, not a way to protect your funds. Do not follow the caller’s or advertiser’s instructions while you are trying to work out whether the claim is real. [S2]
+If a message or call claims to come from the FTC, start with what the person is asking you to do—not how official the caller sounds or how convincing a website looks. A demand to move money for protection, hand over cash, or buy and deliver gold matches the FTC’s explicit warning. Do not treat the demand as legitimate just because the person uses the agency’s name. [S2]
 
-Then use the claim itself to choose your next step:
+A useful decision path is:
 
-- **If someone claims to be the FTC:** Stop the payment conversation. Do not transfer money, withdraw cash or buy gold because the person says it will protect your money; the FTC says it will not ask you to do those things. [S2]
-- **If an ad or message claims to represent a business or government agency:** Don’t assume it is genuine because it appears in a search result, social feed or shopping platform. Look for an official way to contact the organization separately before paying or sharing information. [S2]
-- **If you’re told you won a charity sweepstakes:** Be cautious if the caller connects the supposed prize to a charity you support. The FTC says scammers use that kind of claim; the alert does not establish that a donation means you entered or won a real contest. [S2]
-- **If you suspect fraud:** Report it to the FTC through its fraud-reporting option. Reporting gives the agency information; the supplied materials do not promise a refund or say that filing a report guarantees a particular outcome. [S1][S2]
+- **They threaten you or demand that you move money:** The FTC says it will not do this. Treat the contact as a scam rather than following the instructions. [S2]
+- **They ask you to withdraw cash or buy gold for someone:** The FTC says it will not tell you to do this. Do not hand over the money or gold based on that request. [S2]
+- **They claim you won a charity-sponsored sweepstakes:** Pause before responding. The FTC says scammers may impersonate reputable charities and may use a person’s support for a charity to make a supposed prize seem believable. [S2]
+- **You see an unexpected message or offer on social media:** Be alert to impersonation. The FTC’s Veterans Day consumer alert warns that scammers can use social platforms to connect with veterans and people they know. [S2]
 
-If you already paid or shared personal information, the FTC’s consumer-advice site lists “What To Do if You Were Scammed” among its resources and offers options to report fraud and identity theft. Choose the reporting path that matches what happened, and keep track of the contact, payment and any information you shared so you can describe the incident accurately. The available materials do not specify a recovery deadline or guarantee that a payment can be reversed. [S2]
+The charity example is a reminder that familiar names are not enough to establish that a contact is genuine. The FTC’s October 26 alert describes scammers who pretend to represent charities and tell donors they have won a charity-sponsored sweepstakes. The supplied alert does not set out a full prize-verification process, so do not assume that a message is authentic—or that a prize is available—based only on the organization named in it. [S2]
+
+The agency’s enforcement announcement is news about government action, not an instruction to pay a fee, share information, or respond to a person promising redress. The supplied announcement does not say that consumers should contact an individual to claim the reported $80 million, and the number alone is not evidence that a particular claim or offer is real. [S1]
+
+If you think you have already been scammed, the FTC’s consumer advice site lists ways to report fraud and identity theft. Its site also points consumers to advice on what to do if they paid someone they think is a scammer or shared personal information or access to a device. [S2]
 
 ## What to verify before you act
 
-Before responding to a message, call or ad, check what the person is asking you to do and whether the claim can be confirmed independently. If it involves moving money, handing over cash or gold, or acting because of a threat from someone claiming to be the FTC, stop: the agency says it will not make those demands. For a supposed business, government or charity offer, contact the organization through a channel you find independently rather than relying on the ad or caller. [S2]
+Before responding to a suspicious contact, use this short check:
 
-Before counting on money back, distinguish enforcement redress from a personal refund. The FTC reports more than $80 million in consumer redress tied to enforcement actions since the Impersonation Rule took effect in 2024, but the supplied announcement does not describe who is eligible, how to apply, or whether any particular person will receive payment. Check any specific refund notice through an official FTC source before providing information or paying a fee. [S1]
+- **Identify the demand.** Is the person threatening you, asking you to transfer money to protect it, or telling you to withdraw cash or buy gold and hand it over? Those are specific warning signs the FTC says it will not use. [S2]
+- **Separate an announcement from an individual claim.** The FTC reported aggregate enforcement results, including more than $80 million in redress, but the supplied announcement does not establish your eligibility or provide claim instructions. [S1]
+- **Question familiar names.** A charity’s name or a supposed sweepstakes win does not, by itself, establish that the contact is genuine; the FTC has warned that scammers use both kinds of claims. [S2]
+- **Choose an official next step.** If the contact appears fraudulent, don’t follow its instructions. Use the FTC’s consumer site to report fraud or identity theft and find relevant consumer advice. [S2]
 
-The practical bottom line: pause when a supposed authority pressures you to move money, check the claim outside the message or ad, and report suspected fraud to the FTC. The agency’s announcement shows enforcement activity, but it does not replace checking a particular claim or establish that a victim will recover losses. [S1][S2]
+The key distinction is between the FTC’s actions against imposters and what a person contacting you claims those actions mean for you. The agency says it is removing fake sites and pursuing enforcement; it also gives a direct warning about demands to move or hand over money. If a contact makes that demand, don’t let the agency’s name—or a promise of protection or redress—override the warning. [S1][S2]
 
 ## Related reading
 
-- [FTC Reports New Steps Against Imposter Scams, Including 19 Fake Agency Websites](/article/ftc-reports-new-steps-against-imposter-scams-including-19-fake-agency-websites)
-- [FTC Reports Imposter Scam Crackdown, Urges Consumers to Spot Fake Officials and Ads](/article/ftc-reports-imposter-scam-crackdown-urges-consumers-to-spot-fake-officials-and-ads)
-- [FTC Cites Imposter-Scam Enforcement and Warns Consumers About Fake Officials](/article/ftc-cites-imposter-scam-enforcement-and-warns-consumers-about-fake-officials)
+- [FTC Reports New Steps Against Imposter Scams: What Consumers Should Know](/article/ftc-reports-new-steps-against-imposter-scams-what-consumers-should-know)
+- [FTC Highlights Imposter Scam Enforcement: What Consumers Should Know](/article/ftc-highlights-imposter-scam-enforcement-what-consumers-should-know)
+- [FTC Reports New Steps Against Imposter Scams: How to Check a Suspicious Contact](/article/ftc-reports-new-steps-against-imposter-scams-how-to-check-a-suspicious-contact)
