@@ -1,0 +1,193 @@
+name: C2Ledger Kaggle Ephemeral Lab
+
+on:
+  push:
+    branches: [c2ledger-kaggle-range-v014]
+    paths:
+      - "c2ledger/**"
+      - ".github/workflows/c2ledger-kaggle-ephemeral-lab.yml"
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 5"
+
+jobs:
+  kaggle-lab-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ML dependencies
+        run: pip install -r c2ledger/kaggle/requirements.txt
+
+      - name: Run Kaggle-compatible planner locally
+        run: |
+          mkdir -p c2ledger/kaggle/out
+          python c2ledger/kaggle/c2ledger_range_ml.py --output-dir c2ledger/kaggle/out --rows 7000 --seed 1400
+          python - <<'PY'
+          import json
+          p=json.load(open("c2ledger/kaggle/out/scenario-plan.json"))
+          m=json.load(open("c2ledger/kaggle/out/metrics.json"))
+          assert p["schema"]=="c2ledger-kaggle-plan/v1"
+          assert p["mode"]=="EPHEMERAL_PRIVATE_LAB_ONLY"
+          assert 1 <= len(p["steps"]) <= 24
+          assert set(x["target"] for x in p["steps"]) <= {"lab-edge","lab-ci","lab-data"}
+          assert set(x["effect"] for x in p["steps"]) <= {"plant-marker","stage-synthetic-data","rotate-canary","degrade-service","recover"}
+          assert p["safety"]["publicInternetTargets"] is False
+          assert p["safety"]["arbitraryCommands"] is False
+          assert len(m["planSha256"])==64
+          print(json.dumps({"planner":"PASS","steps":len(p["steps"]),"planSha256":m["planSha256"]},indent=2))
+          PY
+
+      - name: Verify Kaggle metadata is private and offline
+        env:
+          KAGGLE_USERNAME: ci-user
+        run: |
+          python c2ledger/kaggle/prepare_metadata.py
+          python - <<'PY'
+          import json
+          x=json.load(open("c2ledger/kaggle/kernel-metadata.json"))
+          assert x["is_private"] is True
+          assert x["enable_internet"] is False
+          assert x["id"]=="ci-user/c2ledger-range-intelligence"
+          assert x["code_file"]=="c2ledger_range_ml.py"
+          print("KAGGLE_METADATA PASS")
+          PY
+
+      - name: Build engine and disposable lab machine image
+        run: |
+          docker build -t c2ledger-engine:0.14.0 ./c2ledger
+          docker build -t c2ledger-range-node:0.14.0 -f c2ledger/range-node/Dockerfile ./c2ledger
+          docker network create --internal c2ledger-kaggle-lab
+
+      - name: Start three ephemeral lab machines
+        run: |
+          for node in lab-edge lab-ci lab-data; do
+            docker run -d --rm --network c2ledger-kaggle-lab --name "$node" \
+              -e C2LEDGER_RANGE_TOKEN=range-ci-token \
+              -e C2LEDGER_RANGE_ROOT=/var/lib/c2ledger-range \
+              c2ledger-range-node:0.14.0
+          done
+
+      - name: Start C2Ledger v0.14.0 inside isolated lab
+        run: |
+          docker run -d --network c2ledger-kaggle-lab --name c2ledger-engine \
+            -e C2LEDGER_LOCAL_STATE_DIR=/var/lib/c2ledger \
+            -e C2LEDGER_EVIDENCE_REQUIRED=true \
+            -e C2LEDGER_ADMIN_TOKEN=admin-ci-token \
+            -e C2LEDGER_RANGE_TOKEN=range-ci-token \
+            -e C2LEDGER_RANGE_ALLOWED_HOSTS=lab-edge,lab-ci,lab-data \
+            -e C2LEDGER_EXPECTED_VERSION=0.14.0 \
+            -e C2LEDGER_EXPECTED_RULEPACK_HASH=982165065299a96ec5d4b9d07c168917c56c3bddd3ae901180f74aa1e53a51eb \
+            -e C2LEDGER_RELEASE_ID=v0.14.0-kaggle-ci \
+            -v c2ledger-kaggle-state:/var/lib/c2ledger \
+            -v "$PWD/c2ledger/kaggle/out:/app/c2ledger/kaggle/out" \
+            c2ledger-engine:0.14.0
+          ready=0
+          for i in $(seq 1 30); do
+            if docker exec c2ledger-engine bun -e 'const r=await fetch("http://127.0.0.1:3000/health"); if(!r.ok) process.exit(1); console.log(await r.text())' >/tmp/health.json 2>/dev/null; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          test "$ready" = "1"
+          docker exec c2ledger-engine bun -e 'const r=await fetch("http://127.0.0.1:3000/api/kaggle/profile"); if(!r.ok) process.exit(1); console.log(await r.text())' >/tmp/kaggle-profile.json
+          node - <<'NODE'
+          const fs=require("fs");
+          const x=JSON.parse(fs.readFileSync("/tmp/kaggle-profile.json","utf8"));
+          if(x.version!=="0.14.0" || x.status!=="PASS") throw new Error("Kaggle range layer failed");
+          if(x.profile?.notebook?.internet!==false) throw new Error("Kaggle internet boundary failed");
+          if(x.checks?.arbitraryTargetBlocked!==true || x.checks?.arbitraryEffectBlocked!==true) throw new Error("plan policy gate failed");
+          NODE
+
+      - name: Execute ML-generated plan on ephemeral machines
+        run: |
+          docker exec \
+            -e C2LEDGER_ENGINE_URL=http://127.0.0.1:3000 \
+            -e C2LEDGER_ADMIN_TOKEN=admin-ci-token \
+            c2ledger-engine bun kaggle/orchestrate_plan.mjs c2ledger/kaggle/out/scenario-plan.json
+
+      - name: Verify real lab state and recovery
+        run: |
+          for node in lab-edge lab-ci lab-data; do
+            docker exec "$node" sh -lc 'test -d /var/lib/c2ledger-range'
+          done
+          for node in lab-edge lab-ci lab-data; do
+            docker run --rm --network c2ledger-kaggle-lab curlimages/curl:8.12.1 \
+              -fsS -H 'authorization: Bearer range-ci-token' "http://$node:3200/state" > "/tmp/$node.json"
+          done
+          node - <<'NODE'
+          const fs=require("fs");
+          for(const n of ["lab-edge","lab-ci","lab-data"]){
+            const x=JSON.parse(fs.readFileSync("/tmp/"+n+".json","utf8"));
+            if(x.mode!=="NORMAL") throw new Error(n+" did not recover");
+          }
+          const r=JSON.parse(fs.readFileSync("c2ledger/kaggle/out/lab-report.json","utf8"));
+          if(r.status!=="PASS" || !/^[a-f0-9]{64}$/.test(r.digest||"")) throw new Error("lab report proof failed");
+          console.log(JSON.stringify({status:"PASS",machines:3,steps:r.steps,digest:r.digest},null,2));
+          NODE
+
+      - name: Prove public target denial
+        run: |
+          docker exec c2ledger-engine bun -e '
+            const r=await fetch("http://127.0.0.1:3000/api/range/effect",{
+              method:"POST",
+              headers:{authorization:"Bearer admin-ci-token","content-type":"application/json"},
+              body:JSON.stringify({target:"https://example.com",effect:"plant-marker",id:"must-block"})
+            });
+            const body=await r.text();
+            if(r.status!==400 || !body.includes("public/arbitrary hosts are not allowed")) {
+              console.error(r.status,body); process.exit(1);
+            }
+            console.log(body);
+          '
+
+      - name: Verify complete Proof Gate
+        run: |
+          docker exec c2ledger-engine bun -e 'const r=await fetch("http://127.0.0.1:3000/api/proof"); if(!r.ok) process.exit(1); console.log(await r.text())' >/tmp/proof.json
+          node - <<'NODE'
+          const fs=require("fs");
+          const x=JSON.parse(fs.readFileSync("/tmp/proof.json","utf8"));
+          console.log(JSON.stringify({gate:x.gate,benchmark:x.benchmark?.status,evidenceStore:x.evidenceStore?.status,moatLayer:x.moatLayer?.status,integrationLayer:x.integrationLayer?.status,productizationLayer:x.productizationLayer?.status,commercialLayer:x.commercialLayer?.status,operationalIntegrity:x.operationalIntegrity?.status,defenceLayer:x.defenceLayer?.status,adversaryEmulation:x.adversaryEmulation?.status,missionOpsLayer:x.missionOpsLayer?.status,authorizedRangeLayer:x.authorizedRangeLayer?.status,kaggleRangeLayer:x.kaggleRangeLayer?.status,driftSentinel:x.driftSentinel?.status,releaseControl:x.releaseControl?.status},null,2));
+          if(x.gate!=="PASS") throw new Error("proof gate="+x.gate);
+          if(x.kaggleRangeLayer?.status!=="PASS") throw new Error("Kaggle layer did not pass");
+          if(x.authorizedRangeLayer?.status!=="PASS") throw new Error("authorized range layer did not pass");
+          console.log(JSON.stringify({gate:x.gate,version:x.version,kaggle:x.kaggleRangeLayer.status,range:x.authorizedRangeLayer.status},null,2));
+          NODE
+
+      - name: Upload evidence artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: c2ledger-kaggle-lab-proof
+          path: |
+            c2ledger/kaggle/out/scenario-plan.json
+            c2ledger/kaggle/out/metrics.json
+            c2ledger/kaggle/out/risk-summary.csv
+            c2ledger/kaggle/out/lab-report.json
+
+      - name: Optional Kaggle accelerator push
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+        run: |
+          if [ -z "$KAGGLE_USERNAME" ] || [ -z "$KAGGLE_KEY" ]; then
+            echo "Kaggle credentials are not configured; local-equivalent proof already passed." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          pip install kaggle
+          python c2ledger/kaggle/prepare_metadata.py
+          kaggle kernels push -p c2ledger/kaggle -t 1800
+          echo "Kaggle kernel push requested." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Logs
+        if: always()
+        run: |
+          docker logs c2ledger-engine || true
+          for node in lab-edge lab-ci lab-data; do docker logs "$node" || true; done

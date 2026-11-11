@@ -1,0 +1,90 @@
+name: C2Ledger Authorized Range Gate
+
+on:
+  push:
+    branches: [c2ledger-authorized-range-v1]
+    paths:
+      - "c2ledger/**"
+      - ".github/workflows/c2ledger-authorized-range.yml"
+  pull_request:
+    paths:
+      - "c2ledger/**"
+      - ".github/workflows/c2ledger-authorized-range.yml"
+  workflow_dispatch:
+
+jobs:
+  authorized-range:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build engine and range node
+        run: |
+          docker build -t c2ledger-engine ./c2ledger
+          docker build -t c2ledger-range-node -f c2ledger/range-node/Dockerfile ./c2ledger
+          docker network create c2ledger-range-ci
+      - name: Start engine and authorized range node
+        run: |
+          docker run -d --rm --network c2ledger-range-ci --name c2ledger-engine -p 3000:3000             -e C2LEDGER_LOCAL_STATE_DIR=/var/lib/c2ledger             -e C2LEDGER_EVIDENCE_REQUIRED=true             -e C2LEDGER_ADMIN_TOKEN=range-admin             -e C2LEDGER_RANGE_TOKEN=range-token             -e C2LEDGER_RANGE_ALLOWED_HOSTS=c2ledger-range-node             -e C2LEDGER_EXPECTED_VERSION=0.13.0             -e C2LEDGER_RELEASE_ID=v0.13.0-range-ci             -v c2ledger-range-engine-state:/var/lib/c2ledger             c2ledger-engine
+          docker run -d --rm --network c2ledger-range-ci --name c2ledger-range-node             -e C2LEDGER_RANGE_TOKEN=range-token             -e C2LEDGER_RANGE_ROOT=/var/lib/c2ledger-range             -v c2ledger-range-node-state:/var/lib/c2ledger-range             c2ledger-range-node
+      - name: Wait for health
+        run: |
+          for i in $(seq 1 30); do
+            docker exec c2ledger-engine wget -qO- http://127.0.0.1:3000/health >/tmp/engine.json 2>/dev/null &&             docker exec c2ledger-range-node wget -qO- http://127.0.0.1:3200/health >/tmp/node.json 2>/dev/null && exit 0
+            sleep 1
+          done
+          docker logs c2ledger-engine || true
+          docker logs c2ledger-range-node || true
+          exit 1
+      - name: Verify range policy
+        run: |
+          curl -fsS http://127.0.0.1:3000/api/range/profile >/tmp/profile.json
+          node - <<'NODE'
+          const fs=require("fs");
+          const x=JSON.parse(fs.readFileSync("/tmp/profile.json","utf8"));
+          if(x.status!=="PASS") throw new Error("authorized range layer failed");
+          if(x.profile?.targetPolicy?.publicInternet!==false) throw new Error("public Internet target policy failed");
+          if(x.profile?.targetPolicy?.arbitraryHosts!==false) throw new Error("arbitrary host policy failed");
+          if(x.checks?.publicBlocked!==true || x.checks?.privateAllowed!==true) throw new Error("target validation regression");
+          NODE
+      - name: Apply real lab effects
+        run: |
+          curl -fsS -X POST http://127.0.0.1:3000/api/range/effect             -H 'authorization: Bearer range-admin' -H 'content-type: application/json'             -d '{"target":"http://c2ledger-range-node:3200","effect":"plant-marker","id":"proof-marker"}' >/tmp/effect1.json
+          curl -fsS -X POST http://127.0.0.1:3000/api/range/effect             -H 'authorization: Bearer range-admin' -H 'content-type: application/json'             -d '{"target":"http://c2ledger-range-node:3200","effect":"degrade-service","service":"mock-command-service"}' >/tmp/effect2.json
+          docker exec c2ledger-range-node sh -lc 'test -f /var/lib/c2ledger-range/artifacts/marker-proof-marker.txt'
+          docker exec c2ledger-range-node wget -qO /tmp/state.json --header='Authorization: Bearer range-token' http://127.0.0.1:3200/state
+          docker exec c2ledger-range-node cat /tmp/state.json | tee /tmp/node-state.json
+          node - <<'NODE'
+          const fs=require("fs");
+          const a=JSON.parse(fs.readFileSync("/tmp/effect1.json","utf8"));
+          const b=JSON.parse(fs.readFileSync("/tmp/effect2.json","utf8"));
+          const s=JSON.parse(fs.readFileSync("/tmp/node-state.json","utf8"));
+          if(!["PASS","PARTIAL"].includes(a.status)||!["PASS","PARTIAL"].includes(b.status)) throw new Error("range effect not applied");
+          if(s.mode!=="DEGRADED" || !s.degradedServices?.includes("mock-command-service")) throw new Error("range node state did not change");
+          NODE
+      - name: Verify public targets are blocked
+        run: |
+          code=$(curl -sS -o /tmp/public-blocked.json -w '%{http_code}' -X POST http://127.0.0.1:3000/api/range/effect             -H 'authorization: Bearer range-admin' -H 'content-type: application/json'             -d '{"target":"https://example.com","effect":"plant-marker","id":"must-not-run"}')
+          test "$code" = "400"
+          grep -q 'target blocked' /tmp/public-blocked.json
+      - name: Verify kill switch
+        run: |
+          curl -fsS -X POST http://127.0.0.1:3000/api/mission-ops/control             -H 'authorization: Bearer range-admin' -H 'content-type: application/json'             -d '{"enabled":false,"reason":"range-ci-stop"}' >/tmp/off.json
+          code=$(curl -sS -o /tmp/killed.json -w '%{http_code}' -X POST http://127.0.0.1:3000/api/range/effect             -H 'authorization: Bearer range-admin' -H 'content-type: application/json'             -d '{"target":"http://c2ledger-range-node:3200","effect":"stage-synthetic-data","count":3}')
+          test "$code" = "423"
+          curl -fsS -X POST http://127.0.0.1:3000/api/mission-ops/control             -H 'authorization: Bearer range-admin' -H 'content-type: application/json'             -d '{"enabled":true,"reason":"range-ci-resume"}' >/tmp/on.json
+      - name: Recover node
+        run: |
+          curl -fsS -X POST http://127.0.0.1:3000/api/range/effect             -H 'authorization: Bearer range-admin' -H 'content-type: application/json'             -d '{"target":"http://c2ledger-range-node:3200","effect":"recover"}' >/tmp/recover.json
+          docker exec c2ledger-range-node wget -qO /tmp/state2.json --header='Authorization: Bearer range-token' http://127.0.0.1:3200/state
+          docker exec c2ledger-range-node cat /tmp/state2.json | tee /tmp/node-state2.json
+          node - <<'NODE'
+          const fs=require("fs");
+          const s=JSON.parse(fs.readFileSync("/tmp/node-state2.json","utf8"));
+          if(s.mode!=="NORMAL" || (s.degradedServices||[]).length) throw new Error("range recovery failed");
+          NODE
+      - name: Logs
+        if: always()
+        run: |
+          docker logs c2ledger-engine || true
+          docker logs c2ledger-range-node || true

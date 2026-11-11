@@ -1,0 +1,148 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: c2ledger
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: c2ledger-state
+  namespace: c2ledger
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: c2ledger-mission-node
+  namespace: c2ledger
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: c2ledger-mission-node
+  template:
+    metadata:
+      labels:
+        app: c2ledger-mission-node
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: engine
+          image: c2ledger-engine:0.13.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PORT
+              value: "3000"
+            - name: C2LEDGER_LOCAL_STATE_DIR
+              value: /var/lib/c2ledger
+            - name: C2LEDGER_EVIDENCE_REQUIRED
+              value: "true"
+            - name: C2LEDGER_EXPECTED_VERSION
+              value: "0.13.0"
+            - name: C2LEDGER_RELEASE_ID
+              value: "v0.13.0-disconnected"
+            - name: C2LEDGER_ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: c2ledger-secrets
+                  key: admin-token
+            - name: C2LEDGER_SENSOR_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: c2ledger-secrets
+                  key: sensor-token
+          ports:
+            - containerPort: 3000
+          volumeMounts:
+            - name: state
+              mountPath: /var/lib/c2ledger
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
+        - name: sensor
+          image: c2ledger-sensor:0.13.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PORT
+              value: "3100"
+            - name: C2LEDGER_ENGINE_URL
+              value: "http://127.0.0.1:3000"
+            - name: C2LEDGER_SENSOR_ID
+              value: "sensor-k8s-01"
+            - name: C2LEDGER_SENSOR_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: c2ledger-secrets
+                  key: sensor-token
+            - name: C2LEDGER_SENSOR_INGEST_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: c2ledger-secrets
+                  key: sensor-ingest-token
+          ports:
+            - containerPort: 3100
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
+      volumes:
+        - name: state
+          persistentVolumeClaim:
+            claimName: c2ledger-state
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: c2ledger-engine
+  namespace: c2ledger
+spec:
+  selector:
+    app: c2ledger-mission-node
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: c2ledger-sensor
+  namespace: c2ledger
+spec:
+  selector:
+    app: c2ledger-mission-node
+  ports:
+    - name: http
+      port: 3100
+      targetPort: 3100
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: c2ledger-disconnected
+  namespace: c2ledger
+spec:
+  podSelector:
+    matchLabels:
+      app: c2ledger-mission-node
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 3000
+        - protocol: TCP
+          port: 3100
+  egress: []

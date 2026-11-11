@@ -1,0 +1,150 @@
+name: C2Ledger Mission Assurance Gate
+
+on:
+  push:
+    branches: [c2ledger-v1-hardening]
+    paths:
+      - "c2ledger/**"
+      - ".github/workflows/c2ledger-mission-assurance.yml"
+  pull_request:
+    paths:
+      - "c2ledger/**"
+      - ".github/workflows/c2ledger-mission-assurance.yml"
+  workflow_dispatch:
+
+jobs:
+  mission-assurance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build deployable Mission Ops images
+        run: |
+          docker build -t c2ledger-mission-assurance ./c2ledger
+          docker build -t c2ledger-mission-sensor -f c2ledger/sensor/Dockerfile ./c2ledger
+          docker network create c2ledger-ci
+      - name: Start engine
+        run: |
+          docker run -d --rm --network c2ledger-ci -p 3000:3000 --name c2ledger-ma \
+            -e C2LEDGER_LOCAL_STATE_DIR=/var/lib/c2ledger \
+            -e C2LEDGER_EVIDENCE_REQUIRED=true \
+            -e C2LEDGER_ADMIN_TOKEN=test-admin \
+            -e C2LEDGER_SENSOR_TOKEN=test-sensor \
+            -e C2LEDGER_EXPECTED_VERSION=0.14.0 \
+            -e C2LEDGER_RELEASE_ID=v0.14.0-ci \
+            -v c2ledger-ci-state:/var/lib/c2ledger \
+            c2ledger-mission-assurance
+      - name: Wait for health
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3000/health >/tmp/health.json; then exit 0; fi
+            sleep 1
+          done
+          docker logs c2ledger-ma
+          exit 1
+      - name: Verify Mission Assurance boundary
+        run: |
+          curl -fsS http://127.0.0.1:3000/api/defence/readiness >/tmp/readiness.json
+          node - <<'NODE'
+          const fs=require("fs");
+          const x=JSON.parse(fs.readFileSync("/tmp/readiness.json","utf8"));
+          if(x.version!=="0.14.0") throw new Error("unexpected version: "+x.version);
+          if(x.profile?.posture!=="DEFENSIVE_ONLY") throw new Error("defensive posture missing");
+          if(x.profile?.boundaries?.offensiveAutomation!==false) throw new Error("offensive automation boundary failed");
+          if(x.profile?.boundaries?.exploitDelivery!==false) throw new Error("exploit delivery boundary failed");
+          if(x.profile?.boundaries?.destructiveActions!==false) throw new Error("destructive action boundary failed");
+          if(x.defenceLayer?.status!=="PASS") throw new Error("defence layer did not pass");
+          NODE
+      - name: Verify deployable Mission Ops control plane
+        run: |
+          curl -fsS http://127.0.0.1:3000/api/mission-ops/profile >/tmp/mission-profile.json
+          curl -fsS -X POST -H 'content-type: application/json' \
+            -d '{"criticalAssetsTotal":10,"criticalAssetsAvailable":10,"detectionsExpected":4,"detectionsObserved":4,"containmentExpected":2,"containmentSucceeded":2,"evidenceExpected":3,"evidenceVerified":3,"recoveryObjectives":2,"recoveryMet":2}' \
+            http://127.0.0.1:3000/api/mission-ops/evaluate >/tmp/mission-score.json
+          node - <<'NODE'
+          const fs=require("fs");
+          const p=JSON.parse(fs.readFileSync("/tmp/mission-profile.json","utf8"));
+          const s=JSON.parse(fs.readFileSync("/tmp/mission-score.json","utf8"));
+          if(p.status!=="PASS" || p.profile?.deployable!==true) throw new Error("Mission Ops profile not deployable");
+          if(p.profile?.controls?.killSwitch!==true || p.profile?.controls?.arbitraryExecution!==false) throw new Error("Mission Ops control boundary failed");
+          if(s.score!==100 || s.state!=="READY") throw new Error("Mission score regression");
+          NODE
+      - name: Start and verify passive sensor
+        run: |
+          docker run -d --rm --network c2ledger-ci -p 3100:3100 --name c2ledger-sensor \
+            -e C2LEDGER_ENGINE_URL=http://c2ledger-ma:3000 \
+            -e C2LEDGER_SENSOR_ID=sensor-ci-01 \
+            -e C2LEDGER_SENSOR_TOKEN=test-sensor \
+            -e C2LEDGER_SENSOR_INGEST_TOKEN=test-ingest \
+            c2ledger-mission-sensor
+          for i in $(seq 1 20); do
+            curl -fsS http://127.0.0.1:3100/health >/tmp/sensor-health.json && break
+            sleep 1
+          done
+          curl -fsS -X POST -H 'authorization: Bearer test-ingest' -H 'content-type: application/json' \
+            -d '{"type":"mission-test","source":"ci","severity":"info","message":"bounded passive telemetry"}' \
+            http://127.0.0.1:3100/event >/tmp/sensor-event.json
+          node - <<'NODE'
+          const fs=require("fs");
+          const h=JSON.parse(fs.readFileSync("/tmp/sensor-health.json","utf8"));
+          const e=JSON.parse(fs.readFileSync("/tmp/sensor-event.json","utf8"));
+          if(h.mode!=="PASSIVE_FORWARDER" || e.ok!==true || e.forwarded?.accepted!==true) throw new Error("sensor forwarding failed");
+          NODE
+      - name: Verify persistent kill switch
+        run: |
+          curl -fsS -X POST -H 'authorization: Bearer test-admin' -H 'content-type: application/json' \
+            -d '{"enabled":false,"reason":"ci-kill-switch"}' http://127.0.0.1:3000/api/mission-ops/control >/tmp/control-off.json
+          code=$(curl -sS -o /tmp/blocked.json -w '%{http_code}' -X POST -H 'authorization: Bearer test-sensor' -H 'content-type: application/json' \
+            -d '{"type":"should-block"}' http://127.0.0.1:3000/api/sensor/events)
+          test "$code" = "423"
+          curl -fsS -X POST -H 'authorization: Bearer test-admin' -H 'content-type: application/json' \
+            -d '{"enabled":true,"reason":"ci-resume"}' http://127.0.0.1:3000/api/mission-ops/control >/tmp/control-on.json
+      - name: Verify disconnected deployment definitions
+        run: |
+          C2LEDGER_ADMIN_TOKEN=ci-admin C2LEDGER_SENSOR_TOKEN=ci-sensor C2LEDGER_SENSOR_INGEST_TOKEN=ci-ingest \
+            docker compose -f c2ledger/deploy/docker-compose.disconnected.yml config >/tmp/compose.yaml
+          grep -q 'internal: true' /tmp/compose.yaml
+          grep -q 'readOnlyRootFilesystem: true' c2ledger/deploy/k8s-disconnected.yaml
+          grep -q 'egress: \[\]' c2ledger/deploy/k8s-disconnected.yaml
+      - name: Verify bounded adversary emulation
+        run: |
+          curl -fsS http://127.0.0.1:3000/api/defence/adversary-emulation >/tmp/emulation-catalog.json
+          curl -fsS -X POST -H 'content-type: application/json' -d '{"scenarioId":"onchain-dead-drop-chain"}' http://127.0.0.1:3000/api/defence/adversary-emulation >/tmp/emulation-result.json
+          node - <<'NODE'
+          const fs=require("fs");
+          const c=JSON.parse(fs.readFileSync("/tmp/emulation-catalog.json","utf8"));
+          const r=JSON.parse(fs.readFileSync("/tmp/emulation-result.json","utf8"));
+          if(c.mode!=="PURPLE_TEAM_DRY_RUN" || c.safety?.liveExploitation!==false) throw new Error("emulation safety boundary failed");
+          if((c.detectorValidationScenarios||[]).length<4) throw new Error("detector scenario catalog too small");
+          if((c.advancedScenarios||[]).length<4 || Number(c.advancedStageCount||0)<8) throw new Error("advanced adversary-emulation catalog too small");
+          const a=c.advancedScenarios||[];
+          if(!a.every(s=>s.objective&&s.threatModel&&s.environment&&(s.safetyBoundary||[]).length>=3&&(s.stages||[]).every(x=>x.adversaryIntent&&x.simulation&&(x.telemetry||[]).length&&(x.expectedDetection||[]).length&&(x.containment||[]).length&&(x.recovery||[]).length&&(x.passCriteria||[]).length))) throw new Error("advanced scenario documentation incomplete");
+          if(r.status!=="PASS" || r.safety?.executedPayload!==false) throw new Error("emulation detector validation failed");
+          NODE
+      - name: Verify advanced range catalog
+        run: |
+          curl -fsS http://127.0.0.1:3000/api/defence/adversary-emulation/advanced >/tmp/advanced-range.json
+          node - <<'NODE'
+          const fs=require("fs");
+          const x=JSON.parse(fs.readFileSync("/tmp/advanced-range.json","utf8"));
+          if(x.mode!=="ISOLATED_ADVERSARY_EMULATION") throw new Error("advanced range mode mismatch");
+          if((x.scenarios||[]).length<4) throw new Error("advanced range scenario count too small");
+          for(const k of ["liveTargeting","exploitDelivery","destructiveActions","credentialTheft","propagation","arbitraryExecution"]){
+            if(x.safety?.[k]!==false) throw new Error("unsafe range capability: "+k);
+          }
+          NODE
+      - name: Verify portable assurance package
+        run: |
+          curl -fsS http://127.0.0.1:3000/api/defence/assurance-package >/tmp/assurance.json
+          node - <<'NODE'
+          const fs=require("fs");
+          const x=JSON.parse(fs.readFileSync("/tmp/assurance.json","utf8"));
+          if(x.schema!=="c2ledger-mission-assurance/v1") throw new Error("schema mismatch");
+          if(x.digestAlgorithm!=="SHA-256" || !/^[a-f0-9]{64}$/.test(x.digest||"")) throw new Error("invalid evidence digest");
+          if(x.exportMode!=="offline-json") throw new Error("offline export mode missing");
+          NODE
+      - name: Container logs
+        if: always()
+        run: |
+          docker logs c2ledger-ma || true
+          docker logs c2ledger-sensor || true
