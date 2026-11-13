@@ -1,37 +1,41 @@
 {
   "slot": {
-    "id": "reactive-evening",
+    "id": "reactive-midday",
     "kind": "reactive",
     "targetWords": [
       700,
       1200
     ],
     "categories": [
-      "insurance-claims",
-      "travel-refunds",
-      "consumer-rights",
-      "refunds"
+      "credit-debt",
+      "banking-fees",
+      "tax-money"
     ]
   },
   "provider": "github-copilot-cli",
   "topic": {
     "title": "FTC Highlights Efforts to Combat Imposter Scams and Protect Consumers",
-    "category": "consumer-rights"
+    "category": "credit-debt"
   },
-  "slug": "ftc-says-it-removed-19-imposter-sites-as-scam-losses-reach-35-billion",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-says-it-removed-19-imposter-sites-as-scam-losses-reach-35-billion.md",
+  "slug": "ftc-says-it-stopped-19-imposter-websites-as-scams-remain-a-major-fraud-category",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-says-it-stopped-19-imposter-websites-as-scams-remain-a-major-fraud-category.md",
   "evidence": [
     {
       "url": "https://www.ftc.gov/news-events/news/press-releases/2026/10/ftc-highlights-efforts-combat-imposter-scams-protect-consumers",
-      "sha256": "267e3b78aef76e38d906f90d260c471f6364d8cae203faccf7e56b7e4d7e6bb4",
+      "sha256": "295acfce41fed292e9148d75d0a5ff20f15aabfc49db35ad38fc6834f8e3aeee",
       "official": true
     },
     {
-      "url": "https://consumer.ftc.gov/",
-      "sha256": "2ffbf53e776a5610a3d7de12a24b7cf6e56fa5f9bdb9e64392ef968cc9381e84",
+      "url": "https://www.consumerfinance.gov/consumer-tools/credit-reports-and-scores/",
+      "sha256": "ff92fcde3a29fec7556ee915b8417094785e8bc5e6472ce3614f16a02502fef6",
+      "official": true
+    },
+    {
+      "url": "https://www.consumerfinance.gov/consumer-tools/debt-collection/",
+      "sha256": "41127b16202ed1f4c35c5456c556c8a61b61b0a77d10b3ac2617e1649218db85",
       "official": true
     }
   ],
-  "words": 834,
-  "createdAt": "2026-11-12T22:19:05.326Z"
+  "words": 867,
+  "createdAt": "2026-11-13T17:41:46.729Z"
 }
