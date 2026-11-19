@@ -18,20 +18,20 @@
     "title": "FTC Highlights Efforts to Combat Imposter Scams and Protect Consumers",
     "category": "consumer-rights"
   },
-  "slug": "ftc-reports-takedowns-of-19-imposter-websites-and-more-than-80-million-in-consumer-redress",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-reports-takedowns-of-19-imposter-websites-and-more-than-80-million-in-consumer-redress.md",
+  "slug": "ftc-highlights-imposter-scam-crackdown-what-consumers-should-know",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-highlights-imposter-scam-crackdown-what-consumers-should-know.md",
   "evidence": [
     {
       "url": "https://www.ftc.gov/news-events/news/press-releases/2026/10/ftc-highlights-efforts-combat-imposter-scams-protect-consumers",
-      "sha256": "c884ef61b7777238f49f7e87c31438085c44adc2a7850697121eb24dfdca5b59",
+      "sha256": "b4ce94682063a9495a66b2df9525f2aafb72c94961f9f78efa58e162e7442867",
       "official": true
     },
     {
       "url": "https://consumer.ftc.gov/",
-      "sha256": "89bf791251c93c849de7da2e329dbe5e2100b1577d6e8ed7a5c4c0735ae7eb44",
+      "sha256": "35d5f80e6a0ccbc2670b8b76f442761940e976cc39cbdcf507d9c4b3cd916089",
       "official": true
     }
   ],
-  "words": 783,
-  "createdAt": "2026-11-18T22:59:01.805Z"
+  "words": 810,
+  "createdAt": "2026-11-19T23:07:44.640Z"
 }
