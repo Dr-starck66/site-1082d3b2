@@ -1,0 +1,937 @@
+{
+  "schema": "astra-pre-release-routes/1",
+  "site": "freehotels.info",
+  "savedOn": "2026-11-21",
+  "projectId": "prj_CRcKh820D2Sm3h9eFS2SkdNtPVcA",
+  "liveVersion": "2494453c-4555-4fb0-8df3-e58cf572be0e",
+  "routes": [
+    {
+      "id": "b502cac6-7339-4f4f-94b8-f3c02563fdc1",
+      "name": "FreeHotels | archive de/koeln/en/cologne/133.html",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/de/koeln/en/cologne/133\\.html/?$",
+        "dest": "/de/koeln/133.html",
+        "status": 301
+      },
+      "srcSyntax": "regex",
+      "routeType": "redirect"
+    },
+    {
+      "id": "b8832a88-9f6a-4a1a-b41d-f9cecc53c39b",
+      "name": "FreeHotels | archive de/koeln/traveldata 133",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/de/koeln/traveldata/?$",
+        "dest": "/de/koeln/133.html",
+        "status": 301,
+        "has": [
+          {
+            "type": "query",
+            "key": "hotelid",
+            "value": "133"
+          }
+        ]
+      },
+      "srcSyntax": "regex",
+      "routeType": "redirect"
+    },
+    {
+      "id": "958f498e-e7ce-40fe-a872-88fc827ccc8e",
+      "name": "FreeHotels | archive de/frankfurt/traveldata 14",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/de/frankfurt/traveldata/?$",
+        "dest": "/de/frankfurt/14.html",
+        "status": 301,
+        "has": [
+          {
+            "type": "query",
+            "key": "hotelid",
+            "value": "14"
+          }
+        ]
+      },
+      "srcSyntax": "regex",
+      "routeType": "redirect"
+    },
+    {
+      "id": "058c28f1-c4e5-422b-94c7-8ddb3a9b822f",
+      "name": "FreeHotels | archive en/berlin/traveldata 45",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/en/berlin/traveldata/?$",
+        "dest": "/en/berlin/45.html",
+        "status": 301,
+        "has": [
+          {
+            "type": "query",
+            "key": "hotelid",
+            "value": "45"
+          }
+        ]
+      },
+      "srcSyntax": "regex",
+      "routeType": "redirect"
+    },
+    {
+      "id": "f8a6de8a-56cc-40ff-90d1-6505674c59fb",
+      "name": "FreeHotels | archive de/berlin/traveldata 45",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/de/berlin/traveldata/?$",
+        "dest": "/de/berlin/45.html",
+        "status": 301,
+        "has": [
+          {
+            "type": "query",
+            "key": "hotelid",
+            "value": "45"
+          }
+        ]
+      },
+      "srcSyntax": "regex",
+      "routeType": "redirect"
+    },
+    {
+      "id": "cc75ebc4-daf9-4739-b8fb-532dcfe813db",
+      "name": "ASTRA 281 — historical archive sitemaprich explicit origin",
+      "description": "Exact archive path, both slash variants. Serve the preserved German archive from the existing Netlify origin at its canonical slashless path. Keep noindex, follow and HTML content type.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/de/sitemaprich/?$",
+        "dest": "https://freehotels-info.netlify.app/de/sitemaprich",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "x-robots-tag"
+            },
+            "args": "noindex, follow"
+          },
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ]
+      },
+      "srcSyntax": "regex",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "fe0ad371-6f00-4c11-8000-202611060100",
+      "name": "ASTRA FreeHotels guide 1",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "/en/guides/connecting-adjoining-hotel-rooms-confirmation-guide/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@9a2d9e7531e0e1555ee89a28f8932d483b831d82/astra/discover-multisite-20261102/freehotels/editorial-20261106/connecting-adjoining-hotel-rooms-confirmation-guide.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ]
+      },
+      "srcSyntax": "equals",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "fe0ad371-6f00-4c11-8000-202611060101",
+      "name": "ASTRA FreeHotels guide 2",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "/en/guides/early-hotel-arrival-room-ready-luggage-guide/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@9a2d9e7531e0e1555ee89a28f8932d483b831d82/astra/discover-multisite-20261102/freehotels/editorial-20261106/early-hotel-arrival-room-ready-luggage-guide.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ]
+      },
+      "srcSyntax": "equals",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "fe0ad371-6f00-4c11-8000-202611060102",
+      "name": "ASTRA FreeHotels guide 3",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "/en/guides/hotel-card-payment-currency-conversion-dcc-guide/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@9a2d9e7531e0e1555ee89a28f8932d483b831d82/astra/discover-multisite-20261102/freehotels/editorial-20261106/hotel-card-payment-currency-conversion-dcc-guide.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ]
+      },
+      "srcSyntax": "equals",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "fe0ad371-6f00-4c11-8000-202611060199",
+      "name": "ASTRA FreeHotels original explanatory images 20261106",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/assets/editorial-20261106/([a-z0-9.-]+)$",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@9a2d9e7531e0e1555ee89a28f8932d483b831d82/astra/discover-multisite-20261102/freehotels/editorial-20261106/assets/$1"
+      },
+      "srcSyntax": "regex",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "86fbbbf5-ead2-4c8c-be08-1ba7587bd14f",
+      "name": "ASTRA FreeHotels | Editorial Germany news hub",
+      "description": "Isolated editorial route; existing hotels and old URLs remain served by original Next.js app",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "/de/reise/aktuell/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@8c8782ef0ca0ecde41630947aea68fe0841bf071/astra/discover-multisite-20261102/freehotels/reise-aktuell-index.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ],
+        "respectOriginCacheControl": false
+      },
+      "srcSyntax": "equals",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "28a91121-29ca-47ca-a815-0f2d7ff28597",
+      "name": "ASTRA FreeHotels | Scalable German travel editorial",
+      "description": "Isolated editorial route; existing hotels and old URLs remain served by original Next.js app",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/de/reise/([a-z0-9-]+)/?$",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@8c8782ef0ca0ecde41630947aea68fe0841bf071/astra/discover-multisite-20261102/freehotels/$1.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ],
+        "respectOriginCacheControl": false
+      },
+      "srcSyntax": "regex",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "840c1980-bded-4bc9-a7ef-210b428e403d",
+      "name": "ASTRA FreeHotels | Supplemental editorial sitemap",
+      "description": "Isolated editorial route; existing hotels and old URLs remain served by original Next.js app | 2026-11-09: add two source-verified Christmas guides and preserve historic URLs.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "/sitemap-editorial.xml",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@a64494b20f3686e20e1f8275abe7f45a785caf35/astra/discover-multisite-20261102/freehotels/growth-100k/publication/dist/sitemap-editorial-p100-20261109.xml",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "application/xml; charset=utf-8"
+          }
+        ],
+        "respectOriginCacheControl": false
+      },
+      "srcSyntax": "equals",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "7ce72efe-feb0-4099-9bc8-922b6486327f",
+      "name": "ASTRA FreeHotels | 48h News-only sitemap",
+      "description": "Isolated editorial route; existing hotels and old URLs remain served by original Next.js app",
+      "enabled": false,
+      "route": {
+        "src": "/sitemap-news.xml",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@8c8782ef0ca0ecde41630947aea68fe0841bf071/astra/discover-multisite-20261102/freehotels/sitemap-news.xml",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "application/xml; charset=utf-8"
+          }
+        ],
+        "respectOriginCacheControl": false
+      },
+      "srcSyntax": "path-to-regexp",
+      "staged": false,
+      "routeType": "rewrite"
+    },
+    {
+      "id": "49be984d-d1c0-45ce-a331-9ab1447e2f32",
+      "name": "ASTRA FreeHotels | Preserve original and editorial sitemaps",
+      "description": "Isolated editorial route; existing hotels and old URLs remain served by original Next.js app",
+      "enabled": false,
+      "route": {
+        "src": "/robots.txt",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@8c8782ef0ca0ecde41630947aea68fe0841bf071/astra/discover-multisite-20261102/freehotels/robots.txt",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/plain; charset=utf-8"
+          }
+        ],
+        "respectOriginCacheControl": false
+      },
+      "srcSyntax": "path-to-regexp",
+      "staged": false,
+      "routeType": "rewrite"
+    },
+    {
+      "id": "3d072f8a-9988-4cf4-95e9-bf16c4610723",
+      "name": "ASTRA FreeHotels | French Discover travel journal hub",
+      "description": "New isolated French Discover editorial paths only; preserve Next.js historic French pages | 2026-11-09: add two source-verified Christmas guides and preserve historic URLs.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "/fr/voyage/actualites/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@a64494b20f3686e20e1f8275abe7f45a785caf35/astra/discover-multisite-20261102/freehotels/growth-100k/publication/dist/fr-actualites-index.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          },
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "cache-control"
+            },
+            "args": "public, max-age=0, s-maxage=300, must-revalidate"
+          }
+        ],
+        "respectOriginCacheControl": false
+      },
+      "srcSyntax": "equals",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "bc9e5643-b089-406c-9eac-37817ad8dbee",
+      "name": "ASTRA FreeHotels | Metz Christmas 2026 hotels",
+      "description": "Zero-cost sourced hotel guide on an exact new URL; no historical paths changed.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "/fr/voyage/actualites/noel-metz-2026-ou-dormir-hotels/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@a64494b20f3686e20e1f8275abe7f45a785caf35/astra/discover-multisite-20261102/freehotels/growth-100k/publication/dist/noel-metz-2026-ou-dormir-hotels.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          },
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "cache-control"
+            },
+            "args": "public, max-age=0, s-maxage=300, must-revalidate"
+          }
+        ],
+        "respectOriginCacheControl": false
+      },
+      "srcSyntax": "equals",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "5a43e7db-6906-4db5-b726-b7e75ed623a3",
+      "name": "ASTRA FreeHotels | Strasbourg Colmar train 2026",
+      "description": "Zero-cost sourced hotel guide on an exact new URL; no historical paths changed.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "/fr/voyage/actualites/marche-noel-alsace-2026-sans-voiture-quel-hotel/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@a64494b20f3686e20e1f8275abe7f45a785caf35/astra/discover-multisite-20261102/freehotels/growth-100k/publication/dist/marche-noel-alsace-2026-sans-voiture-quel-hotel.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          },
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "cache-control"
+            },
+            "args": "public, max-age=0, s-maxage=300, must-revalidate"
+          }
+        ],
+        "respectOriginCacheControl": false
+      },
+      "srcSyntax": "equals",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "a4ea856b-0177-42d5-b530-51caf412f54b",
+      "name": "ASTRA FreeHotels | Scalable French travel article router",
+      "description": "New isolated French Discover editorial paths only; preserve Next.js historic French pages",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/fr/voyage/actualites/([a-z0-9-]+)/?$",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@d801b8c24593762a65c6ba8fb27440d351081266/astra/discover-multisite-20261102/freehotels/fr-$1.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ],
+        "respectOriginCacheControl": false
+      },
+      "srcSyntax": "regex",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "7f0582f8-d3f1-439b-a551-718ce7e1a48b",
+      "name": "ASTRA FreeHotels | Restore French hotel cost calculator",
+      "description": "Add a useful existing FreeHotels calculator without changing original pages or DNS",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/calculateur/?$",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@e2198ac3d97e0f6153646e3faed63ae43480a836/astra/discover-multisite-20261102/freehotels/growth-100k/dist/calculator-fr.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ],
+        "respectOriginCacheControl": false
+      },
+      "srcSyntax": "regex",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "1b1b3461-5f5c-4998-ad07-937a29959bfa",
+      "name": "ASTRA FreeHotels | English hotel total cost calculator",
+      "description": "Add a useful existing FreeHotels calculator without changing original pages or DNS",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/en/tools/hotel-total-cost/?$",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@e2198ac3d97e0f6153646e3faed63ae43480a836/astra/discover-multisite-20261102/freehotels/growth-100k/dist/calculator-en.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ],
+        "respectOriginCacheControl": false
+      },
+      "srcSyntax": "regex",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "d09130f4-2bb3-44a5-ae84-a053e9f02cd6",
+      "name": "ASTRA FreeHotels | Eight indoor-pool guides",
+      "description": "Isolated additive hotel-guide release. Preserve all existing serving routes and DNS.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/en/(hotels-with-indoor-pools|pigeon-forge-hotels-with-indoor-pools|gatlinburg-hotels-with-indoor-pools|branson-hotels-with-indoor-pools|las-vegas-hotels-with-indoor-pools|myrtle-beach-hotels-with-indoor-pools|ocean-city-md-hotels-with-indoor-pools|virginia-beach-hotels-with-indoor-pools)/?$",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@da06415d4d7c4e5c26d3259f56a3cb3d5339133a/astra/discover-multisite-20261102/freehotels/growth-100k/publication/dist/$1.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          },
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "cache-control"
+            },
+            "args": "public, max-age=0, s-maxage=300, must-revalidate"
+          }
+        ],
+        "respectOriginCacheControl": false
+      },
+      "srcSyntax": "regex",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "2b36a5b6-8683-44b3-a952-671845e3e673",
+      "name": "ASTRA FreeHotels | Bahamas and Patagonia guides",
+      "description": "Isolated additive hotel-guide release. Preserve all existing serving routes and DNS.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/guides/en/(bahamas-luxury-resort-real-cost-2026|chile-patagonia-luxury-lodge-insurance-2026)/?$",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@da06415d4d7c4e5c26d3259f56a3cb3d5339133a/astra/discover-multisite-20261102/freehotels/growth-100k/publication/dist/$1.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          },
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "cache-control"
+            },
+            "args": "public, max-age=0, s-maxage=300, must-revalidate"
+          }
+        ],
+        "respectOriginCacheControl": false
+      },
+      "srcSyntax": "regex",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "90ed631a-4d79-491e-9ede-dcae03c8665e",
+      "name": "ASTRA FreeHotels | English hotel guide directory",
+      "description": "Isolated additive hotel-guide release. Preserve all existing serving routes and DNS.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "/en/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@9a2d9e7531e0e1555ee89a28f8932d483b831d82/astra/discover-multisite-20261102/freehotels/editorial-20261106/hub.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ],
+        "respectOriginCacheControl": false
+      },
+      "srcSyntax": "equals",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "f659cda6-59f7-4596-85b5-f209fa5922bf",
+      "name": "ASTRA FreeHotels | Guide illustrations",
+      "description": "Isolated additive hotel-guide release. Preserve all existing serving routes and DNS.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/astra-assets/hotel-guides-20261104/([a-z0-9-]+\\.svg)$",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@da06415d4d7c4e5c26d3259f56a3cb3d5339133a/astra/discover-multisite-20261102/freehotels/growth-100k/publication/dist/assets/$1",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "image/svg+xml; charset=utf-8"
+          },
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "cache-control"
+            },
+            "args": "public, max-age=31536000, immutable"
+          }
+        ],
+        "respectOriginCacheControl": false
+      },
+      "srcSyntax": "regex",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "109a6e8d-4c37-4ce1-ae8f-4ccd4b4daa2e",
+      "name": "ASTRA FreeHotels | Editorial RSS feed",
+      "description": "Isolated additive hotel-guide release. Preserve all existing serving routes and DNS.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "/feed-editorial.xml",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@9a2d9e7531e0e1555ee89a28f8932d483b831d82/astra/discover-multisite-20261102/freehotels/editorial-20261106/feed.xml",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "application/rss+xml; charset=utf-8"
+          }
+        ],
+        "respectOriginCacheControl": false
+      },
+      "srcSyntax": "equals",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "d25454ac-7064-4bf5-a35b-2424bc4df45b",
+      "name": "ASTRA FreeHotels | Restore Berlin airport URL via verified Netlify",
+      "description": "Exact 404 legacy route restored from 217/217 verified Netlify production; no DNS change; preserves all other Vercel rules.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/de/berlin/flughafen/?$",
+        "dest": "https://freehotels-info.netlify.app/de/berlin/flughafen/"
+      },
+      "srcSyntax": "regex",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "c6f386eb-10ae-4e02-bb10-fe73177eda04",
+      "name": "ASTRA FreeHotels | Restore New York guide via verified Netlify",
+      "description": "Exact 404 legacy route restored from verified Netlify production; no DNS change; preserve all existing Vercel editorial routes.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/en/where-to-stay-in-new-york/?$",
+        "dest": "https://freehotels-info.netlify.app/en/where-to-stay-in-new-york/"
+      },
+      "srcSyntax": "regex",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "73cc0734-8192-4e69-8dd2-035651221242",
+      "name": "ASTRA FreeHotels | Restore Aachen city guide",
+      "description": "Exact verified canonical 404 → existing Netlify HTTP 200; preserve sixteen live rules and all unrelated URLs.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/de/aachen/?$",
+        "dest": "https://freehotels-info.netlify.app/de/aachen/"
+      },
+      "srcSyntax": "regex",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "72c006dd-ad96-4748-92d6-ca5b3e8d153b",
+      "name": "ASTRA FreeHotels | Restore Berlin budget hotels",
+      "description": "Exact verified canonical 404 → existing Netlify HTTP 200; preserve sixteen live rules and all unrelated URLs.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/de/berlin/guenstige-hotels/?$",
+        "dest": "https://freehotels-info.netlify.app/de/berlin/guenstige-hotels/"
+      },
+      "srcSyntax": "regex",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "e2e23f78-4be2-4d77-93b2-0435981c496a",
+      "name": "ASTRA FreeHotels | Restore Cologne CityClass Caprice hotel",
+      "description": "Exact verified canonical 404 → existing Netlify HTTP 200; preserve sixteen live rules and all unrelated URLs.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/de/koeln/133\\.html/?$",
+        "dest": "https://freehotels-info.netlify.app/de/koeln/133.html"
+      },
+      "srcSyntax": "regex",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "d7d63494-baaf-4f79-bf17-0abc38b8762c",
+      "name": "ASTRA FreeHotels | Restore French hotel-guide index",
+      "description": "Exact verified canonical 404 → existing Netlify HTTP 200; preserve sixteen live rules and all unrelated URLs.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/guides/?$",
+        "dest": "https://freehotels-info.netlify.app/guides"
+      },
+      "srcSyntax": "regex",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "f9a4529f-d8f1-4b69-84a9-fc514b4e4d77",
+      "name": "ASTRA FreeHotels | Restore Traveler questions hub",
+      "description": "Exact verified canonical 404 → existing Netlify HTTP 200; preserve sixteen live rules and all unrelated URLs.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/radar-voyageurs/?$",
+        "dest": "https://freehotels-info.netlify.app/radar-voyageurs"
+      },
+      "srcSyntax": "regex",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "astra-freehotels-legacy-city-20261107",
+      "name": "ASTRA FreeHotels historic German city fallback to Netlify",
+      "description": "Reversible city-level origin fallback for real German archive/curated pages; preserves existing higher-priority editorial routes and Netlify 404 for unknown cities. Evidence: /de/aalen/ 404 Vercel, live canonical content on Netlify; /de/berlin/ and /de/hamburg/ valid on both.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/de/(?!reise/)([^/]+)/?$",
+        "dest": "https://freehotels-info.netlify.app/de/$1/"
+      },
+      "srcSyntax": "regex",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "astra-freehotels-legacy-hotel-20261107",
+      "name": "ASTRA FreeHotels historic hotel identities DE EN",
+      "description": "Reversible exact numeric-hotel path family to Netlify for verified archived property identities. Unknown identities remain genuine HTTP 404; no homepage redirects. Includes EN Berlin 45 canonical repair.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/(de|en)/([^/]+)/([0-9]+(?:\\.html)?)/?$",
+        "dest": "https://freehotels-info.netlify.app/$1/$2/$3"
+      },
+      "srcSyntax": "regex",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "astra-freehotels-legacy-list-20261107",
+      "name": "ASTRA FreeHotels historical city list aliases",
+      "description": "Reversible rewrite of old list aliases to origin for city-aware canonical redirects; avoids arbitrary homepage redirects. Tested /de/aachen/list 200 at origin.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/de/([^/]+)/list(?:\\.html)?/?$",
+        "dest": "https://freehotels-info.netlify.app/de/$1/list"
+      },
+      "srcSyntax": "regex",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "47036a1b-789e-4548-ad4f-c1469d938137",
+      "name": "ASTRA FreeHotels | 301 archived language-news hubs",
+      "description": "Proven same-intent permanent redirects. Sources 404 and exact destinations 200; added before broad Netlify archive fallback.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/news/(en|fr)/?$",
+        "dest": "/news/",
+        "status": 301
+      },
+      "srcSyntax": "regex",
+      "routeType": "redirect"
+    },
+    {
+      "id": "dea4a9dd-e1b7-4108-be0f-bd1899181cab",
+      "name": "ASTRA FreeHotels | 301 old hotel-cost guide slug",
+      "description": "Proven same-intent permanent redirects. Sources 404 and exact destinations 200; added before broad Netlify archive fallback.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/guides/en/compare-real-hotel-cost-before-booking/?$",
+        "dest": "/guides/en/compare-real-total-hotel-cost-before-booking/",
+        "status": 301
+      },
+      "srcSyntax": "regex",
+      "routeType": "redirect"
+    },
+    {
+      "id": "10903254-e71d-489e-a5bf-f8a3edf183c4",
+      "name": "ASTRA FreeHotels | Restore Paris old budget hotel URL",
+      "description": "Observed canonical 404 in Netlify traffic; exact same-city hotel-guide destination independently verified HTTP 200; 301 only; preserve unrelated URLs.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/fr/paris/guenstige-hotels-paris/?$",
+        "dest": "/fr/paris/hotel-pas-cher/",
+        "status": 301
+      },
+      "srcSyntax": "regex",
+      "routeType": "redirect"
+    },
+    {
+      "id": "e901e731-c320-445f-9222-4143a7c22138",
+      "name": "ASTRA FreeHotels | Restore Lyon old hotels URL",
+      "description": "Observed canonical 404 in Netlify traffic; exact same-city hotel-guide destination independently verified HTTP 200; 301 only; preserve unrelated URLs.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/fr/lyon/hotels-lyon/?$",
+        "dest": "/fr/lyon/hotel-pas-cher/",
+        "status": 301
+      },
+      "srcSyntax": "regex",
+      "routeType": "redirect"
+    },
+    {
+      "id": "463a41a4-0fc3-4699-8687-62e443cff394",
+      "name": "ASTRA FreeHotels | 301 annuaire historique Berlin",
+      "description": "Ancien annuaire régional allemand vers le guide hôtelier de la même ville. Alias limité aux deux variantes de barre oblique finale.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/de/land/deutschland/berlin/?$",
+        "dest": "/de/berlin/",
+        "status": 301
+      },
+      "srcSyntax": "regex",
+      "routeType": "redirect"
+    },
+    {
+      "id": "e7098075-134a-411a-9450-97417c88ed0a",
+      "name": "ASTRA FreeHotels | 301 annuaire historique Hambourg",
+      "description": "Ancien annuaire régional allemand vers le guide hôtelier de la même ville. Alias limité aux deux variantes de barre oblique finale.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/de/land/deutschland/hamburg/?$",
+        "dest": "/de/hamburg/",
+        "status": 301
+      },
+      "srcSyntax": "regex",
+      "routeType": "redirect"
+    },
+    {
+      "id": "astra-freehotels-indexable-section-20261107",
+      "name": "ASTRA FreeHotels indexable multilingual archived sections",
+      "description": "Safe additive fallback for historic Netlify-backed paths under de/en/fr/guides/news/auteurs. Existing 28 rules stay higher priority; real unknown paths remain 404 on origin.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/(de|en|fr|guides|news|auteurs)/(.+)$",
+        "dest": "https://freehotels-info.netlify.app/$1/$2"
+      },
+      "srcSyntax": "regex",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "astra-freehotels-legal-pages-20261107",
+      "name": "ASTRA FreeHotels existing legal and editorial pages",
+      "description": "Restore verified non-generated existing pages from Netlify with equivalent canonicals; no invented content.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/(a-propos|affiliate-disclosure|contact|politique-editoriale)/?$",
+        "dest": "https://freehotels-info.netlify.app/$1/"
+      },
+      "srcSyntax": "regex",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "astra-freehotels-news-index-20261107",
+      "name": "ASTRA FreeHotels existing news index",
+      "description": "Restore real /news/ catalog from Netlify, verified independently.",
+      "enabled": true,
+      "staged": false,
+      "route": {
+        "src": "^/news/?$",
+        "dest": "https://freehotels-info.netlify.app/news/"
+      },
+      "srcSyntax": "regex",
+      "routeType": "rewrite"
+    },
+    {
+      "id": "astra-freehotels-sitemap-index-20261107",
+      "name": "ASTRA FreeHotels full 217 URL sitemap index",
+      "description": "Replace incomplete 23 URL sitemap with origin 2-file index. Old 23 are strict subset of 217; public 217 paths patched before this publication.",
+      "enabled": false,
+      "route": {
+        "src": "/sitemap.xml",
+        "dest": "https://freehotels-info.netlify.app/sitemap.xml"
+      },
+      "srcSyntax": "path-to-regexp",
+      "staged": false,
+      "routeType": "rewrite"
+    },
+    {
+      "id": "astra-freehotels-sitemap-pages-20261107",
+      "name": "ASTRA FreeHotels restored 217 URL sitemap",
+      "description": "Expose verified Netlify sitemap-pages 217 public canonical URLs for Google; no robots noindex bypass.",
+      "enabled": false,
+      "route": {
+        "src": "/sitemap-pages.xml",
+        "dest": "https://freehotels-info.netlify.app/sitemap-pages.xml"
+      },
+      "srcSyntax": "path-to-regexp",
+      "staged": false,
+      "routeType": "rewrite"
+    },
+    {
+      "id": "astra-freehotels-sitemap-index-alias-20261107",
+      "name": "ASTRA FreeHotels historical sitemap index alias",
+      "description": "Restore /sitemap-index.xml existing Netlify source and retain canonical URLs.",
+      "enabled": false,
+      "route": {
+        "src": "/sitemap-index.xml",
+        "dest": "https://freehotels-info.netlify.app/sitemap-index.xml"
+      },
+      "srcSyntax": "path-to-regexp",
+      "staged": false,
+      "routeType": "rewrite"
+    }
+  ],
+  "oldRobots": "User-agent: *\nAllow: /\n\nSitemap: https://freehotels.info/sitemap-index.xml\nSitemap: https://freehotels.info/sitemap-seo-20261109.xml\nSitemap: https://freehotels.info/sitemap-editorial.xml\nSitemap: https://freehotels.info/sitemap-wellness-de-20261111.xml\nSitemap: https://freehotels.info/sitemap-love-room-fr-20261111.xml\n",
+  "sourceCommit": "36472484332eb1a7bc3db7faf3cd09d0879beea5"
+}

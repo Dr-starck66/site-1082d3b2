@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://freehotels.info/sitemap-index.xml
+Sitemap: https://freehotels.info/sitemap-seo-20261109.xml
+Sitemap: https://freehotels.info/sitemap-editorial.xml
+Sitemap: https://freehotels.info/sitemap-wellness-de-20261111.xml
+Sitemap: https://freehotels.info/sitemap-love-room-fr-20261111.xml
+Sitemap: https://freehotels.info/sitemap-whirlpool-de-20261121.xml
