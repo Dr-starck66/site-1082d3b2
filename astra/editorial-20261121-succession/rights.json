@@ -1,0 +1,19 @@
+{
+  "schema": "astra-original-media/1",
+  "publisher": "Avocat Belgique",
+  "created": "2026-11-21",
+  "provenance": "Original diagrammatic SVG illustrations authored for this five-page legal information cluster; no third-party media or tracking scripts",
+  "license": "© 2026 Avocat Belgique. All rights reserved.",
+  "assets": [
+    "droits-succession-wallonie-calcul-2026-1.svg",
+    "droits-succession-wallonie-calcul-2026-2.svg",
+    "declaration-succession-belgique-delais-documents-1.svg",
+    "declaration-succession-belgique-delais-documents-2.svg",
+    "renoncer-succession-belgique-dettes-acceptation-1.svg",
+    "renoncer-succession-belgique-dettes-acceptation-2.svg",
+    "indivision-succession-belgique-heritier-bloque-partage-1.svg",
+    "indivision-succession-belgique-heritier-bloque-partage-2.svg",
+    "vendre-maison-heritage-belgique-usufruit-notaire-1.svg",
+    "vendre-maison-heritage-belgique-usufruit-notaire-2.svg"
+  ]
+}

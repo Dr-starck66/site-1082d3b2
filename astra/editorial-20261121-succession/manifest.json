@@ -1,0 +1,83 @@
+{
+  "schema": "astra-succession-editorial/1",
+  "created": "2026-11-21",
+  "owner": "avocat-belgique.com",
+  "primaryKeyword": "succession",
+  "measuredVolumeMonthlyFR_BE": 8100,
+  "measuredSeoDifficulty": 19,
+  "rankingPromise": false,
+  "pages": [
+    {
+      "url": "https://avocat-belgique.com/guides/droits-succession-wallonie-calcul-2026/",
+      "title": "Droits de succession en Wallonie en 2026 : calcul, héritiers et déclaration",
+      "keyword": "droits de succession wallonie",
+      "articleWords": 1531,
+      "assets": 2,
+      "sources": [
+        "https://www.wallonie.be/fr/demarches/sinformer-sur-les-droits-de-succession-en-region-wallonne",
+        "https://www.notaire.be/heritage-et-donations/heritage/impot-sur-lheritage-tarifs-des-droits-de-succession",
+        "https://www.notaire.be/heritage-et-donations/heritage/procedure-apres-deces/la-declaration-de-succession",
+        "https://wallonie.be/fr/acteurs-et-institutions/wallonie/gouvernement-de-wallonie/communiques-presse/2026-10-12"
+      ]
+    },
+    {
+      "url": "https://avocat-belgique.com/guides/declaration-succession-belgique-delais-documents/",
+      "title": "Déclaration de succession en Belgique : délai de 4, 5 ou 6 mois et documents",
+      "keyword": "déclaration de succession belgique",
+      "articleWords": 1510,
+      "assets": 2,
+      "sources": [
+        "https://www.notaire.be/heritage-et-donations/heritage/procedure-apres-deces/la-declaration-de-succession",
+        "https://www.notaire.be/faq/heritage/de-combien-de-temps-dispose-t-on-pour-la-declaration-de-succession",
+        "https://www.wikifin.be/fr/heriter/heritage-et-droits-de-succession/que-faire-pour-lheritage-quand-un-proche-decede",
+        "https://www.notaire.be/heritage-et-donations/heritage/procedure-apres-deces"
+      ]
+    },
+    {
+      "url": "https://avocat-belgique.com/guides/renoncer-succession-belgique-dettes-acceptation/",
+      "title": "Renoncer à une succession en Belgique : dettes, actes à éviter et notaire",
+      "keyword": "renoncer succession belgique",
+      "articleWords": 1519,
+      "assets": 2,
+      "sources": [
+        "https://www.notaire.be/heritage-et-donations/heritage/procedure-apres-deces/accepter-ou-renoncer-une-succession",
+        "https://www.notaire.be/heritage-et-donations/heritage/procedure-apres-deces/accepter-ou-renoncer-une-succession/renoncer-une-succession",
+        "https://www.notaire.be/heritage-et-donations/heritage/procedure-apres-deces/accepter-ou-renoncer-une-succession/accepter-une-succession-sous-benefice-dinventaire",
+        "https://refli.be/fr/lex/2022B30600"
+      ]
+    },
+    {
+      "url": "https://avocat-belgique.com/guides/indivision-succession-belgique-heritier-bloque-partage/",
+      "title": "Indivision successorale en Belgique : que faire si un héritier bloque le partage ?",
+      "keyword": "indivision succession belgique",
+      "articleWords": 1534,
+      "assets": 2,
+      "sources": [
+        "https://www.notaire.be/heritage-et-donations/heritage/procedure-apres-deces/indivision-ou-partage-dune-succession",
+        "https://www.notaire.be/heritage-et-donations/heritage/procedure-apres-deces/vendre-les-biens-immobiliers-de-la-succession",
+        "https://refli.be/fr/lex/2022B30600",
+        "https://www.notaire.be/actualites/top-8-des-questions-posees-sur-les-heritages-et-successions"
+      ]
+    },
+    {
+      "url": "https://avocat-belgique.com/guides/vendre-maison-heritage-belgique-usufruit-notaire/",
+      "title": "Vendre une maison héritée en Belgique : accord des héritiers, usufruit et notaire",
+      "keyword": "vendre maison héritée belgique",
+      "articleWords": 1544,
+      "assets": 2,
+      "sources": [
+        "https://www.notaire.be/heritage-et-donations/heritage/procedure-apres-deces/vendre-les-biens-immobiliers-de-la-succession",
+        "https://www.notaire.be/heritage-et-donations/heritage/procedure-apres-deces/indivision-ou-partage-dune-succession",
+        "https://www.notaire.be/heritage-et-donations/heritage/procedure-apres-deces/la-declaration-de-succession",
+        "https://www.notaire.be/heritage-et-donations/heritage/procedure-apres-deces"
+      ]
+    }
+  ],
+  "oldRouteProtection": "Dedicated route additions only; existing guide remains untouched",
+  "recheckRequired": [
+    "HTTPS 200 article and images",
+    "root sitemap discovery",
+    "incoming internal links from existing pages",
+    "Google indexing and ranking"
+  ]
+}
