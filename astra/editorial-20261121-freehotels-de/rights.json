@@ -20,5 +20,29 @@
     "whirlpool-hotel-guenstig-gesamtpreis-stornierung-1.svg",
     "whirlpool-hotel-guenstig-gesamtpreis-stornierung-2.svg",
     "whirlpool-hotel-guenstig-gesamtpreis-stornierung-3.svg"
-  ]
+  ],
+  "photoSource": {
+    "originRepository": "Dr-starck66/freehotels-grok-live",
+    "originPaths": [
+      "public/editorial/love-room-jacuzzi-privatif-hero-1600x900.webp",
+      "public/editorial/love-room-hero-1600x900.webp",
+      "public/editorial/love-room-week-end-amoureux-hero-1600x900.webp",
+      "public/editorial/love-room-prix-total-hero-1600x900.webp",
+      "public/editorial/love-room-arrivee-autonome-hero-1600x900.webp"
+    ],
+    "publicBase": "https://freehotels.info/editorial/",
+    "verifiedMime": "image/webp",
+    "liveHttpStatuses": [
+      200,
+      200,
+      200,
+      200,
+      200
+    ],
+    "note": "Previously present in FreeHotels.info project; display as non-specific editorial illustrative media, not evidence of hotel availability. Rights beyond project ownership require independent confirmation before claiming explicit license."
+  },
+  "updated": "2026-11-21",
+  "inlineArticleRasterCount": 2,
+  "heroRasterCount": 1,
+  "svgDiagramsPreserved": true
 }
