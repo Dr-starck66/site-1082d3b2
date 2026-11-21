@@ -1,0 +1,46 @@
+{
+  "schema": "astra-freehotels-de-5-article-cluster/1",
+  "created": "2026-11-21",
+  "site": "https://freehotels.info",
+  "mainKeyword": "hotel mit whirlpool im zimmer",
+  "searchVolumeMonthlyDE": 9900,
+  "seoDifficulty": 0,
+  "secondaryKeyword": "wellnesshotel deutschland",
+  "secondarySearchVolumeMonthlyDE": 14800,
+  "secondaryDifficulty": 12,
+  "seoSource": "OpenSEO Germany de-DE; difficulty 0 is not a guarantee of low competition",
+  "pages": [
+    {
+      "url": "https://freehotels.info/de/ratgeber/hotel-mit-whirlpool-im-zimmer-deutschland/",
+      "visibleWords": 1272,
+      "title": "Hotel mit Whirlpool im Zimmer: Deutschland-Guide für private Spa-Suiten",
+      "images": 3
+    },
+    {
+      "url": "https://freehotels.info/de/ratgeber/hotel-mit-sauna-im-zimmer-privat/",
+      "visibleWords": 1140,
+      "title": "Hotel mit Sauna im Zimmer: private Suite buchen und Ausstattung prüfen",
+      "images": 3
+    },
+    {
+      "url": "https://freehotels.info/de/ratgeber/hotel-mit-jacuzzi-im-zimmer-unterschiede/",
+      "visibleWords": 1150,
+      "title": "Hotel mit Jacuzzi im Zimmer: Welche Wanne ist wirklich privat?",
+      "images": 3
+    },
+    {
+      "url": "https://freehotels.info/de/ratgeber/private-spa-hotel-deutschland-vergleich/",
+      "visibleWords": 1143,
+      "title": "Private-Spa-Hotel in Deutschland: eigene Suite oder reservierbarer Wellnessbereich?",
+      "images": 3
+    },
+    {
+      "url": "https://freehotels.info/de/ratgeber/whirlpool-hotel-guenstig-gesamtpreis-stornierung/",
+      "visibleWords": 1176,
+      "title": "Whirlpool-Hotel günstig buchen: Endpreis, Stornierung und 12-Punkte-Checkliste",
+      "images": 3
+    }
+  ],
+  "existingWellnessPillar": "https://freehotels.info/wellnesshotel-deutschland.html",
+  "noClaimsOfCurrentPrices": true
+}
