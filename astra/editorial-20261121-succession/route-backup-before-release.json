@@ -1,0 +1,929 @@
+{
+  "schema": "astra-vercel-routes-backup-v1",
+  "timestamp": "2026-11-21",
+  "projectId": "prj_SPcrN3LuEwYM63SsuMv0OIdQ8AdB",
+  "productionVersion": "d5f3d239-5d25-4d8b-b4ea-4e46cc1bb56a",
+  "stagingVersion": "998f69bc-85bf-4290-ae1a-69d43ba6a343",
+  "production": [
+    {
+      "id": "astra-avocat-facture-consommateur-rappel-gratuit-frais-belgique",
+      "name": "Facture impayée en Belgique : vérifier le rappel gratuit avant les frais",
+      "enabled": true,
+      "route": {
+        "src": "/actualites/facture-consommateur-rappel-gratuit-frais-belgique/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@a534e3f73b0c0b0f3ab1c1828e0e29cf8336d170/astra/discover-multisite-20261102/avocat/editorial-20261106/facture-consommateur-rappel-gratuit-frais-belgique.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-avocat-mediation-consommation-belgique-preparer-dossier",
+      "name": "Médiation de consommation en Belgique : préparer un dossier qui peut être compris",
+      "enabled": true,
+      "route": {
+        "src": "/actualites/mediation-consommation-belgique-preparer-dossier/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@a534e3f73b0c0b0f3ab1c1828e0e29cf8336d170/astra/discover-multisite-20261102/avocat/editorial-20261106/mediation-consommation-belgique-preparer-dossier.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-avocat-commande-non-livree-belgique-preuves-demarches",
+      "name": "Commande non livrée : les preuves à réunir avant de demander une solution",
+      "enabled": true,
+      "route": {
+        "src": "/actualites/commande-non-livree-belgique-preuves-demarches/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@a534e3f73b0c0b0f3ab1c1828e0e29cf8336d170/astra/discover-multisite-20261102/avocat/editorial-20261106/commande-non-livree-belgique-preuves-demarches.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-avocat-assets-20261106",
+      "name": "Avocat Belgique — schémas originaux et droits",
+      "enabled": true,
+      "route": {
+        "src": "^/assets/editorial-20261106/([a-z0-9-]+\\.webp|rights\\.json)$",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@a534e3f73b0c0b0f3ab1c1828e0e29cf8336d170/astra/discover-multisite-20261102/avocat/editorial-20261106/assets/$1"
+      }
+    },
+    {
+      "id": "9bd7f7d6-5c76-4d6d-b126-ef2c72c222d6",
+      "name": "ASTRA Avocat Belgique | Indexable historic blog /blog/",
+      "description": "Preserve exact archive URLs and historical links; remove outdated noindex directive",
+      "enabled": true,
+      "route": {
+        "src": "/blog/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@6f81b452fdacefcd48181d0a0d749e586421fa09/astra/discover-multisite-20261102/avocat/blog-reindex/index.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ],
+        "respectOriginCacheControl": false
+      }
+    },
+    {
+      "id": "1a05cfa0-a821-41ae-ba43-139ec8794535",
+      "name": "ASTRA Avocat Belgique | Indexable historic blog /blog/page/2/",
+      "description": "Preserve exact archive URLs and historical links; remove outdated noindex directive",
+      "enabled": true,
+      "route": {
+        "src": "/blog/page/2/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@8c8782ef0ca0ecde41630947aea68fe0841bf071/astra/discover-multisite-20261102/avocat/blog-reindex/page2.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ],
+        "respectOriginCacheControl": false
+      }
+    },
+    {
+      "id": "5d5aac54-ca7b-472e-bc36-7adbbd2f98fe",
+      "name": "ASTRA Avocat Belgique | Indexable historic blog /blog/page/3/",
+      "description": "Preserve exact archive URLs and historical links; remove outdated noindex directive",
+      "enabled": true,
+      "route": {
+        "src": "/blog/page/3/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@8c8782ef0ca0ecde41630947aea68fe0841bf071/astra/discover-multisite-20261102/avocat/blog-reindex/page3.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ],
+        "respectOriginCacheControl": false
+      }
+    },
+    {
+      "id": "40c54dcb-e257-49be-86ff-fefb8ab45afa",
+      "name": "Avocat actualités — nouveaux guides et archives conservées",
+      "enabled": true,
+      "route": {
+        "src": "/actualites/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@a534e3f73b0c0b0f3ab1c1828e0e29cf8336d170/astra/discover-multisite-20261102/avocat/editorial-20261106/hub.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ]
+      }
+    },
+    {
+      "id": "482cfcbe-a2e1-4e11-8dec-b5ccdd629a4d",
+      "name": "ASTRA Avocat Belgique | News article router",
+      "description": "Isolated route on the existing free Vercel project; originals and legacy URLs preserved",
+      "enabled": true,
+      "route": {
+        "src": "^/actualites/([a-z0-9-]+)/?$",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@6f81b452fdacefcd48181d0a0d749e586421fa09/astra/discover-multisite-20261102/avocat/$1.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ],
+        "respectOriginCacheControl": false
+      }
+    },
+    {
+      "id": "e51db684-be5e-4811-96bf-f248e3add453",
+      "name": "Avocat sitemap éditorial étendu",
+      "enabled": true,
+      "route": {
+        "src": "/sitemap-editorial.xml",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@a534e3f73b0c0b0f3ab1c1828e0e29cf8336d170/astra/discover-multisite-20261102/avocat/editorial-20261106/sitemap.xml",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "application/xml; charset=utf-8"
+          }
+        ]
+      }
+    },
+    {
+      "id": "3cee9abc-2572-4aae-a45f-c521d475e4bd",
+      "name": "ASTRA Avocat Belgique | Google News 48h sitemap",
+      "description": "Isolated route on the existing free Vercel project; originals and legacy URLs preserved",
+      "enabled": true,
+      "route": {
+        "src": "/sitemap-news.xml",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@c9e5afff4447a88b75041e1e77e526251e747638/astra/discover-multisite-20261102/avocat/sitemap-news.xml",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "application/xml; charset=utf-8"
+          }
+        ],
+        "respectOriginCacheControl": false
+      }
+    },
+    {
+      "id": "f2e55ad1-8001-425e-8273-79f192c15052",
+      "name": "ASTRA Avocat Belgique | Preserve historic and new sitemaps",
+      "description": "Isolated route on the existing free Vercel project; originals and legacy URLs preserved",
+      "enabled": true,
+      "route": {
+        "src": "/robots.txt",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@8c8782ef0ca0ecde41630947aea68fe0841bf071/astra/discover-multisite-20261102/avocat/robots.txt",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/plain; charset=utf-8"
+          }
+        ],
+        "respectOriginCacheControl": false
+      }
+    },
+    {
+      "id": "astra-nl-cocon-crossproject-20261119-1",
+      "name": "ASTRA NL Cocoon verified cross-project 1",
+      "description": "Independent staging source dpl_3hkYsiMHG1iUnLZTWkyV3uaTEicv; original 12 routes unchanged; reversible",
+      "enabled": true,
+      "route": {
+        "src": "/nl/verkeersboete-opzoeken-pv-nummer-fraude-belgie/",
+        "dest": "https://freehotels-info-test-91xwdrvom-ced-starcks-projects.vercel.app/nl/verkeersboete-opzoeken-pv-nummer-fraude-belgie/",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "delete",
+            "target": {
+              "key": "x-robots-tag"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-nl-cocon-crossproject-20261119-2",
+      "name": "ASTRA NL Cocoon verified cross-project 2",
+      "description": "Independent staging source dpl_3hkYsiMHG1iUnLZTWkyV3uaTEicv; original 12 routes unchanged; reversible",
+      "enabled": true,
+      "route": {
+        "src": "/nl/verkeersboete-firmawagen-bestuurder-aanduiden/",
+        "dest": "https://freehotels-info-test-91xwdrvom-ced-starcks-projects.vercel.app/nl/verkeersboete-firmawagen-bestuurder-aanduiden/",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "delete",
+            "target": {
+              "key": "x-robots-tag"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-nl-cocon-crossproject-20261119-3",
+      "name": "ASTRA NL Cocoon verified cross-project 3",
+      "description": "Independent staging source dpl_3hkYsiMHG1iUnLZTWkyV3uaTEicv; original 12 routes unchanged; reversible",
+      "enabled": true,
+      "route": {
+        "src": "/nl/verkeersboete-buitenlandse-nummerplaat-belgie/",
+        "dest": "https://freehotels-info-test-91xwdrvom-ced-starcks-projects.vercel.app/nl/verkeersboete-buitenlandse-nummerplaat-belgie/",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "delete",
+            "target": {
+              "key": "x-robots-tag"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-nl-cocon-crossproject-20261119-4",
+      "name": "ASTRA NL Cocoon verified cross-project 4",
+      "description": "Independent staging source dpl_3hkYsiMHG1iUnLZTWkyV3uaTEicv; original 12 routes unchanged; reversible",
+      "enabled": true,
+      "route": {
+        "src": "/nl/trajectcontrole-boete-bewijs-betwisten/",
+        "dest": "https://freehotels-info-test-91xwdrvom-ced-starcks-projects.vercel.app/nl/trajectcontrole-boete-bewijs-betwisten/",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "delete",
+            "target": {
+              "key": "x-robots-tag"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-nl-cocon-crossproject-20261119-5",
+      "name": "ASTRA NL Cocoon verified cross-project 5",
+      "description": "Independent staging source dpl_3hkYsiMHG1iUnLZTWkyV3uaTEicv; original 12 routes unchanged; reversible",
+      "enabled": true,
+      "route": {
+        "src": "/nl/verkeersboete-rechtsbijstandverzekering-advocaat/",
+        "dest": "https://freehotels-info-test-91xwdrvom-ced-starcks-projects.vercel.app/nl/verkeersboete-rechtsbijstandverzekering-advocaat/",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "delete",
+            "target": {
+              "key": "x-robots-tag"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-nl-cocon-crossproject-20261119-6",
+      "name": "ASTRA NL Cocoon verified cross-project 6",
+      "description": "Independent staging source dpl_3hkYsiMHG1iUnLZTWkyV3uaTEicv; original 12 routes unchanged; reversible",
+      "enabled": true,
+      "route": {
+        "src": "/nl/",
+        "dest": "https://freehotels-info-test-91xwdrvom-ced-starcks-projects.vercel.app/nl/",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "delete",
+            "target": {
+              "key": "x-robots-tag"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-nl-cocon-crossproject-20261119-7",
+      "name": "ASTRA NL Cocoon verified cross-project 7",
+      "description": "Independent staging source dpl_3hkYsiMHG1iUnLZTWkyV3uaTEicv; original 12 routes unchanged; reversible",
+      "enabled": true,
+      "route": {
+        "src": "/nl/verkeersboete-belgie-2026/",
+        "dest": "https://freehotels-info-test-91xwdrvom-ced-starcks-projects.vercel.app/nl/verkeersboete-belgie-2026/",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "delete",
+            "target": {
+              "key": "x-robots-tag"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-nl-cocon-crossproject-20261119-8",
+      "name": "ASTRA NL Cocoon verified cross-project 8",
+      "description": "Independent staging source dpl_3hkYsiMHG1iUnLZTWkyV3uaTEicv; original 12 routes unchanged; reversible",
+      "enabled": true,
+      "route": {
+        "src": "/sitemap.xml",
+        "dest": "https://freehotels-info-test-91xwdrvom-ced-starcks-projects.vercel.app/sitemap.xml",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "delete",
+            "target": {
+              "key": "x-robots-tag"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "priorStaging": [
+    {
+      "id": "astra-avocat-facture-consommateur-rappel-gratuit-frais-belgique",
+      "name": "Facture impayée en Belgique : vérifier le rappel gratuit avant les frais",
+      "enabled": true,
+      "route": {
+        "src": "/actualites/facture-consommateur-rappel-gratuit-frais-belgique/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@a534e3f73b0c0b0f3ab1c1828e0e29cf8336d170/astra/discover-multisite-20261102/avocat/editorial-20261106/facture-consommateur-rappel-gratuit-frais-belgique.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-avocat-mediation-consommation-belgique-preparer-dossier",
+      "name": "Médiation de consommation en Belgique : préparer un dossier qui peut être compris",
+      "enabled": true,
+      "route": {
+        "src": "/actualites/mediation-consommation-belgique-preparer-dossier/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@a534e3f73b0c0b0f3ab1c1828e0e29cf8336d170/astra/discover-multisite-20261102/avocat/editorial-20261106/mediation-consommation-belgique-preparer-dossier.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-avocat-commande-non-livree-belgique-preuves-demarches",
+      "name": "Commande non livrée : les preuves à réunir avant de demander une solution",
+      "enabled": true,
+      "route": {
+        "src": "/actualites/commande-non-livree-belgique-preuves-demarches/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@a534e3f73b0c0b0f3ab1c1828e0e29cf8336d170/astra/discover-multisite-20261102/avocat/editorial-20261106/commande-non-livree-belgique-preuves-demarches.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-avocat-assets-20261106",
+      "name": "Avocat Belgique — schémas originaux et droits",
+      "enabled": true,
+      "route": {
+        "src": "^/assets/editorial-20261106/([a-z0-9-]+\\.webp|rights\\.json)$",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@a534e3f73b0c0b0f3ab1c1828e0e29cf8336d170/astra/discover-multisite-20261102/avocat/editorial-20261106/assets/$1"
+      }
+    },
+    {
+      "id": "9bd7f7d6-5c76-4d6d-b126-ef2c72c222d6",
+      "name": "ASTRA Avocat Belgique | Indexable historic blog /blog/",
+      "description": "Preserve exact archive URLs and historical links; remove outdated noindex directive",
+      "enabled": true,
+      "route": {
+        "src": "/blog/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@6f81b452fdacefcd48181d0a0d749e586421fa09/astra/discover-multisite-20261102/avocat/blog-reindex/index.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ],
+        "respectOriginCacheControl": false
+      }
+    },
+    {
+      "id": "1a05cfa0-a821-41ae-ba43-139ec8794535",
+      "name": "ASTRA Avocat Belgique | Indexable historic blog /blog/page/2/",
+      "description": "Preserve exact archive URLs and historical links; remove outdated noindex directive",
+      "enabled": true,
+      "route": {
+        "src": "/blog/page/2/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@8c8782ef0ca0ecde41630947aea68fe0841bf071/astra/discover-multisite-20261102/avocat/blog-reindex/page2.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ],
+        "respectOriginCacheControl": false
+      }
+    },
+    {
+      "id": "5d5aac54-ca7b-472e-bc36-7adbbd2f98fe",
+      "name": "ASTRA Avocat Belgique | Indexable historic blog /blog/page/3/",
+      "description": "Preserve exact archive URLs and historical links; remove outdated noindex directive",
+      "enabled": true,
+      "route": {
+        "src": "/blog/page/3/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@8c8782ef0ca0ecde41630947aea68fe0841bf071/astra/discover-multisite-20261102/avocat/blog-reindex/page3.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ],
+        "respectOriginCacheControl": false
+      }
+    },
+    {
+      "id": "40c54dcb-e257-49be-86ff-fefb8ab45afa",
+      "name": "Avocat actualités — nouveaux guides et archives conservées",
+      "enabled": true,
+      "route": {
+        "src": "/actualites/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@a534e3f73b0c0b0f3ab1c1828e0e29cf8336d170/astra/discover-multisite-20261102/avocat/editorial-20261106/hub.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ]
+      }
+    },
+    {
+      "id": "482cfcbe-a2e1-4e11-8dec-b5ccdd629a4d",
+      "name": "ASTRA Avocat Belgique | News article router",
+      "description": "Isolated route on the existing free Vercel project; originals and legacy URLs preserved",
+      "enabled": true,
+      "route": {
+        "src": "^/actualites/([a-z0-9-]+)/?$",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@6f81b452fdacefcd48181d0a0d749e586421fa09/astra/discover-multisite-20261102/avocat/$1.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ],
+        "respectOriginCacheControl": false
+      }
+    },
+    {
+      "id": "e51db684-be5e-4811-96bf-f248e3add453",
+      "name": "Avocat sitemap éditorial étendu",
+      "enabled": true,
+      "route": {
+        "src": "/sitemap-editorial.xml",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@a534e3f73b0c0b0f3ab1c1828e0e29cf8336d170/astra/discover-multisite-20261102/avocat/editorial-20261106/sitemap.xml",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "application/xml; charset=utf-8"
+          }
+        ]
+      }
+    },
+    {
+      "id": "3cee9abc-2572-4aae-a45f-c521d475e4bd",
+      "name": "ASTRA Avocat Belgique | Google News 48h sitemap",
+      "description": "Isolated route on the existing free Vercel project; originals and legacy URLs preserved",
+      "enabled": true,
+      "route": {
+        "src": "/sitemap-news.xml",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@c9e5afff4447a88b75041e1e77e526251e747638/astra/discover-multisite-20261102/avocat/sitemap-news.xml",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "application/xml; charset=utf-8"
+          }
+        ],
+        "respectOriginCacheControl": false
+      }
+    },
+    {
+      "id": "f2e55ad1-8001-425e-8273-79f192c15052",
+      "name": "ASTRA Avocat Belgique | Preserve historic and new sitemaps",
+      "description": "Isolated route on the existing free Vercel project; originals and legacy URLs preserved",
+      "enabled": true,
+      "route": {
+        "src": "/robots.txt",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@8c8782ef0ca0ecde41630947aea68fe0841bf071/astra/discover-multisite-20261102/avocat/robots.txt",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/plain; charset=utf-8"
+          }
+        ],
+        "respectOriginCacheControl": false
+      }
+    },
+    {
+      "id": "astra-nl-cocon-crossproject-20261119-1",
+      "name": "ASTRA NL Cocoon verified cross-project 1",
+      "description": "Independent staging source dpl_3hkYsiMHG1iUnLZTWkyV3uaTEicv; original 12 routes unchanged; reversible",
+      "enabled": false,
+      "route": {
+        "src": "/nl/verkeersboete-opzoeken-pv-nummer-fraude-belgie/",
+        "dest": "https://freehotels-info-test-91xwdrvom-ced-starcks-projects.vercel.app/nl/verkeersboete-opzoeken-pv-nummer-fraude-belgie/",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "delete",
+            "target": {
+              "key": "x-robots-tag"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-nl-cocon-crossproject-20261119-2",
+      "name": "ASTRA NL Cocoon verified cross-project 2",
+      "description": "Independent staging source dpl_3hkYsiMHG1iUnLZTWkyV3uaTEicv; original 12 routes unchanged; reversible",
+      "enabled": false,
+      "route": {
+        "src": "/nl/verkeersboete-firmawagen-bestuurder-aanduiden/",
+        "dest": "https://freehotels-info-test-91xwdrvom-ced-starcks-projects.vercel.app/nl/verkeersboete-firmawagen-bestuurder-aanduiden/",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "delete",
+            "target": {
+              "key": "x-robots-tag"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-nl-cocon-crossproject-20261119-3",
+      "name": "ASTRA NL Cocoon verified cross-project 3",
+      "description": "Independent staging source dpl_3hkYsiMHG1iUnLZTWkyV3uaTEicv; original 12 routes unchanged; reversible",
+      "enabled": false,
+      "route": {
+        "src": "/nl/verkeersboete-buitenlandse-nummerplaat-belgie/",
+        "dest": "https://freehotels-info-test-91xwdrvom-ced-starcks-projects.vercel.app/nl/verkeersboete-buitenlandse-nummerplaat-belgie/",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "delete",
+            "target": {
+              "key": "x-robots-tag"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-nl-cocon-crossproject-20261119-4",
+      "name": "ASTRA NL Cocoon verified cross-project 4",
+      "description": "Independent staging source dpl_3hkYsiMHG1iUnLZTWkyV3uaTEicv; original 12 routes unchanged; reversible",
+      "enabled": false,
+      "route": {
+        "src": "/nl/trajectcontrole-boete-bewijs-betwisten/",
+        "dest": "https://freehotels-info-test-91xwdrvom-ced-starcks-projects.vercel.app/nl/trajectcontrole-boete-bewijs-betwisten/",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "delete",
+            "target": {
+              "key": "x-robots-tag"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-nl-cocon-crossproject-20261119-5",
+      "name": "ASTRA NL Cocoon verified cross-project 5",
+      "description": "Independent staging source dpl_3hkYsiMHG1iUnLZTWkyV3uaTEicv; original 12 routes unchanged; reversible",
+      "enabled": false,
+      "route": {
+        "src": "/nl/verkeersboete-rechtsbijstandverzekering-advocaat/",
+        "dest": "https://freehotels-info-test-91xwdrvom-ced-starcks-projects.vercel.app/nl/verkeersboete-rechtsbijstandverzekering-advocaat/",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "delete",
+            "target": {
+              "key": "x-robots-tag"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-nl-cocon-crossproject-20261119-6",
+      "name": "ASTRA NL Cocoon verified cross-project 6",
+      "description": "Independent staging source dpl_3hkYsiMHG1iUnLZTWkyV3uaTEicv; original 12 routes unchanged; reversible",
+      "enabled": false,
+      "route": {
+        "src": "/nl/",
+        "dest": "https://freehotels-info-test-91xwdrvom-ced-starcks-projects.vercel.app/nl/",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "delete",
+            "target": {
+              "key": "x-robots-tag"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-nl-cocon-crossproject-20261119-7",
+      "name": "ASTRA NL Cocoon verified cross-project 7",
+      "description": "Independent staging source dpl_3hkYsiMHG1iUnLZTWkyV3uaTEicv; original 12 routes unchanged; reversible",
+      "enabled": false,
+      "route": {
+        "src": "/nl/verkeersboete-belgie-2026/",
+        "dest": "https://freehotels-info-test-91xwdrvom-ced-starcks-projects.vercel.app/nl/verkeersboete-belgie-2026/",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "delete",
+            "target": {
+              "key": "x-robots-tag"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-nl-cocon-crossproject-20261119-8",
+      "name": "ASTRA NL Cocoon verified cross-project 8",
+      "description": "Independent staging source dpl_3hkYsiMHG1iUnLZTWkyV3uaTEicv; original 12 routes unchanged; reversible",
+      "enabled": false,
+      "route": {
+        "src": "/sitemap.xml",
+        "dest": "https://freehotels-info-test-91xwdrvom-ced-starcks-projects.vercel.app/sitemap.xml",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "delete",
+            "target": {
+              "key": "x-robots-tag"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "plannedAdditions": [
+    {
+      "id": "astra-succession-fr-20261121-1",
+      "name": "ASTRA Succession France Belgique 2026 article 1",
+      "enabled": true,
+      "route": {
+        "src": "/guides/droits-succession-wallonie-calcul-2026/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@cd70018d69f8ea8b196221ab7ad99db587055401/astra/editorial-20261121-succession/droits-succession-wallonie-calcul-2026.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-succession-fr-20261121-2",
+      "name": "ASTRA Succession France Belgique 2026 article 2",
+      "enabled": true,
+      "route": {
+        "src": "/guides/declaration-succession-belgique-delais-documents/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@cd70018d69f8ea8b196221ab7ad99db587055401/astra/editorial-20261121-succession/declaration-succession-belgique-delais-documents.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-succession-fr-20261121-3",
+      "name": "ASTRA Succession France Belgique 2026 article 3",
+      "enabled": true,
+      "route": {
+        "src": "/guides/renoncer-succession-belgique-dettes-acceptation/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@cd70018d69f8ea8b196221ab7ad99db587055401/astra/editorial-20261121-succession/renoncer-succession-belgique-dettes-acceptation.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-succession-fr-20261121-4",
+      "name": "ASTRA Succession France Belgique 2026 article 4",
+      "enabled": true,
+      "route": {
+        "src": "/guides/indivision-succession-belgique-heritier-bloque-partage/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@cd70018d69f8ea8b196221ab7ad99db587055401/astra/editorial-20261121-succession/indivision-succession-belgique-heritier-bloque-partage.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-succession-fr-20261121-5",
+      "name": "ASTRA Succession France Belgique 2026 article 5",
+      "enabled": true,
+      "route": {
+        "src": "/guides/vendre-maison-heritage-belgique-usufruit-notaire/",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@cd70018d69f8ea8b196221ab7ad99db587055401/astra/editorial-20261121-succession/vendre-maison-heritage-belgique-usufruit-notaire.html",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "text/html; charset=utf-8"
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-succession-fr-20261121-assets",
+      "name": "ASTRA Succession 2026 illustrations SVG",
+      "enabled": true,
+      "route": {
+        "src": "^/assets/succession-20261121/([a-z0-9-]+-[12]\\.svg)$",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@cd70018d69f8ea8b196221ab7ad99db587055401/astra/editorial-20261121-succession/$1",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "image/svg+xml"
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-succession-fr-20261121-rights",
+      "name": "ASTRA Succession 2026 provenance médias",
+      "enabled": true,
+      "route": {
+        "src": "/assets/succession-20261121/rights.json",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@cd70018d69f8ea8b196221ab7ad99db587055401/astra/editorial-20261121-succession/rights.json",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "application/json; charset=utf-8"
+          }
+        ]
+      }
+    },
+    {
+      "id": "astra-succession-fr-20261121-sitemap",
+      "name": "ASTRA Succession 2026 sitemap complémentaire",
+      "enabled": true,
+      "route": {
+        "src": "/sitemap-succession-20261121.xml",
+        "dest": "https://cdn.jsdelivr.net/gh/Dr-starck66/site-1082d3b2@cd70018d69f8ea8b196221ab7ad99db587055401/astra/editorial-20261121-succession/sitemap.xml",
+        "transforms": [
+          {
+            "type": "response.headers",
+            "op": "set",
+            "target": {
+              "key": "content-type"
+            },
+            "args": "application/xml; charset=utf-8"
+          }
+        ]
+      }
+    }
+  ]
+}
