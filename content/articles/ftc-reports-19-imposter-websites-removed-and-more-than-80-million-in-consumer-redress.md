@@ -1,51 +1,51 @@
 ---
 title: "FTC Reports 19 Imposter Websites Removed and More Than $80 Million in Consumer Redress"
-description: "The FTC says it removed 19 sites impersonating the agency and pursued cases resulting in more than $80 million in consumer redress."
+description: "The FTC says its efforts against imposters include 19 removed websites and more than $80 million in consumer redress. Here’s how to assess a suspicious contact."
 category: "consumer-rights"
-published: "2026-11-17T23:34:38.572Z"
-modified: "2026-11-17T23:34:38.672Z"
+published: "2026-11-23T22:01:09.637Z"
+modified: "2026-11-23T22:01:09.741Z"
 author: "Refund Money Now Desk"
 status: "published"
 content_type: "reactive"
-source_hash: "c884ef61b7777238f49f7e87c31438085c44adc2a7850697121eb24dfdca5b59-a50838819bd8563ab2ac5b834935c177b8dd02832540a98898e20972be1737a3"
+source_hash: "cd1b796bc5a60de0d8e20c85b45b036fe9700d8f60cc2d37ca51e42536c8e2de-35d5f80e6a0ccbc2670b8b76f442761940e976cc39cbdcf507d9c4b3cd916089"
 sources: ["https://www.ftc.gov/news-events/news/press-releases/2026/10/ftc-highlights-efforts-combat-imposter-scams-protect-consumers", "https://consumer.ftc.gov/"]
 ---
-The Federal Trade Commission says it has removed 19 websites impersonating the agency and brought enforcement actions resulting in more than $80 million in consumer redress since its Impersonation Rule took effect in 2024. The announcement also describes imposter scams as the top reported fraud category over the past several years, with consumers reporting billions of dollars in losses. [S1]
+The Federal Trade Commission says it has removed 19 websites impersonating the agency and pursued enforcement actions that resulted in more than $80 million in consumer redress since its Impersonation Rule took effect in 2024. The announcement is a reminder that scammers may pose as government agencies—and that a familiar name or official-looking website is not proof that a message is genuine. [S1]
 
-The figures show enforcement activity, not a guarantee that a person who has lost money will receive it back. For consumers, the immediate concern is recognizing when someone claiming to represent the FTC is trying to pressure them into moving money or handing it over. The FTC’s consumer guidance offers a direct test: the agency will never threaten you, tell you to transfer money to “protect it,” or instruct you to withdraw cash or buy gold and give it to someone. [S1][S2]
+For consumers, the most useful part of the FTC’s update is a concrete warning about what an impostor may ask you to do. The agency says it will never threaten you, tell you to transfer money to “protect it,” or instruct you to withdraw cash or buy gold and hand it to someone. [S2]
 
 ## What changed
 
-In an October 29 announcement, the FTC highlighted its work against impersonation scams, including the removal of 19 FTC-imposter websites and enforcement actions that resulted in more than $80 million in consumer redress. The agency says those enforcement efforts have taken place since the Impersonation Rule went into effect in 2024. [S1]
+In an October 29, 2026, update, the FTC highlighted its continuing work to combat impersonation scams, including the removal of 19 websites pretending to be the FTC. The agency also reported enforcement actions resulting in more than $80 million in consumer redress since the Impersonation Rule went into effect in 2024. [S1]
 
-The FTC also described imposter scams as the top reported fraud category over the past several years and said consumers reported billions in losses. Those are broad figures about reported fraud; the announcement does not break them down by type of impersonator, individual case, or the amount any one consumer might recover. [S1]
+Those figures describe agency actions; they do not establish that every scam website has been found or that every person who lost money will receive compensation. The announcement does not provide details about who may qualify for redress, how individuals can check whether they are included, or a deadline to make a claim. Don’t treat the headline amount as money available automatically to anyone who has encountered an impostor. [S1]
 
-That distinction matters. The FTC’s announcement is an update about agency enforcement, not a notice that every person contacted by a scammer is eligible for money. It does not say that the 19 removed websites account for all FTC impersonation attempts, or that enforcement has ended the problem. [S1]
+The FTC’s consumer advice page offers a practical test focused on the request itself: a person claiming to represent the FTC is not genuine if they threaten you or tell you to move money to protect it, withdraw cash, or buy gold and give it to someone. [S2]
 
 ## What this means for consumers
 
-If a message or call claims to be from the FTC, focus first on what the person is asking you to do. A threat, a demand to transfer money for protection, or an instruction to withdraw cash or buy gold and hand it over is a clear warning sign under the FTC’s own guidance. Do not follow those instructions. [S2]
+If someone claims to be from the FTC and makes one of those demands, stop before taking the requested action. Don’t transfer funds, withdraw cash, buy gold, or hand anything over on the caller’s instructions. The FTC says it does not make those demands. [S2]
 
-A useful decision path is:
+Use the request as a decision point, not just the caller’s claimed identity. An official-sounding title, an urgent warning, or a website that appears connected to the FTC does not override the agency’s explicit warning about threats and instructions to move or hand over money. If the person is pressuring you to act, you can end the interaction rather than trying to settle the question while they are on the line. [S2]
 
-- **Being threatened or told to move money?** Stop before sending, withdrawing, or handing over anything. The FTC says it will not threaten you or tell you to transfer money to protect it. [S2]
-- **Being told to withdraw cash or buy gold for someone?** Treat that demand as a scam warning; the FTC says it will never give that instruction. [S2]
-- **Already paid or shared personal information?** The FTC’s consumer advice includes guidance on what to do if you were scammed, and the agency provides a way to report fraud. Use those official FTC resources to consider your next steps. [S2]
+If you have not sent money or shared information, pause and look for the FTC’s consumer advice on impersonation before responding further. The agency’s site includes a “Recognize an FTC Impersonator” warning and links to report fraud. [S2]
 
-The enforcement numbers may help explain why the agency is emphasizing impersonation, but they should not change how you assess an unexpected demand. A website’s removal does not, by itself, tell you whether a particular call, email, text, or message is legitimate. Evaluate the requested action against the FTC’s stated warning signs, and avoid treating a claim of official authority as proof. [S1][S2]
+If you already paid someone you suspect is a scammer, or gave them personal information or access to your computer or phone, the FTC’s consumer advice page points to guidance titled “What To Do if You Were Scammed.” The page also provides links to report fraud and report identity theft. Use the guidance that matches what happened; the available information here does not promise a refund or specify what outcome a report will produce. [S2]
 
-If you are unsure, pause rather than making a rushed payment or disclosure. You can use the FTC’s consumer advice site to find its fraud-reporting and scam guidance. The FTC identifies reporting fraud as a consumer action on its site, but this evidence does not establish that filing a report will recover money or resolve a particular case. [S2]
+Keep the next step narrow: identify what the person asked you to do, whether you paid or shared anything, and which of the FTC’s reporting or recovery resources fits. The consumer advice site lists these actions, but the supplied information does not say that reporting alone reverses a payment or guarantees a particular response. [S2]
 
 ## What to verify before you act
 
-Before responding to a message that claims to come from the FTC, check the request itself against the agency’s warning: Is anyone threatening you, telling you to transfer money to protect it, or asking you to withdraw cash or buy gold and give it to someone? If so, do not comply. [S2]
+Before following a message or call that claims to be from the FTC, check the request against the agency’s warning. A threat, a direction to transfer money for protection, or an instruction to withdraw cash or buy gold and give it to someone is a reason not to comply. [S2]
 
-If you are considering whether you can get money back, separate a general enforcement announcement from a specific refund notice. The FTC reported more than $80 million in consumer redress resulting from enforcement actions since the rule took effect in 2024; the supplied announcement does not establish that you personally qualify, how to apply, or when any payment would arrive. [S1]
+Before acting on a promise of compensation, verify the details through official FTC information. The October announcement reports more than $80 million in consumer redress from enforcement actions, but it does not name individual recipients, explain eligibility, or give a claim process or deadline. Don’t pay a person who contacts you or share sensitive details based only on a claim that you are owed part of that total. [S1]
 
-For help after a suspected scam, confirm that you are using the FTC’s consumer advice resources and reporting options, rather than following a link or phone number provided by the person who contacted you. The FTC site lists “Report Fraud” and provides consumer advice about what to do after a scam, but the available information here does not specify a response time or promise a particular outcome. [S2]
+If you need to report what happened, use the FTC’s consumer advice site, which links to its fraud and identity-theft reporting options. If you have already disclosed personal information or granted device access, consult the FTC’s “What To Do if You Were Scammed” guidance rather than assuming that the website-removal announcement addresses your specific situation. [S2]
+
+The agency’s latest figures show enforcement activity, not a way to identify every impostor or recover every loss. For a consumer deciding what to do next, the clearest immediate safeguard is to refuse a demand that matches the FTC’s own warning, then use its official consumer resources to report or respond to what happened. [S1][S2]
 
 ## Related reading
 
 - [FTC Reports 19 Imposter Sites Removed and More Than $80 Million in Consumer Redress](/article/ftc-reports-19-imposter-sites-removed-and-more-than-80-million-in-consumer-redress)
 - [FTC Reports 19 Imposter Websites Stopped and More Than $80 Million in Consumer Redress](/article/ftc-reports-19-imposter-websites-stopped-and-more-than-80-million-in-consumer-redress)
-- [FTC Reports Takedowns of 19 Imposter Sites and More Than $80 Million in Consumer Redress](/article/ftc-reports-takedowns-of-19-imposter-sites-and-more-than-80-million-in-consumer-redress)
+- [FTC Reports Takedowns of 19 Imposter Websites and More Than $80 Million in Consumer Redress](/article/ftc-reports-takedowns-of-19-imposter-websites-and-more-than-80-million-in-consumer-redress)
