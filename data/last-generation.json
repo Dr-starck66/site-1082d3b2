@@ -18,20 +18,20 @@
     "title": "FTC Highlights Efforts to Combat Imposter Scams and Protect Consumers",
     "category": "consumer-rights"
   },
-  "slug": "ftc-reports-19-imposter-websites-removed-and-more-than-80-million-in-consumer-redress",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-reports-19-imposter-websites-removed-and-more-than-80-million-in-consumer-redress.md",
+  "slug": "ftc-says-it-removed-19-impostor-websites-and-secured-more-than-80-million-in-redress",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-says-it-removed-19-impostor-websites-and-secured-more-than-80-million-in-redress.md",
   "evidence": [
     {
       "url": "https://www.ftc.gov/news-events/news/press-releases/2026/10/ftc-highlights-efforts-combat-imposter-scams-protect-consumers",
-      "sha256": "cd1b796bc5a60de0d8e20c85b45b036fe9700d8f60cc2d37ca51e42536c8e2de",
+      "sha256": "4e1752765f341fb3f7cbae0ac2669f5f9cf77f615ebcd74e138097fa1fcffd93",
       "official": true
     },
     {
       "url": "https://consumer.ftc.gov/",
-      "sha256": "35d5f80e6a0ccbc2670b8b76f442761940e976cc39cbdcf507d9c4b3cd916089",
+      "sha256": "8a9cfd0b78693a1ad8c6e3ea544695c715c97cabb50da6d480c1bdcf26455c9c",
       "official": true
     }
   ],
-  "words": 817,
-  "createdAt": "2026-11-23T22:01:09.638Z"
+  "words": 800,
+  "createdAt": "2026-11-24T23:10:38.823Z"
 }
