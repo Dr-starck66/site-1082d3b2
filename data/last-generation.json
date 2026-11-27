@@ -18,12 +18,12 @@
     "title": "FTC Highlights Efforts to Combat Imposter Scams and Protect Consumers",
     "category": "consumer-rights"
   },
-  "slug": "ftc-reports-new-efforts-against-imposter-scams",
-  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-reports-new-efforts-against-imposter-scams.md",
+  "slug": "ftc-reports-new-steps-against-imposter-scams-including-19-fake-agency-websites",
+  "file": "/home/runner/work/site-1082d3b2/site-1082d3b2/content/articles/ftc-reports-new-steps-against-imposter-scams-including-19-fake-agency-websites.md",
   "evidence": [
     {
       "url": "https://www.ftc.gov/news-events/news/press-releases/2026/10/ftc-highlights-efforts-combat-imposter-scams-protect-consumers",
-      "sha256": "d8a94fc8e37f2bae2ba7428092eccbda55d39e6d28793dbe288bb4377ec827ae",
+      "sha256": "859b25471a346891e9da3fa6c42fd35ac32704d0ddae04e7de54bb98cbaafd60",
       "official": true
     },
     {
@@ -32,6 +32,6 @@
       "official": true
     }
   ],
-  "words": 894,
-  "createdAt": "2026-11-26T22:29:40.793Z"
+  "words": 825,
+  "createdAt": "2026-11-27T22:12:37.541Z"
 }
